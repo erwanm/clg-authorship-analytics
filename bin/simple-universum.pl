@@ -5,26 +5,34 @@
 use strict;
 use warnings;
 use Getopt::Std;
-use Text::TextAnalytics::Util qw/readConfigFile readTSVWithHeaderAsColumnsHash readTSVByColumnsNoHeader rankWithTies mean geomMean harmoMean sum median aggregateVector pickInList pickInListProbas/;
 use Carp;
 use Math::CDF;
 use Math::Trig;
 use Data::Dumper;
+use CLGTextTools::ObsCollection qw/extractObservsWrapper/;
+use CLGTextTools::Commons qw/readConfigFile/;
+use CLGTextTools::Stats qw/aggregateVector pickInList pickInListProbas/;
 
 my $progName="simple-universum.pl";
 my $NaN = "NA";
 my $colCountFile=1; # 1 = abosulte freq, 2 = relative freq
 my $maxAttemptsSplit=10;
 my $nbWarnEmptyDocsReturned=0;
+my $useCountFile;
+
+
 sub usage {
 	my $fh = shift;
 	$fh = *STDOUT if (!defined $fh);
-	print $fh "Usage: $progName [options] <config file> <unknown prefix> <know prefix1>[:<know prefix2>...]\n";
+	print $fh "Usage: $progName [options] <config file> <unknown doc> <known doc1>[:<known doc2>...]\n";
 	print $fh "\n";
 	print $fh " TODO\n";
 	print $fh "\n";
 	print $fh "   Options:\n";
 	print $fh "     -h print this help\n";
+	print $fh "     -c use observations count files instead of extracting observations from raw text\n";
+	print $fh "        files. The count file corresponding to observation type <obs> for document <doc>\n";
+	print $fh "        is read from <doc>.<obs>.count\n";
 #	print $fh "     -o <filename prefix> output intermediate indicators (by observation) to <filename prefix>.<obsType>\n";
 	print $fh "\n";
 }
@@ -253,11 +261,40 @@ sub countMostSim {
 
 
 
+sub readDocDataWrapper {
+    my ($docFile, $obsTypesList, $config, $configFile) = @_;
+
+    my $data = {};
+    if ($useCountFile) {
+	foreach my $obsType (@$obsTypesList) { # loading all data
+	    $data->{$obsType} = readCountFile("$docFile.$obsType.count");
+	}
+    } else {
+	checkParam("minFreqObsIndiv", $config, $configFile);
+	checkParam("performWordTokenization", $config, $configFile);
+	checkParam("InputSegmentationFormat", $config, $configFile);
+	# optional, so no check
+	#checkParam("wordObsVocabResources", $config, $configFile);
+	my %params;
+	$params{obsTypes} = $obsTypesList;
+	$params{wordTokenization} = $config->{performWordTokenization};
+	$params{formatting} = $config->{InputSegmentationFormat};
+	$params{wordVocab} = $config->{wordObsVocabResources}; # optional, might be undef
+	$data = extractObservsWrapper(\%params, $docFile, $config->{minFreqObsIndiv}, 0);
+    }
+    return $data;
+}
+
+
+
+
+
 # PARSING OPTIONS
 my %opt;
-getopts('h', \%opt ) or  ( print STDERR "Error in options" &&  usage(*STDERR) && exit 1);
+getopts('hc', \%opt ) or  ( print STDERR "Error in options" &&  usage(*STDERR) && exit 1);
 usage($STDOUT) && exit 0 if $opt{h};
 print STDERR "3 arguments expected but ".scalar(@ARGV)." found: ".join(" ; ", @ARGV)  && usage(*STDERR) && exit 1 if (scalar(@ARGV) != 3);
+$useCountFile = $opt{c};
 
 my $configFile=$ARGV[0];
 my $unknownPrefix=$ARGV[1];
@@ -265,11 +302,10 @@ my $knownPrefixListStr=$ARGV[2];
 
 my $config = readConfigFile($configFile);
 
+checkParam("obsTypesList", $config, $configFile);
 my @obsTypesList = split(":", $config->{"obsTypesList"});
 #print STDERR "DEBUG $progName: ".join(";",@obsTypesList)."\n";
 my @knownPrefixes = split(":", $knownPrefixListStr);
-
-
 
 
 
@@ -282,13 +318,11 @@ checkParam("univ_meanSimType", $config, $configFile);
 checkParam("univ_useMostSim", $config, $configFile);
 
 
-my %unknownDoc;
+my $unknownDoc;
 my @knownDocs;
-foreach my $obsType (@obsTypesList) { # loading all data
-    $unknownDoc{$obsType} = readCountFile("$unknownPrefix.$obsType.count");
-    for (my $i=0; $i < scalar(@knownPrefixes); $i++) {
-	$knownDocs[$i]->{$obsType} = readCountFile("$knownPrefixes[$i].$obsType.count");
-    }
+$unknownDoc = readDocDataWrapper($unknownPrefix, \@obsTypesList, $config);
+for (my $i=0; $i < scalar(@knownPrefixes); $i++) {
+    $knownDocs[$i] = readDocDataWrapper($knownPrefixes[$i], \@obsTypesList, $config, $configFile);
 }
 
 
@@ -297,7 +331,7 @@ my %sims;
 
 for (my $roundNo=0; $roundNo<$nbRounds; $roundNo++) {
     my $obsType = pickInList(\@obsTypesList);
-    my %docsKQ = ( "K" => \@knownDocs, "Q" => [ \%unknownDoc ] );
+    my %docsKQ = ( "K" => \@knownDocs, "Q" => [ $unknownDoc ] );
 
 #    print STDERR Dumper(\%docsKQ);
 
