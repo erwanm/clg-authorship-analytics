@@ -6,6 +6,6 @@
 #
 
 addToEnvVar "$(pwd)/bin" PATH :
-#addToEnvVar "$(pwd)/lib" PERL5LIB :
-#erw-pm activate perl-libraries
+addToEnvVar "$(pwd)/lib" PERL5LIB :
+erw-pm activate perl-libraries
 erw-pm activate CLGTextTools
