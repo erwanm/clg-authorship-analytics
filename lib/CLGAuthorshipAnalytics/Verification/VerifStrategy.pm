@@ -9,7 +9,6 @@ use strict;
 use warnings;
 use Carp;
 use Log::Log4perl;
-use CLGTextTools::Stats qw/pickInList pickNSloppy/;
 use CLGTextTools::Commons qw//;
 
 use base 'Exporter';
@@ -34,7 +33,7 @@ sub new {
 #
 # * $probeDocsLists: [ [docA1, docA2, ...] ,  [docB1, docB2,...] ]
 #    ** where docX = hash: docX->{obsType}->{ngram} = freq
-#
+# * output: array of features values
 sub compute {
     my $self = shift;
     my $probeDocsLists = shift;

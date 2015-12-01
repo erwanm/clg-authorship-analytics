@@ -122,7 +122,7 @@ sub computeGI {
     
     my $allObs = undef;
     # compute the different versions of the probe documents after filtering the min doc freq, as defined by the different impostors datasets doc freq tables.
-    # $probeDocsListByDataset->[0|1]->[docNo]->{impDataset}->{obsType}->{obs} = freq
+    # $probeDocsListsByDataset->[0|1]->[docNo]->{impDataset}->{obsType}->{obs} = freq
     my @probeDocsListsByDataset;
     foreach my $impDataset (@impostorsDatasets) {
 	my $minDocFreq = $self->{impostors}->{$impDataset}->getMinDocFreq();
