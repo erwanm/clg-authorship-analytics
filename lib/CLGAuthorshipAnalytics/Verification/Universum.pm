@@ -1,6 +1,6 @@
-package CLGAuthorshipAnalytics::Verification::Impostors;
+package CLGAuthorshipAnalytics::Verification::Universum;
 
-# EM Oct 2015
+# EM Dec 2015
 # 
 #
 
@@ -28,14 +28,13 @@ our @EXPORT_OK = qw//;
 # $params:
 # * logging
 # * obsTypesList 
-# * impostors = { dataset1 => DocCollection1,  dataset1 => DocCollection1 } ; impostors will be picked from the various datasets A, B,... with equal probability (i.e. independently from the number of docs in each dataset).
-# ** if a DocCollection dataset has a min doc freq threshold > 1, this threshold will be applied to the probe docs (using the doc freq table from the same dataset).  As a consequence, observations which appear in a probe document but not in the impostors  dataset are removed.
-# * selectNTimesMostSimilarFirst: if not zero, instead  of picking impostors documents randomly, an initial filtering stage is applied which retrieves the N most similar documents to the probe documents (but with an equal proportion of documents from each impostor dataset), with N = selectNTimesMostSimilarFirst * nbImpostors. This ensures that the most dissimilar impostors are not used, while maintaining a degree of randomness depending on the value of selectNTimesMostSimilarFirst.
-# * nbImpostorsUsed: number of impostors documents to select from the impostors dataset (done only once for all rounds) (default 25)
 # * nbRounds: number of rounds (higher number -> more randomization, hence less variance in the result) (default 100)
-# * propObsSubset: (0<=p<1) the proportion of observations/occurrences to keep in every document at each round; if zero, the proportion is picked randomly at every round (default 0.5)
-# * docSubsetMethod: "byOccurrence" -> the proportion is applied to the set of all occurrences; "byObservation" -> applied only to distinct observations (default ByObservation)
+# * propObsSubset: (0<=p<1) the proportion of observations/occurrences used to mix 2 documents together at each round (p and 1-p); if zero, the proportion is picked randomly at every round (default 0.5)
 # * simMeasure: a CLGTextTools::Measure object (initialized) (default minMax)
+# * withReplacement: 0 1. default: 0
+
+
+# * docSubsetMethod: "byOccurrence" -> the proportion is applied to the set of all occurrences; "byObservation" -> applied only to distinct observations (default ByObservation)
 # * preSimValues: used only if selectNTimesMostSimilarFirst>0. preSimValues = [ datasetA => preSimDatasetA, dataset2 => preSimDataset2, ...] which contains at least the datasets provided in <impostors>. each preSimDataset = { probeFilename => { impostorFileName => simValue } }, i.e preSimValues->{dataset}->{probeFilename}->{impostorFilename} = simValue.  This parameter is used (1) to provide similiarity values computed in a meaningful way and (2) avoid repeating the process as many times as the method is called, which might be prohibitive in computing time. If selectNTimesMostSimilarFirst>0 but preSimValues is undef, first-stage similarity between probe and impostors is computed using a random obsType, unless preSimObsType is defined (see below).
 # * preSimObsType: the obs type to use to compute preselection similarity between probe docs and impostors, if selectNTimesMostSimilarFirst>0 but preSimValues is not. If preSimObsType is not defined either, then a random obs type is used (in this case the quality of the results could be more random)
 #
@@ -53,15 +52,16 @@ sub new {
     my $self = $class->SUPER::new($params);
     $self->{logger} = Log::Log4perl->get_logger(__PACKAGE__) if ($params->{logging});
     $self->{obsTypesList} = $params->{obsTypesList};
-    my $impostors =  $params->{impostors};
-    $self->{impostors} = $impostors;
-    confessLog($self->{logger}, "Error: at least one impostor dataset must be provided") if (!defined($impostors) || (scalar(@$impostors)==0));
-    $self->{nbImpostorsUsed} = defined($params->{nbImpostorsUsed}) ? $params->{nbImpostorsUsed} : 25;
-    $self->{selectNTimesMostSimilarFirst} = defined($params->{selectNTimesMostSimilarFirst}) ? $params->{selectNTimesMostSimilarFirst} : 0;
     $self->{nbRounds} = defined($params->{nbRounds}) ? $params->{nbRounds} : 100;
     $self->{propObsSubset} = defined($params->{propObsSubset}) ? $params->{propObsSubset} : 0.5 ;
-    $self->{docSubsetMethod} = defined($params->{docSubsetMethod}) ? $params->{docSubsetMethod} : "byObservation" ;
     $self->{simMeasure} = defined($params->{simMeasure}) ? $params->{simMeasure} : CLGTextTools::SimMeasures::MinMax->new() ;
+    $self->{withReplacement} = defined($params->{withReplacement}) ? $params->{withReplacement} : 0;
+
+
+
+
+
+    $self->{docSubsetMethod} = defined($params->{docSubsetMethod}) ? $params->{docSubsetMethod} : "byObservation" ;
     $self->{preSimValues} = $params->{preSimValues};
     $self->{GI_useCountMostSimFeature} = defined($params->{GI_useCountMostSimFeature}) ? $params->{GI_useCountMostSimFeature} : "original";
     $self->{GI_kNearestNeighbors} = defined($params->{GI_kNearestNeighbors}) ? $params->{GI_kNearestNeighbors} : 0 ;
@@ -84,27 +84,10 @@ sub compute {
     my $self = shift;
     my $probeDocsLists = shift;
 
-    my $preseletedImpostors = $self->preselectMostSimilarImpostorsDataset($probeDocsLists);
-    my $selectedImpostors = $self->pickImpostors($preseletedImpostors);
-    my $scores = $self->computeGI($probeDocsLists, $selectedImpostors);
+    my $scores = $self->computeUniversum($probeDocsLists);
     return $self->featuresFromScores($scores);
 }
 
-
-sub pickImpostors {
-    my $self = shift;
-    my $allImpostorsDatasets = shift;
-    my @resImpostors;
-
-    my @impostorsDatasets = keys %{$self->{impostors}};
-    # pick impostors set (same for all rounds)
-    for (my $i=0; $i< $self->{nbImpostorsUsed}; $i++) {
-	my $dataset = pickInList(\@impostorsDatasets);
-	my $impostor =  pickInList($allImpostorsDatasets->{$dataset});
-	push(@resImpostors, [$impostor, $dataset]);
-    }
-    return \@resImpostors;
-}
 
 
 
@@ -113,10 +96,32 @@ sub pickImpostors {
 # output: $scores->[roundNo] = [  [ probeDocNoA, probeDocNoB ], simProbeAvsB, $simRound ], with 
 #         $simRound->[probe0Or1]->[impostorNo]
 #
-sub computeGI {
+sub computeUniversum {
     my $self = shift;
     my $probeDocsLists = shift;
-    my $impostors = shift;
+
+    my $obsTypes = $self->{obsTypesList};
+    for (my $roundNo=0; $roundNo < $self->{nbRounds}; $roundNo++) {
+	my $obsType = pickInList($obsTypes);
+	my @thirds;
+	if ($self->{withReplacement}) {
+	    for my $probeSide (0,1) {
+		for my $thirdNo (0..2) {
+		    my $doc = pickInList($probeDocsLists->[$probeSide]);
+		    $thirds[$probeSide]->[$thirdNo] = pickDocSubset($doc->{$obsType}, 1/3);
+		}
+	    }
+	} else {
+	}
+
+	
+    }
+
+
+
+
+
+
 
     my @impostorsDatasets = keys %$impostors;
     
@@ -146,9 +151,6 @@ sub computeGI {
 	}
     }
 
-    my $obsTypes = $self->{obsTypesList};
-    my @res;
-    for (my $roundNo=0; $roundNo < $self->{nbRounds}; $roundNo++) {
 	my @probeDocNo = (pickIndex($probeDocsListsByDataset[0]) , pickIndex($probeDocsListsByDataset[1]));
 	my $obsType = pickInList($obsTypes);
 	my $propObsRound = ($self->{propObsSubset} > 0) ? $self->{propObsSubset} : rand();
@@ -198,6 +200,17 @@ sub filterObservations {
     return \%subset;
 }
 
+sub pickDocSubset {
+    my ($doc, $propObsSubset) = @_;
+    my %subset;
+    my ($obs, $nb);
+    while (($obs, $nb) = each %$doc) {
+	for (my $i=0; $i< $nb; $i++) {
+	    $subset{$obs}++ if (rand() < $propObsSubset);
+	}
+    }
+    return \%subset;
+}
 
 
 
