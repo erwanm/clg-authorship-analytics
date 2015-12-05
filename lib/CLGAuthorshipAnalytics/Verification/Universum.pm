@@ -9,8 +9,8 @@ use strict;
 use warnings;
 use Carp;
 use Log::Log4perl;
-use CLGTextTools::Stats qw/pickInList pickNSloppy aggregateVector/;
-use CLGTextTools::Commons qw/pickDocSubset/;
+use CLGTextTools::Stats qw/pickInList pickNSloppy aggregateVector pickDocSubset splitDocRandomAvoidEmpty/;
+use CLGTextTools::Commons qw/getArrayValuesFromIndexes containsUndef mergeDocs/;
 use CLGAuthorshipAnalytics::Verification::VerifStrategy;
 use CLGTextTools::Logging qw/confessLog cluckLog/;
 
@@ -32,6 +32,8 @@ our @EXPORT_OK = qw//;
 # * propObsSubset: (0<=p<1) the proportion of observations/occurrences used to mix 2 documents together at each round (p and 1-p); if zero, the proportion is picked randomly at every round (default 0.5)
 # * simMeasure: a CLGTextTools::Measure object (initialized) (default minMax)
 # * withReplacement: 0 1. default: 0
+# * splitWithoutReplacementMaxNbAttempts: max number of attempts to try splitting doc without replacement if at least one of the subsets is empty. Default: 5.
+
 
 
 # * docSubsetMethod: "byOccurrence" -> the proportion is applied to the set of all occurrences; "byObservation" -> applied only to distinct observations (default ByObservation)
@@ -56,7 +58,7 @@ sub new {
     $self->{propObsSubset} = defined($params->{propObsSubset}) ? $params->{propObsSubset} : 0.5 ;
     $self->{simMeasure} = defined($params->{simMeasure}) ? $params->{simMeasure} : CLGTextTools::SimMeasures::MinMax->new() ;
     $self->{withReplacement} = defined($params->{withReplacement}) ? $params->{withReplacement} : 0;
-
+    $self->{splitWithoutReplacementMaxNbAttempts} = defined($params->{splitWithoutReplacementMaxNbAttempts}) ? $params->{splitWithoutReplacementMaxNbAttempts} : 5;
 
 
 
@@ -100,206 +102,67 @@ sub computeUniversum {
     my $self = shift;
     my $probeDocsLists = shift;
 
+    my @simRounds;
+    my $nbEmpty=0;
     my $obsTypes = $self->{obsTypesList};
     for (my $roundNo=0; $roundNo < $self->{nbRounds}; $roundNo++) {
 	my $obsType = pickInList($obsTypes);
 	my @thirds;
-	if ($self->{withReplacement}) {
-	    for my $probeSide (0,1) {
+	# Goal is to obtain 6 subsets: 2 x P0, 2 x P1, 2 x M (where Px = Probe x and M = merged P0-P1)
+	# after preparing everything we will have:
+	#  thirds[0] = [P0a, P0b] ; thirds[1] = [P1a, P1b] ; thirds[2] = [Ma, Mb]
+	#
+	# 1; splitting the 2 docs in thirds; if serveral docs on one side, pick a third at random
+	for my $probeSide (0,1) {
+	    if ($self->{withReplacement}) {
 		for my $thirdNo (0..2) {
 		    my $doc = pickInList($probeDocsLists->[$probeSide]);
 		    $thirds[$probeSide]->[$thirdNo] = pickDocSubset($doc->{$obsType}, 1/3);
 		}
-	    }
-	} else {
-	}
-
-	
-    }
-
-
-
-
-
-
-
-    my @impostorsDatasets = keys %$impostors;
-    
-    my $allObs = undef;
-    # compute the different versions of the probe documents after filtering the min doc freq, as defined by the different impostors datasets doc freq tables.
-    # $probeDocsListsByDataset->[0|1]->[docNo]->{impDataset}->{obsType}->{obs} = freq
-    my @probeDocsListsByDataset;
-    foreach my $impDataset (@impostorsDatasets) {
-	my $minDocFreq = $self->{impostors}->{$impDataset}->getMinDocFreq();
-	if ($minDocFreq > 1) {
-	    my $docFreqTable = $self->{impostors}->{$impDataset}->getDocFreqTable();
-	    for (my $probeDocNo=0; $probeDocNo<=1; $probeDocNo++) {
-		for (my $docNo=0; $docNo<scalar(@{$probeDocsLists->[$probeDocNo]}); $docNo++) {
-		    $probeDocsListsByDataset[$probeDocNo]->[$docNo]->{$impDataset} = filterMinDocFreq($probeDocsLists->[$probeDocNo]->[$docNo], $minDocFreq, $docFreqTable);
+	    } else {
+		my @allPossibleThirds;
+		foreach my $doc (@{$probeDocsLists->[$probeSide]}) {
+		    my $thirdsDoc = splitDocRandomAvoidEmpty($self->{splitWithoutReplacementMaxNbAttempts}, $doc, 3);
+		    $nbEmpty++ if (containsUndef($thirdsDoc));
+		    push(@allPossibleThirds, @$thirdsDoc);
 		}
+		my $selectedThirdsIndexes = pickNIndexesAmongMExactly(3, scalar(@allPossibleThirds));
+		$thirds[$probeSide] = getArrayValuesFromIndexes(\@allPossibleThirds, $selectedThirdsIndexes);
 	    }
-	    if ($self->{docSubsetMethod} eq "byObservation") {
-		foreach my $obsType (@{$self->{obsTypesList}}) {
-		    my ($obs, $docFreq);
-		    my @obsTypeObservs;
-		    while (($obs, $docFreq) = each %{$minDocFreq->{$obsType}}) {
-			push(@obsTypeObservs, $obs) if ($docFreq >= $minDocFreq);
-		    }
-		    $allObs->{$obsType} = \@obsTypeObservs;
+	}
+	# 2.  mixing one third of each with the other:
+	my $prop = ($config->{propObsSubset} == 0) ? rand() : $config->{propObsSubset};
+	# 2.a generating two thirds obtained from merging the two sides
+	my $mergedMixed = mergeDocs($thirds[0]->[2], $thirds[1]->[2], 1);
+	undef $thirds[0]->[2];
+	undef $thirds[1]->[2];
+	# 2.b split again into two mixed subsets
+	$thirds[2] = splitDocRandomAvoidEmpty($mergedMixed, 2, { 0 => $prop  , 1 => 1-$prop} );
+
+	# 3. compute sims between P0a-P0b, P1a-P1b, Ma-Mb, P0?-P1?, P0?-M?, P1?-M?
+	my %sim;
+	for my $i (0..2) {
+	    for my $j (0..$i) {
+		my ($docA, $docB);
+		if ($i == $j) { # comparing both subsets from the same "category"
+		   ($docA, $docB) = ($third[$i]->[0], $third[$i]->[1]); 
+		} else {
+		    # remark: we could have measured the similiarity of all 4 possible pairs, but this seems ok considering
+                    # the randomization at the round level. Notice that this can make a big difference especially in the case where the
+		    # proportion for the mixed doc is not 0.5 or not constant.
+		   ($docA, $docB) = ($third[$i]->[int(rand(2))], $third[$j]->[int(rand(2))]); 
 		}
-	    }	
+		$sim{"$i.$j"} = $self->{simMeasure}->compute($docA, $docB);
+	    }
 	}
+	push(@simRounds, \%sim);
     }
-
-	my @probeDocNo = (pickIndex($probeDocsListsByDataset[0]) , pickIndex($probeDocsListsByDataset[1]));
-	my $obsType = pickInList($obsTypes);
-	my $propObsRound = ($self->{propObsSubset} > 0) ? $self->{propObsSubset} : rand();
-	my @probeDocsRound = ($probeDocsListsByDataset[0]->[$probeDocNo[0]]->{$obsType}, $probeDocsListsByDataset[1]->[$probeDocNo[1]]->{$obsType} );
-	my @impDocRound;
-	if (defined($allObs)) {
-	    my $observs = $allObs->{$obsType};
-	    my $featSubset = pickNSloppy($propObsRound * scalar($observs), $observs);
-	    foreach my $impDataset (@impostorsDatasets) {
-		$probeDocsRound[0]->{$impDataset} =  filterObservations($probeDocsRound[0]->{$impDataset}, $featSubset);
-		$probeDocsRound[1]->{$impDataset} =  filterObservations($probeDocsRound[1]->{$impDataset}, $featSubset);
-	    }
-	    @impDocRound = map { [ filterObservations($_->[0]->{$obsType}, $featSubset) , $_->[1] ] } @$impostors; # remark: $_->[1] = dataset
-	} else {
-	    foreach my $impDataset (@impostorsDatasets) {
-		$probeDocsRound[0]->{$impDataset} =  pickDocSubset($probeDocsRound[0]->{$impDataset}, $propObsRound);
-		$probeDocsRound[1]->{$impDataset} =  pickDocSubset($probeDocsRound[1]->{$impDataset}, $propObsRound);
-	    }
-	    @impDocRound = map { [ pickDocSubset($_->[0]->{$obsType}, $propObsRound) , $_->[1] ] } @$impostors;
-	}
-	my $datasetRnd = pickInLIst(@probeDocsListsByDataset); # it makes sense to compare with the same minDocFreq as the impostors, but against which ref dataset doesn't matter so much
-	my $probeDocsSim = $self->{simMeasure}->compute($probeDocsRound[0]->{$datasetRnd}, $probeDocsRound[1]->{$datasetRnd});
-	my @simRound;
-	for (my $probeDocNo=0; $probeDocNo<=1; $probeDocNo++) {
-	    for (my $impNo=0; $impNo<scalar(@$impostors); $impNo++) {
-		my ($impDoc, $dataset) = ( $impDocRound[$impNo]->[0], $impDocRound[$impNo]->[1] );
-		$simRound[$probeDocNo]->[$impNo] = $self->{simMeasure}->compute($probeDocsRound[$probeDocNo]->{$dataset}, $impDoc);
-	    }
-	}
-	push(@res, [ \@probeDocNo,  $probeDocsSim, \@simRound ]);
-    }
-
-    return \@res;
+    warnLog($self->{logger}, "doc(s) too small => impossible to find enough partitions => used possibly empty doc(s) $nbEmpty times.") if ($nbEmpty>0);
+    return \@simRounds;
 }
 
 
 
-
-
-sub filterObservations {
-    my ($doc, $obsSet) = @_;
-    my %subset;
-    foreach my $obs (@$obsSet) {
-	my $freq = $doc->{$obs};
-	$subset{$obs} = $freq if (defined($freq));
-    }
-    return \%subset;
-}
-
-sub pickDocSubset {
-    my ($doc, $propObsSubset) = @_;
-    my %subset;
-    my ($obs, $nb);
-    while (($obs, $nb) = each %$doc) {
-	for (my $i=0; $i< $nb; $i++) {
-	    $subset{$obs}++ if (rand() < $propObsSubset);
-	}
-    }
-    return \%subset;
-}
-
-
-
-# $self->{selectNTimesMostSimilarFirst}>0
-#
-sub preselectMostSimilarImpostorsDataset {
-    my $self = shift;
-    my $probeDocsLists = shift;
-
-    my @impostorsDatasets = keys %{$self->{impostors}};
-    my %preSelectedImpostors;
-    if ($self->{selectNTimesMostSimilarFirst}>0) {
-	my $preSimValues = defined($self->{preSimValues}) ? $self->{preSimValues} : computePreSimValues($probeDocsLists);
-	my $nbByDataset = $self->{selectNTimesMostSimilarFirst} * $self->{nbImpostorsUsed} / scalar(@impostorsDatasets);
-
-	foreach my $impDataset (@impostorsDatasets) {
-	    my $nbToSelect = $nbByDataset;
-	    my $impostors = $self->{impostors}->{$impDataset}->getDocsAsList();
-	    my @mostSimilarDocs=();
-	    while (scalar(@mostSimilarDocs) <= $nbToSelect - scalar(@$impostors)) { # in case not enough impostors
-		push(@mostSimilarDocs, @$impostors);
-	    }
-	    warnLog("Warning: not enough impostors in dataset '$impDataset' for preselecting $nbByDataset docs, using all impostors") if (scalar(@mostSimilarDocs > 0));
-	    $nbToSelect = $nbToSelect - scalar(@mostSimilarDocs); # guaranteed to have  0 <= $nbToSelect < scalar(@$impostors)
-	    if ($nbToSelect > 0) {
-		my @sortedImpBySimByProbe;
-		foreach my $probeSide (0,1) {
-		    foreach my $probeDoc (@{$probeDocsLists->[$probeSide]}) {
-			my $simByImpostor = $preSimValues->{$impDataset}->{$probeDoc->getFilename()}; # $simByImpostor->{impFilename} = sim value
-			confessLog("Error: could not find pre-similaritiy values for probe fine '".$probeDoc->getFilename()."'") if (!defined($simByImpostor));
-			my @sortedImpBySim = sort { $simByImpostor->{$b} <=> $simByImpostor->{$a} } (keys %$simByImpostor) ;
-			$sortedImpBySimByProbe[$probeSide]->{$probeDoc} = \@sortedImpBySim;
-		    }
-		}
-		my $nbSelected=0;
-		my %selected;
-		while ($nbSelected<$nbToSelect) {
-		    my $probeSide = int(rand(2)); # randomly picks one of the sides and one of the docs on this side
-		    my $doc = pickInList(@{$probeDocsLists->[$probeSide]});
-		    my $impSelected = shift(@{$sortedImpBySimByProbe[$probeSide]->{$doc}}); # gets the most similar impostor for this doc, removing it from the array
-		    if (defined($impSelected) && !defined($selected{$impSelected})) {
-			$selected{$impSelected} = 1; # not added if the impostor is already in the hash (from different probe docs)
-			$nbSelected++;
-		    }
-		}
-		my $impDatasetDocsByFilename = $self->{impostors}->{$impDataset}->getDocsAsHash();
-		my @selectedDocs = map { $impDatasetDocsByFilename->{$_} } (keys %selected);
-		push(@mostSimilarDocs, @selectedDocs);
-	    }
-	    $preSelectedImpostors{$impDataset} = \@mostSimilarDocs;
-	}
-    } else {
-	foreach my $impDataset (@impostorsDatasets) {
-	    $preSelectedImpostors{$impDataset} = $self->{impostors}->{$impDataset}->getDocsAsList();
-	}
-    }
-    return \%preSelectedImpostors;
-
-}
-
-
-#
-# $self->{selectNTimesMostSimilarFirst}>0 and $self->{preSimValues} undefined
-#
-sub computePreSimValues {
-    my $self = shift;
-    my $probeDocsLists = shift;
-
-    my %preSimValues;
-    my @impostorsDatasets = keys %{$self->{impostors}};
-    my $obsType = defined($self->{preSimObsType}) ? $self->{preSimObsType} : pickInList($self->{obsTypesList});
-    foreach my $impDataset (@impostorsDatasets) {
-	my %resDataset;
-	foreach my $probeSide (0,1) {
-	    foreach my $probeDoc (@{$probeDocsLists->[$probeSide]}) {
-		my $probeData = $probeDoc->getObservations($obsType);
-		my $impostors = $self->{impostors}->{$impDataset}->getDocsAsHash();
-		my %resProbe;
-		my ($impId, $impDoc);
-		while (($impId, $impDoc) = each(%$impostors)) {
-		    $resProbe{$impId} = $self->{simMeasure}->compute($probeData, $impDoc->getObservations($obsType) );
-		}
-		$resDataset{$probeDoc->getFilename()} = \%resProbe;
-	    }
-	}
-	$preSimValues{$impDataset} = \%resDataset;
-    }
-    return \%preSimValues;
-}
 
 
 
