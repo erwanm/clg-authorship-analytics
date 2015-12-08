@@ -33,19 +33,12 @@ our @EXPORT_OK = qw//;
 # * simMeasure: a CLGTextTools::Measure object (initialized) (default minMax)
 # * withReplacement: 0 1. default: 0
 # * splitWithoutReplacementMaxNbAttempts: max number of attempts to try splitting doc without replacement if at least one of the subsets is empty. Default: 5.
+# * finalScoresMethod: aggregSimByRound countMostSimByRound both: overall method(s) to obtain the features: by aggregating the similarities for each category or counting the most similar category among rounds. default: 'countMostSimByRound'
+# * aggregSimByRound: all homogenity sameCat mergedOrNot: 'all' means use all individual categories as features. with 'homogenity' four final features are considered: AA+BB, AM+BM, AB, MM; with 'sameCat' there are only two final features: AA+BB+MM, AB+AM+BM. with 'mergedOrNot' there are two categories: AA+BB+AB, AM+BM+MM. default = 'sameCat'
+# * countMostSimByRound: all homogenity sameCat mergedOrNot. see above.  default = 'sameCat'
+# * aggregSimByRoundAggregType: median, arithm, geom, harmo. default = "arithm"
 
 
-
-# * docSubsetMethod: "byOccurrence" -> the proportion is applied to the set of all occurrences; "byObservation" -> applied only to distinct observations (default ByObservation)
-# * preSimValues: used only if selectNTimesMostSimilarFirst>0. preSimValues = [ datasetA => preSimDatasetA, dataset2 => preSimDataset2, ...] which contains at least the datasets provided in <impostors>. each preSimDataset = { probeFilename => { impostorFileName => simValue } }, i.e preSimValues->{dataset}->{probeFilename}->{impostorFilename} = simValue.  This parameter is used (1) to provide similiarity values computed in a meaningful way and (2) avoid repeating the process as many times as the method is called, which might be prohibitive in computing time. If selectNTimesMostSimilarFirst>0 but preSimValues is undef, first-stage similarity between probe and impostors is computed using a random obsType, unless preSimObsType is defined (see below).
-# * preSimObsType: the obs type to use to compute preselection similarity between probe docs and impostors, if selectNTimesMostSimilarFirst>0 but preSimValues is not. If preSimObsType is not defined either, then a random obs type is used (in this case the quality of the results could be more random)
-#
-# * GI_useCountMostSimFeature: 0, original, ASGALF, ASGALFavg. if not "0", the "count most similar" feature is computed with the specified variant; default: "original".
-# * GI_kNearestNeighbors: uses only the K (value) most similar impostors when calculating result features. default: 0 (use all impostors).
-# * GI_mostSimilarFirst: doc or run: specifies whether the K most similar impostors are selected globally (doc) or for each run (run); unused if GI_kNearestNeighbors=0. Default: doc.
-# * GI_aggregRelRank: 0, median, arithm, geom, harmo. if not 0, computes the relative rank of the sim between A and B among sim against all impostors by round; the value is used to aggregate all relative ranks (i.e. the values by round). Default: 0.
-# * GI_useAgregateSim: 0, diff, ratio. if not 0, computes X = the aggregate sim value between A and B across all runs and Y= the aggregate sim value between any probe and any impostor across all rounds; returns A-B (diff) or A/B (ratio); default : 0.
-# * GI_aggregateSimStat:  median, arithm, geom, harmo. aggregate method to use if useAgregateSim is not 0 (ignored if 0). default: arithm.
 
 
 #
@@ -59,18 +52,11 @@ sub new {
     $self->{simMeasure} = defined($params->{simMeasure}) ? $params->{simMeasure} : CLGTextTools::SimMeasures::MinMax->new() ;
     $self->{withReplacement} = defined($params->{withReplacement}) ? $params->{withReplacement} : 0;
     $self->{splitWithoutReplacementMaxNbAttempts} = defined($params->{splitWithoutReplacementMaxNbAttempts}) ? $params->{splitWithoutReplacementMaxNbAttempts} : 5;
-
-
-
-
-    $self->{docSubsetMethod} = defined($params->{docSubsetMethod}) ? $params->{docSubsetMethod} : "byObservation" ;
-    $self->{preSimValues} = $params->{preSimValues};
-    $self->{GI_useCountMostSimFeature} = defined($params->{GI_useCountMostSimFeature}) ? $params->{GI_useCountMostSimFeature} : "original";
-    $self->{GI_kNearestNeighbors} = defined($params->{GI_kNearestNeighbors}) ? $params->{GI_kNearestNeighbors} : 0 ;
-    $self->{GI_mostSimilarFirst} =  defined($params->{GI_mostSimilarFirst}) ? $params->{GI_mostSimilarFirst} : "doc" ;
-    $self->{GI_aggregRelRank} = defined($params->{GI_aggregRelRank}) ? $params->{GI_aggregRelRank} : "0";
-    $self->{GI_useAgregateSim} = defined($params->{GI_useAgregateSim}) ? $params->{GI_useAgregateSim} : "0";
-    $self->{GI_agregateSimStat} = defined($params->{GI_agregateSimStat}) ? $params->{GI_agregateSimStat} : "arithm";
+    $self->{finalScoresMethod} = defined($params->{finalScoresMethod}) ? $params->{finalScoresMethod} : "countMostSimByRound";
+    $self->{aggregSimByRound} = defined($params->{aggregSimByRound}) ? $params->{aggregSimByRound} : "sameCat";
+    $self->{countMostSimByRound} = defined($params->{countMostSimByRound}) ? $params->{countMostSimByRound} : "sameCat";
+    $self->{aggregSimByRoundAggregType} = defined($params->{aggregSimByRoundAggregType}) ? $params->{aggregSimByRoundAggregType} : "arithm";
+#    $self->{} = defined($params->{}) ? $params->{} : "";
     bless($self, $class);
     return $self;
 }
@@ -131,7 +117,7 @@ sub computeUniversum {
 	    }
 	}
 	# 2.  mixing one third of each with the other:
-	my $prop = ($config->{propObsSubset} == 0) ? rand() : $config->{propObsSubset};
+	my $prop = ($self->{propObsSubset} == 0) ? rand() : $self->{propObsSubset};
 	# 2.a generating two thirds obtained from merging the two sides
 	my $mergedMixed = mergeDocs($thirds[0]->[2], $thirds[1]->[2], 1);
 	undef $thirds[0]->[2];
@@ -140,22 +126,22 @@ sub computeUniversum {
 	$thirds[2] = splitDocRandomAvoidEmpty($mergedMixed, 2, { 0 => $prop  , 1 => 1-$prop} );
 
 	# 3. compute sims between P0a-P0b, P1a-P1b, Ma-Mb, P0?-P1?, P0?-M?, P1?-M?
-	my %sim;
+	my @sim;
 	for my $i (0..2) {
 	    for my $j (0..$i) {
 		my ($docA, $docB);
 		if ($i == $j) { # comparing both subsets from the same "category"
-		   ($docA, $docB) = ($third[$i]->[0], $third[$i]->[1]); 
+		   ($docA, $docB) = ($thirds[$i]->[0], $thirds[$i]->[1]); 
 		} else {
 		    # remark: we could have measured the similiarity of all 4 possible pairs, but this seems ok considering
                     # the randomization at the round level. Notice that this can make a big difference especially in the case where the
 		    # proportion for the mixed doc is not 0.5 or not constant.
-		   ($docA, $docB) = ($third[$i]->[int(rand(2))], $third[$j]->[int(rand(2))]); 
+		   ($docA, $docB) = ($thirds[$i]->[int(rand(2))], $thirds[$j]->[int(rand(2))]); 
 		}
-		$sim{"$i.$j"} = $self->{simMeasure}->compute($docA, $docB);
+		$sim[$i]->[$j] = $self->{simMeasure}->compute($docA, $docB);
 	    }
 	}
-	push(@simRounds, \%sim);
+	push(@simRounds, \@sim);
     }
     warnLog($self->{logger}, "doc(s) too small => impossible to find enough partitions => used possibly empty doc(s) $nbEmpty times.") if ($nbEmpty>0);
     return \@simRounds;
@@ -174,172 +160,117 @@ sub featuresFromScores {
     my ($self, $scores) = @_;
 
     my @features;
-    $self->removeLeastSimilar($scores); # keeps only K most similar if K>0
-    if ($self->{GI_useCountMostSimFeature} != "0") {
-	my $mostSimImpNo = $self->getKMostSimilarImpostorsGlobal($scores, 1);
-	my @impNo = ($mostSimImpNo->[0]->[0], $mostSimImpNo->[1]->[0]); 
-	# extract vector of similarities (by round) for each probe (from the most similar impostor no)
-	my @simValuesMostSimImp = ( [ map { $_->[2]->[0]->[$impNo[0]] } (@$scores) ], [ map { $_->[2]->[1]->[$impNo[1]] } (@$scores) ] ); # nb rounds items
-	my @simValuesProbeDocs = map { $_->[1] } (@$scores);
-	push(@features, $self->countMostSimFeature(\@simValuesProbeDocs ,\@simValuesMostSimImp));
+    if (($self->{finalScoresMethod} eq "aggregSimByRound") || ($self->{finalScoresMethod} eq "both")) {
+	my $catLists = getCatLists($self->{aggregSimByRound});
+	my @f = map { computeFeatureFromCatListAggreg($scores, $_, $self->{aggregSimByRoundAggregType}) } @$catLists;
+	push(@features, @f);
     }
-    push(@features, $self->relativeRankFeature($scores)) if ($self->{GI_aggregRelRank} != "0");
-    push(@features, $self->aggregateSimComparison($scores)) if ($self->{GI_useAggregateSim} != "0");
+    if (($self->{finalScoresMethod} eq "countMostSimByRound") || ($self->{finalScoresMethod} eq "both")) {
+	my $mostSimByRound = countMostSimByRound($scores); # first step if most sim method: extract most sim by round
+	my $catLists = getCatLists($self->{countMostSimByRound});
+	my @f = map { computeFeatureFromCatListCount($mostSimByRound, $_) } @$catLists;
+	push(@features, @f);
+
+    }
+
     return \@features;
 }
 
 
+#
+# catList = a list of pairs [i,j] of categories to aggregate
+#
+sub computeFeatureFromCatListAggreg {
+    my $scores = shift;
+    my $catList = shift;
+    my $aggregType = shift;
+
+    my $nbRounds = scalar(@$scores);
+    my @values;
+    foreach my $simRound (@$scores) {
+	my $sumRound = 0;
+	foreach my $pair (@$catList) {
+	    $sumRound += $scores->[$pair->[0]]->[$pair->[1]];
+	}
+	my $valueRound = $sumRound / scalar(@$catList);
+	push(@values, $valueRound);
+    }
+    return aggregateVector(\@values, $aggregType);
+}
+
 
 #
-# keeps only the K most similar impostors for each run (param GI_kNearestNeighbors)
-# the selected K can be either global or by run (param GI_mostSimilarFirst; ignored if GI_kNearestNeighbors=0)
-# Warning: modifies $scores directly!
+# catList = a list of pairs [i,j] of categories to aggregate
 #
-sub removeLeastSimilar {
-    my $self = shift;
+sub computeFeatureFromCatListCount {
+    my $counts = shift;
+    my $catList = shift;
+
+    my $sum = 0;
+    foreach my $pair (@$catList) {
+	$sum += $counts->[$pair->[0]]->[$pair->[1]];
+    }
+    return $sum / scalar(@$catList);
+}
+
+
+
+
+sub getCatLists {
+    my $categsId = shift;
+
+    my @categsLists;
+    if ($categsId eq "all") {
+	for my $i (0..2) {
+	    for my $j (0..$i) {
+		push(@categsLists, [ [$i,$j] ] );
+	    }
+	}
+    } elsif ($categsId eq "homogenity") {
+	push(@categsLists, [ [0,0] , [1,1] ]);
+	push(@categsLists, [ [2,0] , [2,1] ]);
+	push(@categsLists, [ [1,0] ]);
+	push(@categsLists, [ [2,2] ]);
+    } elsif ($categsId eq "sameCat") {
+	push(@categsLists, [ [0,0] , [1,1] , [2,2] ]);
+	push(@categsLists, [ [2,0] , [2,1] , [1,0] ]);
+    } elsif ($categsId eq "mergedOrNot") {
+	push(@categsLists, [ [0,0] , [1,1] , [1,0] ]);
+	push(@categsLists, [ [2,0] , [2,1] , [2,2] ]);
+    }    
+    return \@categsLists;
+}
+
+
+
+sub countMostSimByRound {
     my $scores = shift;
 
-    my $nbImp = scalar(@{$scores->[0]->[2]->[0]});
+    my @mostSimByRound;
     my $nbRounds = scalar(@$scores);
-    my $k = $self->{GI_kNearestNeighbors};
-    if (($k>0) && ($k < $nbImp))  { # otherwise nothing to remove
-	my $keepOnly = undef;
-	if ($self->{GI_mostSimilarFirst} == "doc") {
-	    $keepOnly  = $self->getKMostSimilarImpostorsGlobal($scores, $k);
+    foreach my $simRound (@$scores) {
+	my ($maxI, $maxJ) =(undef,undef);
+	for my $i (0..2) {
+	    for my $j (0..$i) {
+		my $thisSim = $simRound->[$i]->[$j];
+		($maxI, $maxJ) = ($i, $j) if (!defined($maxI) || !defined($maxJ) || ($thisSim > $simRound->[$maxI]->[$maxJ])); 
+	    }
 	}
-	for (my $roundNo = 0; $roundNo < $nbRounds; $roundNo++) {
-	    foreach my $probeNo (0,1) {
-		if (defined($keepOnly)) { # global (doc)
-		    $scores->[$roundNo]->[2]->[$probeNo] =  [ map { $scores->[$roundNo]->[2]->[$probeNo]->[$_] } @$keepOnly ];
-		} else {
-		    my @sorted0 = sort { $b <=> $a } @{$scores->[$roundNo]->[2]->[$probeNo]}; # sim values!
-		    my @sortedK = @sorted0[0..$k-1];
-		    $scores->[$roundNo]->[2]->[$probeNo] = \@sortedK;
-		}
+	$mostSimByRound[$maxI]->[$maxJ]++;
+    }
+    for my $i (0..2) { # normalize and define as zero if undef
+	for my $j (0..$i) {
+	    if (defined($mostSimByRound[$i]->[$j])) {
+		$mostSimByRound[$i]->[$j] /= $nbRounds;
+	    } else {
+		$mostSimByRound[$i]->[$j] = 0;
 	    }
 	}
     }
+    return \@mostSimByRound;
 }
 
 
-
-#
-# 
-#
-sub countMostSimFeature {
-    my $self = shift;
-    my $probeSimVector = shift;
-    my $impSimVectors = shift;
-
-    my $sum=0;
-    for (my $i=0; $i<scalar(@$probeSimVector); $i++) { # iterate rounds
-	if ($self->{GI_useCountMostSimFeature} == "original") {
-	    $sum++ if ( $probeSimVector->[$i]**2 > ($impSimVectors->[0]->[$i] * $impSimVectors->[1]->[$i]) );
-	} elsif ($self->{GI_useCountMostSimFeature} == "ASGALF") {
-	    $sum +=  ( $probeSimVector->[$i]**2 / ($impSimVectors->[0]->[$i] * $impSimVectors->[1]->[$i]) );
-	} elsif ($self->{GI_useCountMostSimFeature} == "ASGALFavg") {
-	    $sum +=  ( $probeSimVector->[$i] * 2 / ($impSimVectors->[0]->[$i] + $impSimVectors->[1]->[$i]) );
-	} else {
-	    confessLog($self->{logger}, "Error: invalid value '".$self->{GI_useCountMostSimFeature}."' for param 'GI_useCountMostSimFeature' ");
-	}
-    }
-    # IMPORTANT: the normalisation makes sense only for the original version
-    # I don't think we can normalise the two others since we don't can't be sure
-    # that B>=A in A/B (i.e. sim(Pi,Ii)>sim(P1,P2))
-    # However dividing every score by the same value doesn't hurt, it's just
-    # that the result shouldn't be interpreted as necessarily in [0,1]
-    return $sum / scalar(@$probeSimVector);
-}
-
-
-
-
-#
-# returns res->[probeSide]->[0..k-1] =  k most similar impostors nos.
-#
-#
-sub getKMostSimilarImpostorsGlobal {
-    my $self = shift;
-    my $scores = shift; # as returned by computeGI
-    my $k = shift;
-
-    $k--; # arrays slice last index (start at zero)
-    my $nbImp = scalar(@{$scores->[0]->[2]->[0]});
-    my $nbRounds = scalar(@$scores);
-    my @res;
-    foreach my $probeNo (0,1) {
-	my @meanSim;
-	for (my $impNo=0; $impNo < $nbImp; $impNo++) {
-	    my $sum=0;
-	    for (my $roundNo = 0; $roundNo < $nbRounds; $roundNo++) {
-		$sum += $scores->[$roundNo]->[2]->[$probeNo]->[$impNo];
-	    }
-	    $meanSim[$impNo] = $sum / $nbRounds;
-	}
-        my $last= $nbImp-1;
-        my @avgSorted = sort { $meanSim[$b] <=> $meanSim[$a] } (0..$last);
-        my @select = @avgSorted[0..$k];
-	$res[$probeNo] = \@select;
-    }
-    return \@res;
-}
-
-
-#
-#
-sub relativeRankFeature {
-    my $self = shift;
-    my $scores = shift;
- 
-    my $nbImp = scalar(@{$scores->[0]->[2]->[0]});
-    my $nbRounds = scalar(@$scores);
-    my @res;
-    for (my $run=0; $run < $nbRounds; $run++) {
-	my @relRankByProbe;
-	for my $probeNo (0,1) {
-	    my $vector = $scores->[$run]->[2]->[$probeNo];
-	    my %asHash;
-	    for (my $imp=0; $imp<$nbImp; $imp++) {
-		$asHash{$imp} = $vector->[$imp];
-	    }
-	    $asHash{Q} = $scores->[$run]->[1];
-	    my $ranking = rankWithTies({ values => \%asHash, noNaNWarning => 1, firstRank => 0 });
-	    $relRankByProbe[$probeNo] = $ranking->{Q} / scalar(@$vector);
-	}
-	$res[$run] = ( $relRankByProbe[0] + $relRankByProbe[1] ) /2; # simple average between the two sides for each run
-    }
-    my $finalScore = aggregateVector(\@res, $self->{GI_aggregRelRank});
-    return $finalScore;
-
-}
- 
-
-
-sub aggregateSimComparison {
-    my $self = shift;
-    my $scores = shift;
- 
-    my $nbImp = scalar(@{$scores->[0]->[2]->[0]});
-    my $nbRounds = scalar(@$scores);
-
-    my @aggregProbe;
-    my @aggregImp;
-    for (my $run=0; $run < $nbRounds; $run++) {
-	push(@aggregProbe, $scores->[$run]->[1]);
-	for my $probeNo (0,1) {
-	    push(@aggregImp, @{$scores->[$run]->[2]->[$probeNo]});
-	}
-    }
-    my $valProbe = aggregateVector(@aggregProbe, $self->{GI_aggregateSimStat});
-    my $valImp = aggregateVector(@aggregImp, $self->{GI_aggregateSimStat});
-    if ($self->{useAggregateSim} eq "diff") {
-	return $valProbe - $valImp;
-    } elsif ($self->{useAggregateSim} eq "ratio") {
-	return $valProbe / $valImp;
-    } else {
-	confessLog($self->{logger}, "Error: invalid value '".$self->{useAggregateSim}."' for param 'useAggregateSim' ");
-    }
-}
 
 
 1;
