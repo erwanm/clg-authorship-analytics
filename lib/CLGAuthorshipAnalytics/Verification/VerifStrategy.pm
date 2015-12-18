@@ -12,7 +12,7 @@ use Log::Log4perl;
 use CLGTextTools::Commons qw//;
 
 use base 'Exporter';
-our @EXPORT_OK = qw//;
+our @EXPORT_OK = qw/newVerifStrategyFromId/;
 
 
 
@@ -42,7 +42,26 @@ sub compute {
 }
 
 
+#
+# static 'new' method which instantiates one of the non-abstract strategy classes. 
+# The class is specified by a string id.
+#
+sub newVerifStrategyFromId {
+    my $strategyId = shift;
+    my $params = shift;
 
+    my $res;
+    if ($strategyId eq "basic") {
+	my $res = CLGAuthorshipAnalytics::Verification::Basic->new($params);
+    } elsif ($strategyId eq "univ") {
+	my $res = CLGAuthorshipAnalytics::Verification::Universum->new($params);
+    } elsif ($strategyId eq "GI") {
+	my $res = CLGAuthorshipAnalytics::Verification::Impostors->new($params);
+    } else {
+	confess("Error: invalid strategy id '$strategyId', cannot instanciate VerifStrategy class.");
+    }
+    return $res;
+}
 
 
 1;

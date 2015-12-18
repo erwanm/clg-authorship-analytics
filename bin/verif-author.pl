@@ -13,6 +13,8 @@ use Getopt::Std;
 use CLGTextTools::ObsCollection;
 use CLGTextTools::Logging qw/@possibleLogLevels/;
 use CLGTextTools::DocProvider;
+use CLGTextTools::Commons /readConfigFile/;
+use CLGAuthorshipAnalytics::Verification::VerifStrategy qw/newVerifStrategyFromId/;
 
 my $progNamePrefix = "verif-author"; 
 my $progname = "$progNamePrefix.pl";
@@ -25,7 +27,7 @@ sub usage {
 	my $fh = shift;
 	$fh = *STDOUT if (!defined $fh);
 	print $fh "\n"; 
-	print $fh "Usage: $progname [options] <config file> [<fileA1:..:fileAn> <fileB1:..:fileBm>]\n";
+	print $fh "Usage: $progname [options] <config file|parameters> [<fileA1:..:fileAn> <fileB1:..:fileBm>]\n";
 	print $fh "\n";
 	print $fh "  Applies an author verification algorithm to:\n";
 	print $fh "    - a pair of sets of documents (fileA1,..,fileAn) vs. (fileB1,..,fileBm) if\n";
@@ -33,7 +35,12 @@ sub usage {
 	print $fh "    - a series of pairs of sets of documents read from STDIN if only one \n";
 	print $fh "      arg is supplied. Format: one pair <fileA1:..:fileAn> <fileB1:..:fileBm>\n";
 	print $fh "       on every line.\n";
-	print $fh "  The strategy id and the strategy parameters are read from <config file>.\n";
+	print $fh "  The strategy id and the strategy parameters are obtained from the first argument:\n";
+	print $fh "    - if <config file|parameters> is a valid path to a non-empty file, then it is\n";
+	print $fh "      interpreted as a config file (one paramter by line, format: 'param=value')\n";
+	print $fh "    - otherwise, <config file|parameters> is interpreted as a list of \n";
+	print $fh "      parameter/value pairs: (quotes are needed if several parameters)\n";
+	print $fh "        'param1=val1;param2=val2;..;paramN=valN'\n";
 	print $fh "\n";
 	print $fh "  Main options:\n";
 	print $fh "     -h print this help message\n";
@@ -41,6 +48,13 @@ sub usage {
 	print $fh "        or a log level (".join(",", @possibleLogLevels)."). \n";
 	print $fh "        By default there is no logging at all.\n";
 	print $fh "     -L <Log output file> log filename (useless if a log config file is given).\n";
+	print $fh "     -m by default input files are loaded into memory until the end of the script,\n";
+	print $fh "        so that the same file does not have to be loaded several times. This option\n";
+	print $fh "        prevents that behaviour, in order to save memory space when a lot of input\n";
+	print $fh "        files have to be processed (useful only when reading input files from STDIN).\n";
+
+
+
 	print $fh "     -s <singleLineBreak|doubleLineBreak> by default all the text is collated\n";
 	print $fh "        togenther; this option allows to specify a separator for meaningful units,\n";
 	print $fh "        typically sentences or paragraphs.";
@@ -61,7 +75,7 @@ getopts('hl:L:t:r:s:', \%opt ) or  ( print STDERR "Error in options" &&  usage(*
 usage(*STDOUT) && exit 0 if $opt{h};
 print STDERR "Either 1 or 3 arguments expected, but ".scalar(@ARGV)." found: ".join(" ; ", @ARGV)  && usage(*STDERR) && exit 1 if ((scalar(@ARGV) != 1) && (scalar(@ARGV) != 3));
 
-my $configFile = $ARGV[0];
+my $configFileOrParams = $ARGV[0];
 my ($docsA, $docsB) = ($ARGV[1], $ARGV[2]);
 
 # init log
@@ -69,6 +83,19 @@ my $logger;
 if ($opt{l} || $opt{L}) {
     CLGTextTools::Logging::initLog($opt{l}, $opt{L} || $defaultLogFilename);
     $logger = Log::Log4perl->get_logger(__PACKAGE__) ;
+}
+
+
+# strategy parameters
+my $strategyParams;
+if (-s $configFileOrParams) {
+    $strategyParams = readConfigFile($configFileOrParams);
+} else {
+    my @pairs = split(";", $configFileOrParams);
+    foreach my $pair (@pairs) {
+	my ($p, $v) = ($pair =~ m/^([^=]+)=(.*)$/);
+	$strategyParams{$p} = $v;
+    }
 }
 
 # extract input sets of documents
@@ -87,6 +114,19 @@ if (defined($docsA) & defined($docsB)) {
     }
 }
 
+
+# initiate DocProvider objects for all documents
+my %docs;
+foreach my $pair (@docsPairs) {
+    my ($docs1, $docs2)  = @$pair;
+    
+}
+
+
+
+
+
+
 # text format parameters
 my $formattingSeparator = $opt{s};
 my $performTokenization = 0 if ($opt{t});
@@ -104,9 +144,8 @@ if ($opt{r}) {
 
 
 
+my $strategy = newVerifStrategyFromId($strategyParams->{strategy}, $strategyParams);
 
-
-TODO
 
 
 my %params;
