@@ -13,7 +13,7 @@ use Getopt::Std;
 use CLGTextTools::ObsCollection;
 use CLGTextTools::Logging qw/@possibleLogLevels/;
 use CLGTextTools::DocProvider;
-use CLGTextTools::Commons /readConfigFile/;
+use CLGTextTools::Commons qw/readConfigFile parseParamsFromString/;
 use CLGAuthorshipAnalytics::Verification::VerifStrategy qw/newVerifStrategyFromId/;
 
 my $progNamePrefix = "verif-author"; 
@@ -37,7 +37,7 @@ sub usage {
 	print $fh "       on every line.\n";
 	print $fh "  The strategy id and the strategy parameters are obtained from the first argument:\n";
 	print $fh "    - if <config file|parameters> is a valid path to a non-empty file, then it is\n";
-	print $fh "      interpreted as a config file (one paramter by line, format: 'param=value')\n";
+	print $fh "      interpreted as a config file (one parameter by line, format: 'param=value')\n";
 	print $fh "    - otherwise, <config file|parameters> is interpreted as a list of \n";
 	print $fh "      parameter/value pairs: (quotes are needed if several parameters)\n";
 	print $fh "        'param1=val1;param2=val2;..;paramN=valN'\n";
@@ -52,18 +52,17 @@ sub usage {
 	print $fh "        so that the same file does not have to be loaded several times. This option\n";
 	print $fh "        prevents that behaviour, in order to save memory space when a lot of input\n";
 	print $fh "        files have to be processed (useful only when reading input files from STDIN).\n";
+	print $fh "     -c use count files (see CLGTextTools::DocProvider)\n"
 
-
-
-	print $fh "     -s <singleLineBreak|doubleLineBreak> by default all the text is collated\n";
-	print $fh "        togenther; this option allows to specify a separator for meaningful units,\n";
-	print $fh "        typically sentences or paragraphs.";
-	print $fh "        (applies only to CHAR and WORD observations).\n";
-	print $fh "     -t pre-tokenized text, do not perform default tokenization\n";
-	print $fh "        (applies only to WORD observations).\n";
-	print $fh "     -r <resourceId1:filename2[;resourceId2:filename2;...]> vocab resouces files\n";
-	print $fh "        with their ids.\n";
-	print $fh "\n";
+#	print $fh "     -s <singleLineBreak|doubleLineBreak> by default all the text is collated\n";
+#	print $fh "        togenther; this option allows to specify a separator for meaningful units,\n";
+#	print $fh "        typically sentences or paragraphs.";
+#	print $fh "        (applies only to CHAR and WORD observations).\n";
+#	print $fh "     -t pre-tokenized text, do not perform default tokenization\n";
+#	print $fh "        (applies only to WORD observations).\n";
+	print $fh "     -v <resourceId1=filename2[;resourceId2=filename2;...]> vocab resouces files\n";
+	print $fh "        with their ids. Can also be provided in the config as:\n";
+	print $fh "          wordVocab.resourceId=filename\n";
 	print $fh "\n";
 	print $fh "\n";
 }
@@ -71,12 +70,17 @@ sub usage {
 
 # PARSING OPTIONS
 my %opt;
-getopts('hl:L:t:r:s:', \%opt ) or  ( print STDERR "Error in options" &&  usage(*STDERR) && exit 1);
+getopts('hl:L:mcv:', \%opt ) or  ( print STDERR "Error in options" &&  usage(*STDERR) && exit 1);
 usage(*STDOUT) && exit 0 if $opt{h};
 print STDERR "Either 1 or 3 arguments expected, but ".scalar(@ARGV)." found: ".join(" ; ", @ARGV)  && usage(*STDERR) && exit 1 if ((scalar(@ARGV) != 1) && (scalar(@ARGV) != 3));
 
 my $configFileOrParams = $ARGV[0];
 my ($docsA, $docsB) = ($ARGV[1], $ARGV[2]);
+
+my $dontLoadAllFiles = $opt{m};
+my $useCountFiles = $opt{c};
+my $vocabResourcesStr = $opt{v};
+
 
 # init log
 my $logger;
@@ -87,15 +91,19 @@ if ($opt{l} || $opt{L}) {
 
 
 # strategy parameters
-my $strategyParams;
+my $config;
 if (-s $configFileOrParams) {
-    $strategyParams = readConfigFile($configFileOrParams);
+    $config = readConfigFile($configFileOrParams);
 } else {
-    my @pairs = split(";", $configFileOrParams);
-    foreach my $pair (@pairs) {
-	my ($p, $v) = ($pair =~ m/^([^=]+)=(.*)$/);
-	$strategyParams{$p} = $v;
-    }
+    $config = parseParamsFromString($configFileOrParams);
+}
+
+$config{logging} = $opt{l} || $opt{L};
+
+# word vocab resources
+if ($vocabResourcesStr) {
+    $config->{wordVocab} = {} if (!defined($config->{wordVocab})); # this way it is possible to define some resources in the config file and some other on the command line
+    parseParamsFromString($vocabResourcesStr, $config->{wordVocab});
 }
 
 # extract input sets of documents
@@ -114,52 +122,32 @@ if (defined($docsA) & defined($docsB)) {
     }
 }
 
-
-# initiate DocProvider objects for all documents
-my %docs;
-foreach my $pair (@docsPairs) {
-    my ($docs1, $docs2)  = @$pair;
-    
-}
+my $strategy = newVerifStrategyFromId($config->{strategy}, $config, 1);
 
 
-
-
-
-
-# text format parameters
-my $formattingSeparator = $opt{s};
-my $performTokenization = 0 if ($opt{t});
-my $resourcesStr = $opt{r};
-my $vocabResources;
-if ($opt{r}) {
-    $vocabResources ={};
-    my @resourcesPairs = split (";", $resourcesStr);
-    foreach my $pair (@resourcesPairs) {
-	my ($id, $file) = split (":", $pair);
-#	print STDERR "DEBUG pair = $pair ; id,file = $id,$file\n";
-	$vocabResources->{$id} = $file;
+my %allDocs;
+foreach my $pair (@docsPairs) { # for each case to analyze
+    my @casePair;
+    foreach my $docSet (@$pair) { # for each of the two documents sets
+	my @docProvSet;
+	foreach my $doc (@$docsSet) { # for each doc in a set
+	    my $docProvider;
+	    if ((!$dontLoadAllFiles) && defined($allDocs{$doc})) {
+		$docProvider = $allDocs{$doc};
+	    } else {
+		my %thisConfig = %$config;
+		$thisConfig{filename} = $doc;
+		$thisConfig{useCountFiles} = $useCountFiles;
+		$docProvider = CLGTextTools::DocProvider->new(\%thisConfig);
+		$allDocs{$doc} = $docProvider if (!$dontLoadAllFiles);
+	    }
+	    push(@docProvSet, $docProvider);
+	}
+	push(@casePair, \@docProvSet);
     }
+
+    # process case
+    my $features = $strategy->compute($casePair[0],$casePair[1]);
+    print join("\t", @$features)"\n";
 }
 
-
-
-my $strategy = newVerifStrategyFromId($strategyParams->{strategy}, $strategyParams);
-
-
-
-my %params;
-$params{logging} = 1 if ($logger);
-
-my @obsTypes = split(":", $obsTypesList);
-$params{obsTypes} = \@obsTypes;
-$params{wordTokenization} = $performTokenization;
-$params{formatting} = $formattingSeparator;
-$params{wordVocab} = $vocabResources if (defined($vocabResources));
-
-foreach my $file (@files) {
-#    my $textLines = ($file eq "-") ? readLines(*STDIN,0,$logger) : readTextFileLines($file,0,$logger);
-    my $data = CLGTextTools::ObsCollection->new(\%params);
-    my $doc = CLGTextTools::DocProvider->new({ logging => $params{logging}, obsCollection => $data, obsTypesList => $params{obsTypes}, filename => $file, useCountFiles => 1});
-    $doc->getObservations();
-}

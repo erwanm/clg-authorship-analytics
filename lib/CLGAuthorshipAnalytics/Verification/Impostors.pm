@@ -39,36 +39,35 @@ our @EXPORT_OK = qw//;
 # * preSimValues: used only if selectNTimesMostSimilarFirst>0. preSimValues = [ datasetA => preSimDatasetA, dataset2 => preSimDataset2, ...] which contains at least the datasets provided in <impostors>. each preSimDataset = { probeFilename => { impostorFileName => simValue } }, i.e preSimValues->{dataset}->{probeFilename}->{impostorFilename} = simValue.  This parameter is used (1) to provide similiarity values computed in a meaningful way and (2) avoid repeating the process as many times as the method is called, which might be prohibitive in computing time. If selectNTimesMostSimilarFirst>0 but preSimValues is undef, first-stage similarity between probe and impostors is computed using a random obsType, unless preSimObsType is defined (see below).
 # * preSimObsType: the obs type to use to compute preselection similarity between probe docs and impostors, if selectNTimesMostSimilarFirst>0 but preSimValues is not. If preSimObsType is not defined either, then a random obs type is used (in this case the quality of the results could be more random)
 #
-# * GI_useCountMostSimFeature: 0, original, ASGALF, ASGALFavg. if not "0", the "count most similar" feature is computed with the specified variant; default: "original".
-# * GI_kNearestNeighbors: uses only the K (value) most similar impostors when calculating result features. default: 0 (use all impostors).
-# * GI_mostSimilarFirst: doc or run: specifies whether the K most similar impostors are selected globally (doc) or for each run (run); unused if GI_kNearestNeighbors=0. Default: doc.
-# * GI_aggregRelRank: 0, median, arithm, geom, harmo. if not 0, computes the relative rank of the sim between A and B among sim against all impostors by round; the value is used to aggregate all relative ranks (i.e. the values by round). Default: 0.
-# * GI_useAgregateSim: 0, diff, ratio. if not 0, computes X = the aggregate sim value between A and B across all runs and Y= the aggregate sim value between any probe and any impostor across all rounds; returns A-B (diff) or A/B (ratio); default : 0.
-# * GI_aggregateSimStat:  median, arithm, geom, harmo. aggregate method to use if useAgregateSim is not 0 (ignored if 0). default: arithm.
+# * useCountMostSimFeature: 0, original, ASGALF, ASGALFavg. if not "0", the "count most similar" feature is computed with the specified variant; default: "original".
+# * kNearestNeighbors: uses only the K (value) most similar impostors when calculating result features. default: 0 (use all impostors).
+# * mostSimilarFirst: doc or run: specifies whether the K most similar impostors are selected globally (doc) or for each run (run); unused if GI_kNearestNeighbors=0. Default: doc.
+# * aggregRelRank: 0, median, arithm, geom, harmo. if not 0, computes the relative rank of the sim between A and B among sim against all impostors by round; the value is used to aggregate all relative ranks (i.e. the values by round). Default: 0.
+# * useAgregateSim: 0, diff, ratio. if not 0, computes X = the aggregate sim value between A and B across all runs and Y= the aggregate sim value between any probe and any impostor across all rounds; returns A-B (diff) or A/B (ratio); default : 0.
+# * aggregateSimStat:  median, arithm, geom, harmo. aggregate method to use if useAgregateSim is not 0 (ignored if 0). default: arithm.
 
 
 #
 sub new {
     my ($class, $params) = @_;
-    my $self = $class->SUPER::new($params);
-    $self->{logger} = Log::Log4perl->get_logger(__PACKAGE__) if ($params->{logging});
+    my $self = $class->SUPER::new($params, __PACKAGE__);
     $self->{obsTypesList} = $params->{obsTypesList};
     my $impostors =  $params->{impostors};
     $self->{impostors} = $impostors;
     confessLog($self->{logger}, "Error: at least one impostor dataset must be provided") if (!defined($impostors) || (scalar(@$impostors)==0));
-    $self->{nbImpostorsUsed} = defined($params->{nbImpostorsUsed}) ? $params->{nbImpostorsUsed} : 25;
-    $self->{selectNTimesMostSimilarFirst} = defined($params->{selectNTimesMostSimilarFirst}) ? $params->{selectNTimesMostSimilarFirst} : 0;
-    $self->{nbRounds} = defined($params->{nbRounds}) ? $params->{nbRounds} : 100;
-    $self->{propObsSubset} = defined($params->{propObsSubset}) ? $params->{propObsSubset} : 0.5 ;
-    $self->{docSubsetMethod} = defined($params->{docSubsetMethod}) ? $params->{docSubsetMethod} : "byObservation" ;
-    $self->{simMeasure} = defined($params->{simMeasure}) ? $params->{simMeasure} : CLGTextTools::SimMeasures::MinMax->new() ;
+    $self->{nbImpostorsUsed} = assignDefaultAndWarnIfUndef("nbImpostorsUsed", $params->{nbImpostorsUsed}, 25, $self->{logger});
+    $self->{selectNTimesMostSimilarFirst} = assignDefaultAndWarnIfUndef("selectNTimesMostSimilarFirst", $params->{selectNTimesMostSimilarFirst}, 0, $self->{logger});
+    $self->{nbRounds} = assignDefaultAndWarnIfUndef("nbRounds", $params->{nbRounds}, 100, $self->{logger});
+    $self->{propObsSubset} = assignDefaultAndWarnIfUndef("propObsSubset", $params->{propObsSubset}, 0.5, $self->{logger});
+    $self->{docSubsetMethod} = assignDefaultAndWarnIfUndef("docSubsetMethod", $params->{docSubsetMethod}, "byObservation", $self->{logger}) ;
+    $self->{simMeasure} = assignDefaultAndWarnIfUndef("simMeasure", $params->{simMeasure}, CLGTextTools::SimMeasures::MinMax->new(), $self->{logger}); 
     $self->{preSimValues} = $params->{preSimValues};
-    $self->{GI_useCountMostSimFeature} = defined($params->{GI_useCountMostSimFeature}) ? $params->{GI_useCountMostSimFeature} : "original";
-    $self->{GI_kNearestNeighbors} = defined($params->{GI_kNearestNeighbors}) ? $params->{GI_kNearestNeighbors} : 0 ;
-    $self->{GI_mostSimilarFirst} =  defined($params->{GI_mostSimilarFirst}) ? $params->{GI_mostSimilarFirst} : "doc" ;
-    $self->{GI_aggregRelRank} = defined($params->{GI_aggregRelRank}) ? $params->{GI_aggregRelRank} : "0";
-    $self->{GI_useAgregateSim} = defined($params->{GI_useAgregateSim}) ? $params->{GI_useAgregateSim} : "0";
-    $self->{GI_agregateSimStat} = defined($params->{GI_agregateSimStat}) ? $params->{GI_agregateSimStat} : "arithm";
+    $self->{GI_useCountMostSimFeature} = assignDefaultAndWarnIfUndef("useCountMostSimFeature", $params->{useCountMostSimFeature}, "original", $self->{logger});
+    $self->{GI_kNearestNeighbors} = assignDefaultAndWarnIfUndef("kNearestNeighbors", $params->{kNearestNeighbors}, 0, $self->{logger});
+    $self->{GI_mostSimilarFirst} =  assignDefaultAndWarnIfUndef("mostSimilarFirst", $params->{mostSimilarFirst}, "doc", $self->{logger});
+    $self->{GI_aggregRelRank} = assignDefaultAndWarnIfUndef("aggregRelRank", $params->{aggregRelRank}, "0", $self->{logger});
+    $self->{GI_useAgregateSim} = assignDefaultAndWarnIfUndef("useAgregateSim", $params->{useAgregateSim}, "0", $self->{logger});
+    $self->{GI_agregateSimStat} = assignDefaultAndWarnIfUndef("agregateSimStat", $params->{agregateSimStat},  "arithm", $self->{logger});
     bless($self, $class);
     return $self;
 }

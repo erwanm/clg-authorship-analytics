@@ -33,11 +33,10 @@ our @EXPORT_OK = qw//;
 #
 sub new {
     my ($class, $params) = @_;
-    my $self = $class->SUPER::new($params);
-    $self->{logger} = Log::Log4perl->get_logger(__PACKAGE__) if ($params->{logging});
+    my $self = $class->SUPER::new($params,__PACKAGE__);
     $self->{obsTypesList} = $params->{obsTypesList};
-    $self->{simMeasure} = defined($params->{simMeasure}) ? $params->{simMeasure} : CLGTextTools::SimMeasures::MinMax->new() ;
-    $self->{multipleProbeAggregate} = defined($params->{multipleProbeAggregate}) ? $params->{multipleProbeAggregate} : "random";
+    $self->{simMeasure} = assignDefaultAndWarnIfUndef("simMeasure", $params->{simMeasure}, CLGTextTools::SimMeasures::MinMax->new(), $self->{logger}) ;
+    $self->{multipleProbeAggregate} =  assignDefaultAndWarnIfUndef("multipleProbeAggregate", $params->{multipleProbeAggregate}, "random", $self->{logger}) ;
     bless($self, $class);
     return $self;
 }

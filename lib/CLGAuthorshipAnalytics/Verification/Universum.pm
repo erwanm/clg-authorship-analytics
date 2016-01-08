@@ -44,19 +44,17 @@ our @EXPORT_OK = qw//;
 #
 sub new {
     my ($class, $params) = @_;
-    my $self = $class->SUPER::new($params);
-    $self->{logger} = Log::Log4perl->get_logger(__PACKAGE__) if ($params->{logging});
+    my $self = $class->SUPER::new($params, __PACKAGE__);
     $self->{obsTypesList} = $params->{obsTypesList};
-    $self->{nbRounds} = defined($params->{nbRounds}) ? $params->{nbRounds} : 100;
-    $self->{propObsSubset} = defined($params->{propObsSubset}) ? $params->{propObsSubset} : 0.5 ;
-    $self->{simMeasure} = defined($params->{simMeasure}) ? $params->{simMeasure} : CLGTextTools::SimMeasures::MinMax->new() ;
-    $self->{withReplacement} = defined($params->{withReplacement}) ? $params->{withReplacement} : 0;
-    $self->{splitWithoutReplacementMaxNbAttempts} = defined($params->{splitWithoutReplacementMaxNbAttempts}) ? $params->{splitWithoutReplacementMaxNbAttempts} : 5;
-    $self->{finalScoresMethod} = defined($params->{finalScoresMethod}) ? $params->{finalScoresMethod} : "countMostSimByRound";
-    $self->{aggregSimByRound} = defined($params->{aggregSimByRound}) ? $params->{aggregSimByRound} : "sameCat";
-    $self->{countMostSimByRound} = defined($params->{countMostSimByRound}) ? $params->{countMostSimByRound} : "sameCat";
-    $self->{aggregSimByRoundAggregType} = defined($params->{aggregSimByRoundAggregType}) ? $params->{aggregSimByRoundAggregType} : "arithm";
-#    $self->{} = defined($params->{}) ? $params->{} : "";
+    $self->{nbRounds} = assignDefaultAndWarnIfUndef("nbRounds", $params->{nbRounds}, 100, $self->{logger});
+    $self->{propObsSubset} = assignDefaultAndWarnIfUndef("propObsSubset", $params->{propObsSubset}, 0.5, $self->{logger});
+    $self->{simMeasure} = assignDefaultAndWarnIfUndef("simMeasure", $params->{simMeasure}, CLGTextTools::SimMeasures::MinMax->new(), $self->{logger}) ;
+    $self->{withReplacement} = assignDefaultAndWarnIfUndef("withReplacement", $params->{withReplacement}, 0, $self->{logger});
+    $self->{splitWithoutReplacementMaxNbAttempts} = assignDefaultAndWarnIfUndef("splitWithoutReplacementMaxNbAttempts", $params->{splitWithoutReplacementMaxNbAttempts}, 5, $self->{logger});
+    $self->{finalScoresMethod} = assignDefaultAndWarnIfUndef("finalScoresMethod", $params->{finalScoresMethod}, "countMostSimByRound", $self->{logger});
+    $self->{aggregSimByRound} = assignDefaultAndWarnIfUndef("aggregSimByRound", $params->{aggregSimByRound}, "sameCat" , $self->{logger});
+    $self->{countMostSimByRound} = assignDefaultAndWarnIfUndef("countMostSimByRound", $params->{countMostSimByRound}, "sameCat", $self->{logger});
+    $self->{aggregSimByRoundAggregType} = assignDefaultAndWarnIfUndef("aggregSimByRoundAggregType", $params->{aggregSimByRoundAggregType}, "arithm", $self->{logger});
     bless($self, $class);
     return $self;
 }
