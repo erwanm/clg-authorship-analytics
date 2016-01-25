@@ -52,7 +52,7 @@ sub usage {
 	print $fh "        so that the same file does not have to be loaded several times. This option\n";
 	print $fh "        prevents that behaviour, in order to save memory space when a lot of input\n";
 	print $fh "        files have to be processed (useful only when reading input files from STDIN).\n";
-	print $fh "     -c use count files (see CLGTextTools::DocProvider)\n"
+	print $fh "     -c use count files (see CLGTextTools::DocProvider)\n";
 
 #	print $fh "     -s <singleLineBreak|doubleLineBreak> by default all the text is collated\n";
 #	print $fh "        togenther; this option allows to specify a separator for meaningful units,\n";
@@ -98,7 +98,7 @@ if (-s $configFileOrParams) {
     $config = parseParamsFromString($configFileOrParams);
 }
 
-$config{logging} = $opt{l} || $opt{L};
+$config->{logging} = $opt{l} || $opt{L};
 
 # word vocab resources
 if ($vocabResourcesStr) {
@@ -115,7 +115,7 @@ if (defined($docsA) & defined($docsB)) {
 } else {
     while (my $line = <STDIN>) {
 	chomp($line);
-	my @pair = split("\s+", $line);
+	my @pair = split(/\s+/, $line);
 	my @setA = split(":", $pair[0]);
 	my @setB = split(":", $pair[1]);
 	push(@docsPairs, [ \@setA, \@setB ]);
@@ -130,7 +130,7 @@ foreach my $pair (@docsPairs) { # for each case to analyze
     my @casePair;
     foreach my $docSet (@$pair) { # for each of the two documents sets
 	my @docProvSet;
-	foreach my $doc (@$docsSet) { # for each doc in a set
+	foreach my $doc (@$docSet) { # for each doc in a set
 	    my $docProvider;
 	    if ((!$dontLoadAllFiles) && defined($allDocs{$doc})) {
 		$docProvider = $allDocs{$doc};
@@ -148,6 +148,6 @@ foreach my $pair (@docsPairs) { # for each case to analyze
 
     # process case
     my $features = $strategy->compute($casePair[0],$casePair[1]);
-    print join("\t", @$features)"\n";
+    print join("\t", @$features)."\n";
 }
 
