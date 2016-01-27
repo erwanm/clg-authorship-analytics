@@ -58,7 +58,8 @@ sub compute {
     my @features;
     $self->{logger}->debug("Basic strategy: computing features between pair of sets of docs") if ($self->{logger});
     confessLog($self->{logger}, "Cannot process case: no obs types at all") if ((scalar(@{$self->{obsTypesList}})==0) && $self->{logger});
-    foreach my $obsType (@{$self->{obsTypesList}}) {
+    foreach my $obsType (sort @{$self->{obsTypesList}}) {
+	$self->{logger}->debug("computing similarity for obs type '$obsType'") if ($self->{logger});
 	my $simValue;
 	if ($self->{multipleProbeAggregate} eq "random") {
 	    my @probeDocPair = map { pickInList($_) } @$probeDocsLists;
@@ -71,6 +72,7 @@ sub compute {
 		    push(@values, $res);
 		}
 	    }
+	    $self->{logger}->debug("similarity value for '$obsType' = $simValue") if ($self->{logger});
 	    $simValue = aggregateVector(\@values, $self->{multipleProbeAggregate});
 	}
 	push(@features, $simValue);
