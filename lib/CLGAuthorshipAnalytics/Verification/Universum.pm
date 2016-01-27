@@ -86,6 +86,8 @@ sub computeUniversum {
     my $self = shift;
     my $probeDocsLists = shift;
 
+    $self->{logger}->debug("Universum strategy: computing features between pair of sets of docs") if ($self->{logger});
+    confessLog($self->{logger}, "Cannot process case: no obs types at all") if ((scalar(@{$self->{obsTypesList}})==0) && $self->{logger});
     my @simRounds;
     my $nbEmpty=0;
     my $obsTypes = $self->{obsTypesList};
@@ -101,12 +103,13 @@ sub computeUniversum {
 	    if ($self->{withReplacement}) {
 		for my $thirdNo (0..2) {
 		    my $doc = pickInList($probeDocsLists->[$probeSide]);
-		    $thirds[$probeSide]->[$thirdNo] = pickDocSubset($doc->{$obsType}, 1/3);
+		    $thirds[$probeSide]->[$thirdNo] = pickDocSubset($doc->getObservations($obsType), 1/3);
 		}
 	    } else {
 		my @allPossibleThirds;
 		foreach my $doc (@{$probeDocsLists->[$probeSide]}) {
-		    my $thirdsDoc = splitDocRandomAvoidEmpty($self->{splitWithoutReplacementMaxNbAttempts}, $doc, 3);
+		    my $docObsHash = $doc->getObservations($obsType);
+		    my $thirdsDoc = splitDocRandomAvoidEmpty($self->{splitWithoutReplacementMaxNbAttempts}, $docObsHash, 3);
 		    $nbEmpty++ if (containsUndef($thirdsDoc));
 		    push(@allPossibleThirds, @$thirdsDoc);
 		}

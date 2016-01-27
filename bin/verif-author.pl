@@ -10,11 +10,13 @@ use warnings;
 use Carp;
 use Log::Log4perl;
 use Getopt::Std;
+use Data::Dumper;
 use CLGTextTools::ObsCollection;
-use CLGTextTools::Logging qw/@possibleLogLevels/;
+use CLGTextTools::Logging qw/@possibleLogLevels confessLog warnLog/;
 use CLGTextTools::DocProvider;
-use CLGTextTools::Commons qw/readConfigFile parseParamsFromString/;
+use CLGTextTools::Commons qw/readConfigFile parseParamsFromString readObsTypesFromConfigHash/;
 use CLGAuthorshipAnalytics::Verification::VerifStrategy qw/newVerifStrategyFromId/;
+
 
 my $progNamePrefix = "verif-author"; 
 my $progname = "$progNamePrefix.pl";
@@ -27,7 +29,7 @@ sub usage {
 	my $fh = shift;
 	$fh = *STDOUT if (!defined $fh);
 	print $fh "\n"; 
-	print $fh "Usage: $progname [options] <config file|parameters> [<fileA1:..:fileAn> <fileB1:..:fileBm>]\n";
+	print $fh "Usage: $progname [options] <config file> [<fileA1:..:fileAn> <fileB1:..:fileBm>]\n";
 	print $fh "\n";
 	print $fh "  Applies an author verification algorithm to:\n";
 	print $fh "    - a pair of sets of documents (fileA1,..,fileAn) vs. (fileB1,..,fileBm) if\n";
@@ -35,12 +37,9 @@ sub usage {
 	print $fh "    - a series of pairs of sets of documents read from STDIN if only one \n";
 	print $fh "      arg is supplied. Format: one pair <fileA1:..:fileAn> <fileB1:..:fileBm>\n";
 	print $fh "       on every line.\n";
-	print $fh "  The strategy id and the strategy parameters are obtained from the first argument:\n";
-	print $fh "    - if <config file|parameters> is a valid path to a non-empty file, then it is\n";
-	print $fh "      interpreted as a config file (one parameter by line, format: 'param=value')\n";
-	print $fh "    - otherwise, <config file|parameters> is interpreted as a list of \n";
-	print $fh "      parameter/value pairs: (quotes are needed if several parameters)\n";
-	print $fh "        'param1=val1;param2=val2;..;paramN=valN'\n";
+	print $fh "  The strategy id and the strategy parameters are read from <config file>,\n";
+	print $fh "    - except if '-s' is used (see below).\n";
+	print $fh "      The config file format is one parameter by line: 'param=value'.\n";
 	print $fh "\n";
 	print $fh "  Main options:\n";
 	print $fh "     -h print this help message\n";
@@ -63,6 +62,9 @@ sub usage {
 	print $fh "     -v <resourceId1=filename2[;resourceId2=filename2;...]> vocab resouces files\n";
 	print $fh "        with their ids. Can also be provided in the config as:\n";
 	print $fh "          wordVocab.resourceId=filename\n";
+	print $fh "     -s interpret the first argument <config file> as a string which contains a\n";
+	print $fh "        list of parameter/value pairs: (quotes are needed if several parameters)\n";
+	print $fh "        'param1=val1;param2=val2;..;paramN=valN'\n";
 	print $fh "\n";
 	print $fh "\n";
 }
@@ -70,7 +72,7 @@ sub usage {
 
 # PARSING OPTIONS
 my %opt;
-getopts('hl:L:mcv:', \%opt ) or  ( print STDERR "Error in options" &&  usage(*STDERR) && exit 1);
+getopts('hl:L:mcv:s', \%opt ) or  ( print STDERR "Error in options" &&  usage(*STDERR) && exit 1);
 usage(*STDOUT) && exit 0 if $opt{h};
 print STDERR "Either 1 or 3 arguments expected, but ".scalar(@ARGV)." found: ".join(" ; ", @ARGV)  && usage(*STDERR) && exit 1 if ((scalar(@ARGV) != 1) && (scalar(@ARGV) != 3));
 
@@ -80,7 +82,7 @@ my ($docsA, $docsB) = ($ARGV[1], $ARGV[2]);
 my $dontLoadAllFiles = $opt{m};
 my $useCountFiles = $opt{c};
 my $vocabResourcesStr = $opt{v};
-
+my $configAsString=$opt{s};
 
 # init log
 my $logger;
@@ -92,10 +94,14 @@ if ($opt{l} || $opt{L}) {
 
 # strategy parameters
 my $config;
-if (-s $configFileOrParams) {
-    $config = readConfigFile($configFileOrParams);
-} else {
+if (defined($configAsString)) {
     $config = parseParamsFromString($configFileOrParams);
+} else {
+    if (-s $configFileOrParams) {
+	$config = readConfigFile($configFileOrParams);
+    } else {
+	confessLog($logger, "Cannot open config file '$configFileOrParams'");
+    }
 }
 
 $config->{logging} = $opt{l} || $opt{L};
@@ -122,15 +128,20 @@ if (defined($docsA) & defined($docsB)) {
     }
 }
 
+confessLog($logger, "Parameter 'strategy' is undefined") if (!defined($config->{strategy}));
 my $strategy = newVerifStrategyFromId($config->{strategy}, $config, 1);
+$strategy->{obsTypesList} = readObsTypesFromConfigHash($config); # for verif strategy (DocProvder reads obs types separately)
 
 
 my %allDocs;
 foreach my $pair (@docsPairs) { # for each case to analyze
+    $logger->debug("Initializing pair") if ($logger);
     my @casePair;
     foreach my $docSet (@$pair) { # for each of the two documents sets
+	$logger->debug("Initializing 1 doc set out of 2") if ($logger);
 	my @docProvSet;
 	foreach my $doc (@$docSet) { # for each doc in a set
+	    $logger->debug("Initializing doc '$doc'") if ($logger);
 	    my $docProvider;
 	    if ((!$dontLoadAllFiles) && defined($allDocs{$doc})) {
 		$docProvider = $allDocs{$doc};
@@ -146,8 +157,11 @@ foreach my $pair (@docsPairs) { # for each case to analyze
 	push(@casePair, \@docProvSet);
     }
 
+    die "bug!" if (scalar(@casePair) != 2);
+
     # process case
-    my $features = $strategy->compute($casePair[0],$casePair[1]);
+    $logger->debug("Computing similarity for case") if ($logger);
+    my $features = $strategy->compute(\@casePair);
     print join("\t", @$features)."\n";
 }
 

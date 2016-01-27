@@ -9,8 +9,7 @@ use strict;
 use warnings;
 use Carp;
 use Log::Log4perl;
-use CLGTextTools::Stats qw/pickInList pickNSloppy aggregateVector/;
-use CLGTextTools::Commons qw/pickDocSubset/;
+use CLGTextTools::Stats qw/pickInList pickNSloppy aggregateVector pickDocSubset/;
 use CLGAuthorshipAnalytics::Verification::VerifStrategy;
 use CLGTextTools::Logging qw/confessLog cluckLog/;
 
@@ -83,6 +82,8 @@ sub compute {
     my $self = shift;
     my $probeDocsLists = shift;
 
+    $self->{logger}->debug("Impostors strategy: computing features between pair of sets of docs") if ($self->{logger});
+    confessLog($self->{logger}, "Cannot process case: no obs types at all") if ((scalar(@{$self->{obsTypesList}})==0) && $self->{logger});
     my $preseletedImpostors = $self->preselectMostSimilarImpostorsDataset($probeDocsLists);
     my $selectedImpostors = $self->pickImpostors($preseletedImpostors);
     my $scores = $self->computeGI($probeDocsLists, $selectedImpostors);
@@ -151,7 +152,7 @@ sub computeGI {
 	my @probeDocNo = (pickIndex($probeDocsListsByDataset[0]) , pickIndex($probeDocsListsByDataset[1]));
 	my $obsType = pickInList($obsTypes);
 	my $propObsRound = ($self->{propObsSubset} > 0) ? $self->{propObsSubset} : rand();
-	my @probeDocsRound = ($probeDocsListsByDataset[0]->[$probeDocNo[0]]->{$obsType}, $probeDocsListsByDataset[1]->[$probeDocNo[1]]->{$obsType} );
+	my @probeDocsRound = ($probeDocsListsByDataset[0]->[$probeDocNo[0]]->getObservations($obsType), $probeDocsListsByDataset[1]->[$probeDocNo[1]]->getObservations($obsType) );
 	my @impDocRound;
 	if (defined($allObs)) {
 	    my $observs = $allObs->{$obsType};

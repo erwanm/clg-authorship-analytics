@@ -10,9 +10,10 @@ use warnings;
 use Carp;
 use Log::Log4perl;
 use CLGTextTools::Stats qw/pickInList pickNSloppy aggregateVector/;
-use CLGTextTools::Commons qw//;
+use CLGTextTools::Commons qw/assignDefaultAndWarnIfUndef/;
 use CLGAuthorshipAnalytics::Verification::VerifStrategy;
 use CLGTextTools::Logging qw/confessLog cluckLog/;
+use CLGTextTools::SimMeasures::MinMax;
 
 our @ISA=qw/CLGAuthorshipAnalytics::Verification::VerifStrategy/;
 
@@ -35,7 +36,9 @@ sub new {
     my ($class, $params) = @_;
     my $self = $class->SUPER::new($params,__PACKAGE__);
     $self->{obsTypesList} = $params->{obsTypesList};
-    $self->{simMeasure} = assignDefaultAndWarnIfUndef("simMeasure", $params->{simMeasure}, CLGTextTools::SimMeasures::MinMax->new(), $self->{logger}) ;
+
+    my $defaultSim= CLGTextTools::SimMeasures::MinMax->new($params); # if (!defined($params->{simMeasure}));
+    $self->{simMeasure} = assignDefaultAndWarnIfUndef("simMeasure", $params->{simMeasure}, $defaultSim, $self->{logger}) ;
     $self->{multipleProbeAggregate} =  assignDefaultAndWarnIfUndef("multipleProbeAggregate", $params->{multipleProbeAggregate}, "random", $self->{logger}) ;
     bless($self, $class);
     return $self;
@@ -53,16 +56,18 @@ sub compute {
     my $probeDocsLists = shift;
 
     my @features;
+    $self->{logger}->debug("Basic strategy: computing features between pair of sets of docs") if ($self->{logger});
+    confessLog($self->{logger}, "Cannot process case: no obs types at all") if ((scalar(@{$self->{obsTypesList}})==0) && $self->{logger});
     foreach my $obsType (@{$self->{obsTypesList}}) {
 	my $simValue;
 	if ($self->{multipleProbeAggregate} eq "random") {
 	    my @probeDocPair = map { pickInList($_) } @$probeDocsLists;
-	    $simValue = $self->{simMeasure}->compute($probeDocPair[0]->{$obsType}, $probeDocPair[1]->{$obsType});
+	    $simValue = $self->{simMeasure}->compute($probeDocPair[0]->getObservations($obsType), $probeDocPair[1]->getObservations($obsType));
 	} else {
 	    my @values;
 	    foreach my $doc1 (@{$probeDocsLists->[0]}) {
 		foreach my $doc2 (@{$probeDocsLists->[1]}) {
-		    my $res = $self->{simMeasure}->compute($doc1->{$obsType}, $doc2->{$obsType});
+		    my $res = $self->{simMeasure}->compute($doc1->getObservations($obsType), $doc2->getObservations($obsType));
 		    push(@values, $res);
 		}
 	    }

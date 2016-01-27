@@ -9,7 +9,10 @@ use strict;
 use warnings;
 use Carp;
 use Log::Log4perl;
-use CLGTextTools::Commons qw//;
+use CLGTextTools::Commons qw/readParamGroupAsHashFromConfig/;
+use CLGAuthorshipAnalytics::Verification::Basic;
+use CLGAuthorshipAnalytics::Verification::Universum;
+use CLGAuthorshipAnalytics::Verification::Impostors;
 
 use base 'Exporter';
 our @EXPORT_OK = qw/newVerifStrategyFromId/;
@@ -24,7 +27,7 @@ sub new {
     my ($class, $params, $subclass) = @_;
     my $self;
     $self->{logger} = Log::Log4perl->get_logger(defined($subclass)?$subclass:__PACKAGE__) if ($params->{logging});
-    bless($self, $class);
+#    bless($self, $class);
     return $self;
 }
 
@@ -51,14 +54,20 @@ sub newVerifStrategyFromId {
     my $params = shift;
     my $removeStrategyIdPrefix = shift; # optional
 
-    my $res;
-    my $strategyParams = ($removeStrategyIdPrefix) ? readParamGroupAsHashFromConfig($params, $strategyId) : $params;
+   my $res;
+    my $strategyParams; 
+    if ($removeStrategyIdPrefix) { 
+	$strategyParams = readParamGroupAsHashFromConfig($params, $strategyId);
+	$strategyParams->{logging} = $params->{logging}; # add general parameters; TODO: others??
+    } else { 
+	$strategyParams = $params;
+    }
     if ($strategyId eq "basic") {
-	my $res = CLGAuthorshipAnalytics::Verification::Basic->new($strategyParams);
+	$res = CLGAuthorshipAnalytics::Verification::Basic->new($strategyParams);
     } elsif ($strategyId eq "univ") {
-	my $res = CLGAuthorshipAnalytics::Verification::Universum->new($strategyParams);
+	$res = CLGAuthorshipAnalytics::Verification::Universum->new($strategyParams);
     } elsif ($strategyId eq "GI") {
-	my $res = CLGAuthorshipAnalytics::Verification::Impostors->new($strategyParams);
+	$res = CLGAuthorshipAnalytics::Verification::Impostors->new($strategyParams);
     } else {
 	confess("Error: invalid strategy id '$strategyId', cannot instanciate VerifStrategy class.");
     }
