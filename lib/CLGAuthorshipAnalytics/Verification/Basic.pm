@@ -13,8 +13,7 @@ use CLGTextTools::Stats qw/pickInList pickNSloppy aggregateVector/;
 use CLGTextTools::Commons qw/assignDefaultAndWarnIfUndef/;
 use CLGAuthorshipAnalytics::Verification::VerifStrategy;
 use CLGTextTools::Logging qw/confessLog cluckLog/;
-use CLGTextTools::SimMeasures::MinMax;
-
+use CLGTextTools::SimMeasures::Measure qw/createSimMeasureFromId/;
 our @ISA=qw/CLGAuthorshipAnalytics::Verification::VerifStrategy/;
 
 use base 'Exporter';
@@ -36,9 +35,7 @@ sub new {
     my ($class, $params) = @_;
     my $self = $class->SUPER::new($params,__PACKAGE__);
     $self->{obsTypesList} = $params->{obsTypesList};
-
-    my $defaultSim= CLGTextTools::SimMeasures::MinMax->new($params); # if (!defined($params->{simMeasure}));
-    $self->{simMeasure} = assignDefaultAndWarnIfUndef("simMeasure", $params->{simMeasure}, $defaultSim, $self->{logger}) ;
+    $self->{simMeasure} = createSimMeasureFromId(assignDefaultAndWarnIfUndef("simMeasure", $params->{simMeasure}, "minmax", $self->{logger}), $params, 1); 
     $self->{multipleProbeAggregate} =  assignDefaultAndWarnIfUndef("multipleProbeAggregate", $params->{multipleProbeAggregate}, "random", $self->{logger}) ;
     bless($self, $class);
     return $self;
