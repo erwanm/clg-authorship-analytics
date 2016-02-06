@@ -9,10 +9,12 @@ use strict;
 use warnings;
 use Carp;
 use Log::Log4perl;
-use CLGTextTools::Stats qw/pickInList pickNSloppy aggregateVector pickDocSubset splitDocRandomAvoidEmpty/;
-use CLGTextTools::Commons qw/getArrayValuesFromIndexes containsUndef mergeDocs/;
+use CLGTextTools::Stats qw/pickInList pickNSloppy pickNIndexesAmongMExactly aggregateVector pickDocSubset splitDocRandomAvoidEmpty/;
+use CLGTextTools::Commons qw/getArrayValuesFromIndexes containsUndef mergeDocs assignDefaultAndWarnIfUndef/;
 use CLGAuthorshipAnalytics::Verification::VerifStrategy;
 use CLGTextTools::Logging qw/confessLog cluckLog/;
+use CLGTextTools::SimMeasures::Measure qw/createSimMeasureFromId/;
+use Data::Dumper;
 
 our @ISA=qw/CLGAuthorshipAnalytics::Verification::VerifStrategy/;
 
@@ -34,8 +36,8 @@ our @EXPORT_OK = qw//;
 # * withReplacement: 0 1. default: 0
 # * splitWithoutReplacementMaxNbAttempts: max number of attempts to try splitting doc without replacement if at least one of the subsets is empty. Default: 5.
 # * finalScoresMethod: aggregSimByRound countMostSimByRound both: overall method(s) to obtain the features: by aggregating the similarities for each category or counting the most similar category among rounds. default: 'countMostSimByRound'
-# * aggregSimByRound: all homogenity sameCat mergedOrNot: 'all' means use all individual categories as features. with 'homogenity' four final features are considered: AA+BB, AM+BM, AB, MM; with 'sameCat' there are only two final features: AA+BB+MM, AB+AM+BM. with 'mergedOrNot' there are two categories: AA+BB+AB, AM+BM+MM. default = 'sameCat'
-# * countMostSimByRound: all homogenity sameCat mergedOrNot. see above.  default = 'sameCat'
+# * aggregSimByRound: all homogeneity sameCat mergedOrNot: 'all' means use all individual categories as features. with 'homogeneity' four final features are considered: AA+BB, AM+BM, AB, MM; with 'sameCat' there are only two final features: AA+BB+MM, AB+AM+BM. with 'mergedOrNot' there are two categories: AA+BB+AB, AM+BM+MM. default = 'sameCat'
+# * countMostSimByRound: all homogeneity sameCat mergedOrNot. see above.  default = 'sameCat'
 # * aggregSimByRoundAggregType: median, arithm, geom, harmo. default = "arithm"
 
 
@@ -48,7 +50,7 @@ sub new {
     $self->{obsTypesList} = $params->{obsTypesList};
     $self->{nbRounds} = assignDefaultAndWarnIfUndef("nbRounds", $params->{nbRounds}, 100, $self->{logger});
     $self->{propObsSubset} = assignDefaultAndWarnIfUndef("propObsSubset", $params->{propObsSubset}, 0.5, $self->{logger});
-    $self->{simMeasure} = assignDefaultAndWarnIfUndef("simMeasure", $params->{simMeasure}, CLGTextTools::SimMeasures::MinMax->new(), $self->{logger}) ;
+    $self->{simMeasure} = createSimMeasureFromId(assignDefaultAndWarnIfUndef("simMeasure", $params->{simMeasure}, "minmax", $self->{logger}), $params, 1);
     $self->{withReplacement} = assignDefaultAndWarnIfUndef("withReplacement", $params->{withReplacement}, 0, $self->{logger});
     $self->{splitWithoutReplacementMaxNbAttempts} = assignDefaultAndWarnIfUndef("splitWithoutReplacementMaxNbAttempts", $params->{splitWithoutReplacementMaxNbAttempts}, 5, $self->{logger});
     $self->{finalScoresMethod} = assignDefaultAndWarnIfUndef("finalScoresMethod", $params->{finalScoresMethod}, "countMostSimByRound", $self->{logger});
@@ -78,9 +80,13 @@ sub compute {
 
 
 #
+# At each round two docs are picked from the two input sets: P0 vs P1 (P for "probe"). docs are split into thirds: a, b and the third used for the merged doc (M). Thus we obtain 6 "docs": P0a, P0b, P1a, P1b, Ma, Mb. Similarity is computed between:  P0a-P0b, P1a-P1b, Ma-Mb, P0?-P1?, P0?-M?, P1?-M? (X? means that we pick either Xa or Xb). In other words we compute: P0 against itself, P1 against itself, M against itself, then P0 against P1, P0 against M, P1 against M.
 #
-# output: $scores->[roundNo] = [  [ probeDocNoA, probeDocNoB ], simProbeAvsB, $simRound ], with 
-#         $simRound->[probe0Or1]->[impostorNo]
+# 
+# * input: $probeDocsLists = [ [docA1, docA2, ...] ,  [docB1, docB2,...] ]
+#    ** where docX = DocProvider
+# * output: scores->[roundNo] = [ [ sim(P0,P0) ] , [ sim(P0,P1) , sim(M,P1) ], [ sim(P0,M) , sim(P1,M) , sim(M,M) ] ]     (remark: done weeks after coding, possible errors!)
+#
 #
 sub computeUniversum {
     my $self = shift;
@@ -109,7 +115,7 @@ sub computeUniversum {
 		my @allPossibleThirds;
 		foreach my $doc (@{$probeDocsLists->[$probeSide]}) {
 		    my $docObsHash = $doc->getObservations($obsType);
-		    my $thirdsDoc = splitDocRandomAvoidEmpty($self->{splitWithoutReplacementMaxNbAttempts}, $docObsHash, 3);
+		    my $thirdsDoc = splitDocRandomAvoidEmpty($self->{splitWithoutReplacementMaxNbAttempts}, $docObsHash, 3, undef, $self->{logger});
 		    $nbEmpty++ if (containsUndef($thirdsDoc));
 		    push(@allPossibleThirds, @$thirdsDoc);
 		}
@@ -124,7 +130,7 @@ sub computeUniversum {
 	undef $thirds[0]->[2];
 	undef $thirds[1]->[2];
 	# 2.b split again into two mixed subsets
-	$thirds[2] = splitDocRandomAvoidEmpty($mergedMixed, 2, { 0 => $prop  , 1 => 1-$prop} );
+	$thirds[2] = splitDocRandomAvoidEmpty($self->{splitWithoutReplacementMaxNbAttempts}, $mergedMixed, 2, { 0 => $prop  , 1 => 1-$prop} , $self->{logger});
 
 	# 3. compute sims between P0a-P0b, P1a-P1b, Ma-Mb, P0?-P1?, P0?-M?, P1?-M?
 	my @sim;
@@ -160,15 +166,16 @@ sub computeUniversum {
 sub featuresFromScores {
     my ($self, $scores) = @_;
 
+    $self->{logger}->trace("scores table:".Dumper($scores)) if ($self->{logger});
     my @features;
     if (($self->{finalScoresMethod} eq "aggregSimByRound") || ($self->{finalScoresMethod} eq "both")) {
-	my $catLists = getCatLists($self->{aggregSimByRound});
-	my @f = map { computeFeatureFromCatListAggreg($scores, $_, $self->{aggregSimByRoundAggregType}) } @$catLists;
+	my $catLists = $self->getCatLists($self->{aggregSimByRound});
+	my @f = map { $self->computeFeatureFromCatListAggreg($scores, $_, $self->{aggregSimByRoundAggregType}) } @$catLists;
 	push(@features, @f);
     }
     if (($self->{finalScoresMethod} eq "countMostSimByRound") || ($self->{finalScoresMethod} eq "both")) {
 	my $mostSimByRound = countMostSimByRound($scores); # first step if most sim method: extract most sim by round
-	my $catLists = getCatLists($self->{countMostSimByRound});
+	my $catLists = $self->getCatLists($self->{countMostSimByRound});
 	my @f = map { computeFeatureFromCatListCount($mostSimByRound, $_) } @$catLists;
 	push(@features, @f);
 
@@ -182,16 +189,19 @@ sub featuresFromScores {
 # catList = a list of pairs [i,j] of categories to aggregate
 #
 sub computeFeatureFromCatListAggreg {
+    my $self = shift;
     my $scores = shift;
     my $catList = shift;
     my $aggregType = shift;
 
     my $nbRounds = scalar(@$scores);
+    $self->{logger}->debug("aggregating scores for $nbRounds rounds, method=$aggregType. catList = ".Dumper($catList)) if ($self->{logger});
     my @values;
     foreach my $simRound (@$scores) {
 	my $sumRound = 0;
 	foreach my $pair (@$catList) {
-	    $sumRound += $scores->[$pair->[0]]->[$pair->[1]];
+	    $sumRound += $simRound->[$pair->[0]]->[$pair->[1]];
+	    $self->{logger}->trace("aggregating; score(".$pair->[0].";".$pair->[1].") = ".$simRound->[$pair->[0]]->[$pair->[1]].", sumRound=$sumRound") if ($self->{logger});
 	}
 	my $valueRound = $sumRound / scalar(@$catList);
 	push(@values, $valueRound);
@@ -218,6 +228,7 @@ sub computeFeatureFromCatListCount {
 
 
 sub getCatLists {
+    my $self = shift;
     my $categsId = shift;
 
     my @categsLists;
@@ -227,7 +238,7 @@ sub getCatLists {
 		push(@categsLists, [ [$i,$j] ] );
 	    }
 	}
-    } elsif ($categsId eq "homogenity") {
+    } elsif ($categsId eq "homogeneity") {
 	push(@categsLists, [ [0,0] , [1,1] ]);
 	push(@categsLists, [ [2,0] , [2,1] ]);
 	push(@categsLists, [ [1,0] ]);
@@ -238,7 +249,9 @@ sub getCatLists {
     } elsif ($categsId eq "mergedOrNot") {
 	push(@categsLists, [ [0,0] , [1,1] , [1,0] ]);
 	push(@categsLists, [ [2,0] , [2,1] , [2,2] ]);
-    }    
+    } else {
+	confessLog($self->{logger}, "Univ strategy: invalid categ id '$categsId' (must be 'all', 'homogeneity', 'sameCat', 'mergedOrNot')");
+    }
     return \@categsLists;
 }
 
