@@ -9,9 +9,14 @@ use strict;
 use warnings;
 use Carp;
 use Log::Log4perl;
-use CLGTextTools::Stats qw/pickInList pickNSloppy aggregateVector pickDocSubset/;
+use CLGTextTools::Stats qw/pickInList pickNSloppy aggregateVector pickDocSubset pickIndex/;
 use CLGAuthorshipAnalytics::Verification::VerifStrategy;
 use CLGTextTools::Logging qw/confessLog cluckLog/;
+use CLGTextTools::DocCollection qw/createDatasetsFromParams/;
+use CLGTextTools::Commons qw/assignDefaultAndWarnIfUndef/;
+use CLGTextTools::SimMeasures::Measure qw/createSimMeasureFromId/;
+
+use Data::Dumper;
 
 our @ISA=qw/CLGAuthorshipAnalytics::Verification::VerifStrategy/;
 
@@ -27,8 +32,13 @@ our @EXPORT_OK = qw//;
 # $params:
 # * logging
 # * obsTypesList 
-# * impostors = { dataset1 => DocCollection1,  dataset1 => DocCollection1 } ; impostors will be picked from the various datasets A, B,... with equal probability (i.e. independently from the number of docs in each dataset).
+# * impostors = { dataset1 => DocCollection1,  dataset2 => DocCollection2 } ; impostors will be picked from the various datasets A, B,... with equal probability (i.e. independently from the number of docs in each dataset).
 # ** if a DocCollection dataset has a min doc freq threshold > 1, this threshold will be applied to the probe docs (using the doc freq table from the same dataset).  As a consequence, observations which appear in a probe document but not in the impostors  dataset are removed.
+# ** Alternatively, $impostors can be a string with format 'datasetid1;datasetId2;...'; the fact that it is not a hash ref is used as marker for this option. In this case parameter 'datasetResources'  must be set.
+# * datasetResources = { datasetId1 => path1, datasetId2 => path2, ...}. Used only if impostors is not provided as a list of DocCollection (see above).  'pathX' is a path where the files included in the dataset are located. datasetResources can only be a single string corresponding to the path where all datasets are located under their ids, i.e. <datasetResources>/<datasetId>/
+# * minDocFreq: optional (default 1); used only if impostors not provided as a list of DocCollection objects
+# * filePattern: optional (default "*.txt"); used only if impostors not provided as a list of DocCollection objects (describes the files used as impostor docs in the directory).
+
 # * selectNTimesMostSimilarFirst: if not zero, instead  of picking impostors documents randomly, an initial filtering stage is applied which retrieves the N most similar documents to the probe documents (but with an equal proportion of documents from each impostor dataset), with N = selectNTimesMostSimilarFirst * nbImpostors. This ensures that the most dissimilar impostors are not used, while maintaining a degree of randomness depending on the value of selectNTimesMostSimilarFirst.
 # * nbImpostorsUsed: number of impostors documents to select from the impostors dataset (done only once for all rounds) (default 25)
 # * nbRounds: number of rounds (higher number -> more randomization, hence less variance in the result) (default 100)
@@ -42,8 +52,8 @@ our @EXPORT_OK = qw//;
 # * kNearestNeighbors: uses only the K (value) most similar impostors when calculating result features. default: 0 (use all impostors).
 # * mostSimilarFirst: doc or run: specifies whether the K most similar impostors are selected globally (doc) or for each run (run); unused if GI_kNearestNeighbors=0. Default: doc.
 # * aggregRelRank: 0, median, arithm, geom, harmo. if not 0, computes the relative rank of the sim between A and B among sim against all impostors by round; the value is used to aggregate all relative ranks (i.e. the values by round). Default: 0.
-# * useAgregateSim: 0, diff, ratio. if not 0, computes X = the aggregate sim value between A and B across all runs and Y= the aggregate sim value between any probe and any impostor across all rounds; returns A-B (diff) or A/B (ratio); default : 0.
-# * aggregateSimStat:  median, arithm, geom, harmo. aggregate method to use if useAgregateSim is not 0 (ignored if 0). default: arithm.
+# * useAggregateSim: 0, diff, ratio. if not 0, computes X = the aggregate sim value between A and B across all runs and Y= the aggregate sim value between any probe and any impostor across all rounds; returns A-B (diff) or A/B (ratio); default : 0.
+# * aggregateSimStat:  median, arithm, geom, harmo. aggregate method to use if useAggregateSim is not 0 (ignored if 0). default: arithm.
 
 
 #
@@ -53,7 +63,12 @@ sub new {
     $self->{obsTypesList} = $params->{obsTypesList};
     my $impostors =  $params->{impostors};
     $self->{impostors} = $impostors;
-    confessLog($self->{logger}, "Error: at least one impostor dataset must be provided") if (!defined($impostors) || (scalar(@$impostors)==0));
+    confessLog($self->{logger}, "Error: at least one impostor dataset must be provided") if (!defined($impostors) || (ref($impostors) && (scalar(@$impostors)==0)) || (!ref($impostors) && ($impostors eq "")));
+    if (!ref($impostors)) { # if impostors not provided directly as a list of DocCollection objects
+	confessLog("Error: if impostors are not provided as a list of DocCollection objects, then parameter 'datasetResources' must be defined.") if (!defined($params->{datasetResources}));
+	my @impDatasetsIds = split(/;/, $impostors);
+	$self->{impostors} = createDatasetsFromParams($params, \@impDatasetsIds, $params->{datasetResources}, $params->{minDocFreq}, $params->{filePattern}, $self->{logger});
+    }
     $self->{nbImpostorsUsed} = assignDefaultAndWarnIfUndef("nbImpostorsUsed", $params->{nbImpostorsUsed}, 25, $self->{logger});
     $self->{selectNTimesMostSimilarFirst} = assignDefaultAndWarnIfUndef("selectNTimesMostSimilarFirst", $params->{selectNTimesMostSimilarFirst}, 0, $self->{logger});
     $self->{nbRounds} = assignDefaultAndWarnIfUndef("nbRounds", $params->{nbRounds}, 100, $self->{logger});
@@ -65,8 +80,8 @@ sub new {
     $self->{GI_kNearestNeighbors} = assignDefaultAndWarnIfUndef("kNearestNeighbors", $params->{kNearestNeighbors}, 0, $self->{logger});
     $self->{GI_mostSimilarFirst} =  assignDefaultAndWarnIfUndef("mostSimilarFirst", $params->{mostSimilarFirst}, "doc", $self->{logger});
     $self->{GI_aggregRelRank} = assignDefaultAndWarnIfUndef("aggregRelRank", $params->{aggregRelRank}, "0", $self->{logger});
-    $self->{GI_useAgregateSim} = assignDefaultAndWarnIfUndef("useAgregateSim", $params->{useAgregateSim}, "0", $self->{logger});
-    $self->{GI_agregateSimStat} = assignDefaultAndWarnIfUndef("agregateSimStat", $params->{agregateSimStat},  "arithm", $self->{logger});
+    $self->{GI_useAggregateSim} = assignDefaultAndWarnIfUndef("useAggregateSim", $params->{useAggregateSim}, "0", $self->{logger});
+    $self->{GI_aggregateSimStat} = assignDefaultAndWarnIfUndef("aggregateSimStat", $params->{aggregateSimStat},  "arithm", $self->{logger});
     bless($self, $class);
     return $self;
 }
@@ -91,24 +106,42 @@ sub compute {
 }
 
 
+#
+#
+# input: $allImpostorsDatasets->{datasetId}->[impNo] = DocProvider
+# output: [ [impostorDocProvider1, datasetId1], ... ]
+#
 sub pickImpostors {
     my $self = shift;
     my $allImpostorsDatasets = shift;
     my @resImpostors;
+    my %countDataset;
 
+    $self->{logger}->trace("Picking a set of impostors randomly") if ($self->{logger});
     my @impostorsDatasets = keys %{$self->{impostors}};
     # pick impostors set (same for all rounds)
     for (my $i=0; $i< $self->{nbImpostorsUsed}; $i++) {
 	my $dataset = pickInList(\@impostorsDatasets);
 	my $impostor =  pickInList($allImpostorsDatasets->{$dataset});
+	$self->{logger}->trace("$i th impostor: picked '".$impostor->getFilename()."' in dataset '$dataset'") if ($self->{logger});
+	$countDataset{$dataset}++ if ($self->{logger});
 	push(@resImpostors, [$impostor, $dataset]);
     }
+     if ($self->{logger}) {
+	 foreach my $dataset (keys %countDataset) {
+	     $self->{logger}->debug("Selected $countDataset{$dataset} impostors from dataset $dataset.");
+	 }
+     }
     return \@resImpostors;
 }
 
 
 
 #
+# input:
+# * $probeDocsLists: [ [docA1, docA2, ...] ,  [docB1, docB2,...] ]
+#    ** where docX = DocProvider
+# * $impostors : [ [impostorDocProvider1, datasetId1], ... ]
 #
 # output: $scores->[roundNo] = [  [ probeDocNoA, probeDocNoB ], simProbeAvsB, $simRound ], with 
 #         $simRound->[probe0Or1]->[impostorNo]
@@ -118,22 +151,26 @@ sub computeGI {
     my $probeDocsLists = shift;
     my $impostors = shift;
 
-    my @impostorsDatasets = keys %$impostors;
+    my @impostorsDatasets = keys %{$self->{impostors}};
     
+    $self->{logger}->debug("Starting computeGI") if ($self->{logger});
     my $allObs = undef;
     # compute the different versions of the probe documents after filtering the min doc freq, as defined by the different impostors datasets doc freq tables.
     # $probeDocsListsByDataset->[0|1]->[docNo]->{impDataset}->{obsType}->{obs} = freq
     my @probeDocsListsByDataset;
     foreach my $impDataset (@impostorsDatasets) {
+	$self->{logger}->debug("Preparing impostors sets: dataset '$impDataset'") if ($self->{logger});
 	my $minDocFreq = $self->{impostors}->{$impDataset}->getMinDocFreq();
 	if ($minDocFreq > 1) {
+	    $self->{logger}->trace("Applying minDocFreq=$minDocFreq for '$impDataset'") if ($self->{logger});
 	    my $docFreqTable = $self->{impostors}->{$impDataset}->getDocFreqTable();
 	    for (my $probeDocNo=0; $probeDocNo<=1; $probeDocNo++) {
 		for (my $docNo=0; $docNo<scalar(@{$probeDocsLists->[$probeDocNo]}); $docNo++) {
-		    $probeDocsListsByDataset[$probeDocNo]->[$docNo]->{$impDataset} = filterMinDocFreq($probeDocsLists->[$probeDocNo]->[$docNo], $minDocFreq, $docFreqTable);
+		    $probeDocsListsByDataset[$probeDocNo]->[$docNo]->{$impDataset} = filterMinDocFreq($probeDocsLists->[$probeDocNo]->[$docNo]->getObservations(), $minDocFreq, $docFreqTable);
 		}
 	    }
 	    if ($self->{docSubsetMethod} eq "byObservation") {
+		$self->{logger}->trace("Option 'byObservation is on, computing list of all observations for '$impDataset'") if ($self->{logger});
 		foreach my $obsType (@{$self->{obsTypesList}}) {
 		    my ($obs, $docFreq);
 		    my @obsTypeObservs;
@@ -143,8 +180,18 @@ sub computeGI {
 		    $allObs->{$obsType} = \@obsTypeObservs;
 		}
 	    }	
+	} else {
+	    $self->{logger}->debug("No min doc freq to apply") if ($self->{logger});
+	    for (my $probeDocNo=0; $probeDocNo<=1; $probeDocNo++) {
+		for (my $docNo=0; $docNo<scalar(@{$probeDocsLists->[$probeDocNo]}); $docNo++) {
+		    $probeDocsListsByDataset[$probeDocNo]->[$docNo]->{$impDataset} = $probeDocsLists->[$probeDocNo]->[$docNo]->getObservations();
+		}
+	    }
 	}
     }
+
+    $self->{logger}->trace("Prepared probe documents = ".Dumper(\@probeDocsListsByDataset)) if ($self->{logger});
+    $self->{logger}->debug("computeGI: starting rounds") if ($self->{logger});
 
     my $obsTypes = $self->{obsTypesList};
     my @res;
@@ -152,7 +199,8 @@ sub computeGI {
 	my @probeDocNo = (pickIndex($probeDocsListsByDataset[0]) , pickIndex($probeDocsListsByDataset[1]));
 	my $obsType = pickInList($obsTypes);
 	my $propObsRound = ($self->{propObsSubset} > 0) ? $self->{propObsSubset} : rand();
-	my @probeDocsRound = ($probeDocsListsByDataset[0]->[$probeDocNo[0]]->getObservations($obsType), $probeDocsListsByDataset[1]->[$probeDocNo[1]]->getObservations($obsType) );
+	$self->{logger}->trace("round $roundNo: probeDocNos = ($probeDocNo[0],$probeDocNo[1]); obsType = $obsType; propObsRound = $propObsRound");
+	my @probeDocsRound = ($probeDocsListsByDataset[0]->[$probeDocNo[0]]->{$obsType}, $probeDocsListsByDataset[1]->[$probeDocNo[1]]->{$obsType} );
 	my @impDocRound;
 	if (defined($allObs)) {
 	    my $observs = $allObs->{$obsType};
@@ -169,7 +217,7 @@ sub computeGI {
 	    }
 	    @impDocRound = map { [ pickDocSubset($_->[0]->{$obsType}, $propObsRound) , $_->[1] ] } @$impostors;
 	}
-	my $datasetRnd = pickInLIst(@probeDocsListsByDataset); # it makes sense to compare with the same minDocFreq as the impostors, but against which ref dataset doesn't matter so much
+	my $datasetRnd = pickInList(@probeDocsListsByDataset); # it makes sense to compare with the same minDocFreq as the impostors, but against which ref dataset doesn't matter so much
 	my $probeDocsSim = $self->{simMeasure}->compute($probeDocsRound[0]->{$datasetRnd}, $probeDocsRound[1]->{$datasetRnd});
 	my @simRound;
 	for (my $probeDocNo=0; $probeDocNo<=1; $probeDocNo++) {
@@ -207,11 +255,13 @@ sub preselectMostSimilarImpostorsDataset {
     my $self = shift;
     my $probeDocsLists = shift;
 
+    $self->{logger}->debug("Preselecting most similar impostors") if ($self->{logger});
     my @impostorsDatasets = keys %{$self->{impostors}};
     my %preSelectedImpostors;
     if ($self->{selectNTimesMostSimilarFirst}>0) {
 	my $preSimValues = defined($self->{preSimValues}) ? $self->{preSimValues} : computePreSimValues($probeDocsLists);
 	my $nbByDataset = $self->{selectNTimesMostSimilarFirst} * $self->{nbImpostorsUsed} / scalar(@impostorsDatasets);
+	$self->{logger}->debug("Preselecting $nbByDataset impostors by dataset (selectNTimesMostSimilarFirst=".$self->{selectNTimesMostSimilarFirst}." x nbImpostorsUsed=".$self->{nbImpostorsUsed}." / nb datasets = ".scalar(@impostorsDatasets).")") if ($self->{logger});
 
 	foreach my $impDataset (@impostorsDatasets) {
 	    my $nbToSelect = $nbByDataset;
@@ -250,8 +300,11 @@ sub preselectMostSimilarImpostorsDataset {
 	    $preSelectedImpostors{$impDataset} = \@mostSimilarDocs;
 	}
     } else {
+	$self->{logger}->debug("Preselecting all impostors docs (no similarity-based preselection)") if ($self->{logger});
 	foreach my $impDataset (@impostorsDatasets) {
-	    $preSelectedImpostors{$impDataset} = $self->{impostors}->{$impDataset}->getDocsAsList();
+	    my $imps = $self->{impostors}->{$impDataset}->getDocsAsList();
+	    $self->{logger}->trace("impDataset '$impDataset': ".scalar(@$imps)." impostors") if ($self->{logger});
+	    $preSelectedImpostors{$impDataset} = $imps;
 	}
     }
     return \%preSelectedImpostors;
@@ -266,6 +319,7 @@ sub computePreSimValues {
     my $self = shift;
     my $probeDocsLists = shift;
 
+    $self->{logger}->debug("Computing pre-sim values between probe docs and all impostors for pre-selection") if ($self->{logger});
     my %preSimValues;
     my @impostorsDatasets = keys %{$self->{impostors}};
     my $obsType = defined($self->{preSimObsType}) ? $self->{preSimObsType} : pickInList($self->{obsTypesList});
@@ -299,7 +353,7 @@ sub featuresFromScores {
 
     my @features;
     $self->removeLeastSimilar($scores); # keeps only K most similar if K>0
-    if ($self->{GI_useCountMostSimFeature} != "0") {
+    if ($self->{GI_useCountMostSimFeature} ne "0") {
 	my $mostSimImpNo = $self->getKMostSimilarImpostorsGlobal($scores, 1);
 	my @impNo = ($mostSimImpNo->[0]->[0], $mostSimImpNo->[1]->[0]); 
 	# extract vector of similarities (by round) for each probe (from the most similar impostor no)
@@ -357,11 +411,11 @@ sub countMostSimFeature {
 
     my $sum=0;
     for (my $i=0; $i<scalar(@$probeSimVector); $i++) { # iterate rounds
-	if ($self->{GI_useCountMostSimFeature} == "original") {
+	if ($self->{GI_useCountMostSimFeature} eq "original") {
 	    $sum++ if ( $probeSimVector->[$i]**2 > ($impSimVectors->[0]->[$i] * $impSimVectors->[1]->[$i]) );
-	} elsif ($self->{GI_useCountMostSimFeature} == "ASGALF") {
+	} elsif ($self->{GI_useCountMostSimFeature} eq "ASGALF") {
 	    $sum +=  ( $probeSimVector->[$i]**2 / ($impSimVectors->[0]->[$i] * $impSimVectors->[1]->[$i]) );
-	} elsif ($self->{GI_useCountMostSimFeature} == "ASGALFavg") {
+	} elsif ($self->{GI_useCountMostSimFeature} eq "ASGALFavg") {
 	    $sum +=  ( $probeSimVector->[$i] * 2 / ($impSimVectors->[0]->[$i] + $impSimVectors->[1]->[$i]) );
 	} else {
 	    confessLog($self->{logger}, "Error: invalid value '".$self->{GI_useCountMostSimFeature}."' for param 'GI_useCountMostSimFeature' ");

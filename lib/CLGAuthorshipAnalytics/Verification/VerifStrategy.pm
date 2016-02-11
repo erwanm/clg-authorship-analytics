@@ -53,12 +53,14 @@ sub newVerifStrategyFromId {
     my $strategyId = shift;
     my $params = shift;
     my $removeStrategyIdPrefix = shift; # optional
+ #   my $keepOtherParams = shift; # optional (used only if $removeStrategyIdPrefix is defined)
 
-   my $res;
+    print STDERR "AAA logging=".$params->{logging}."\n";
+    my $res;
     my $strategyParams; 
     if ($removeStrategyIdPrefix) { 
-	$strategyParams = readParamGroupAsHashFromConfig($params, $strategyId);
-	$strategyParams->{logging} = $params->{logging}; # add general parameters; TODO: others??
+	$strategyParams = readParamGroupAsHashFromConfig($params, $strategyId, 1); # always keep other params, don't know how to manage otherwise (especially in the case of impostors)
+#	$strategyParams->{logging} = $params->{logging}; # add general parameters; TODO: others??
     } else { 
 	$strategyParams = $params;
     }

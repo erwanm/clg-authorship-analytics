@@ -1,0 +1,15 @@
+log4perl.logger              = TRACE, LOGFILE
+log4perl.logger.Threshold = OFF
+log4perl.logger.CLGTextTools.Observations = INFO, LOGFILE
+
+log4perl.appender.LOGFILE           = Log::Log4perl::Appender::File
+log4perl.appender.LOGFILE.filename  = custom.log
+log4perl.appender.LOGFILE.mode      = write
+log4perl.appender.LOGFILE.utf8      = 1
+log4perl.appender.LOGFILE.layout    = Log::Log4perl::Layout::PatternLayout
+log4perl.appender.LOGFILE.layout.ConversionPattern = [%r] %d %p %m    from %c in %M (%F %L)%n
+
+log4perl.appender.LOGSCREEN          = Log::Log4perl::Appender::Screen
+log4perl.appender.LOGSCREEN.stderr   = 0
+log4perl.appender.LOGSCREEN.layout   = PatternLayout
+log4perl.appender.LOGSCREEN.layout.ConversionPattern = %p> %m%n

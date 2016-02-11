@@ -59,9 +59,10 @@ sub usage {
 #	print $fh "        (applies only to CHAR and WORD observations).\n";
 #	print $fh "     -t pre-tokenized text, do not perform default tokenization\n";
 #	print $fh "        (applies only to WORD observations).\n";
-	print $fh "     -v <resourceId1=filename2[;resourceId2=filename2;...]> vocab resouces files\n";
+	print $fh "     -v <resourceId1=filename1[;resourceId2=filename2;...]> vocab resouces files\n";
 	print $fh "        with their ids. Can also be provided in the config as:\n";
 	print $fh "          wordVocab.resourceId=filename\n";
+	print $fh "     -d <datasetsResourcesPath> for impostors method.\n";
 	print $fh "     -s interpret the first argument <config file> as a string which contains a\n";
 	print $fh "        list of parameter/value pairs: (quotes are needed if several parameters)\n";
 	print $fh "        'param1=val1;param2=val2;..;paramN=valN'\n";
@@ -72,7 +73,7 @@ sub usage {
 
 # PARSING OPTIONS
 my %opt;
-getopts('hl:L:mcv:s', \%opt ) or  ( print STDERR "Error in options" &&  usage(*STDERR) && exit 1);
+getopts('hl:L:mcv:sd:', \%opt ) or  ( print STDERR "Error in options" &&  usage(*STDERR) && exit 1);
 usage(*STDOUT) && exit 0 if $opt{h};
 print STDERR "Either 1 or 3 arguments expected, but ".scalar(@ARGV)." found: ".join(" ; ", @ARGV)  && usage(*STDERR) && exit 1 if ((scalar(@ARGV) != 1) && (scalar(@ARGV) != 3));
 
@@ -83,6 +84,7 @@ my $dontLoadAllFiles = $opt{m};
 my $useCountFiles = $opt{c};
 my $vocabResourcesStr = $opt{v};
 my $configAsString=$opt{s};
+my $datasetsResourcesPath=$opt{d};
 
 # init log
 my $logger;
@@ -129,6 +131,7 @@ if (defined($docsA) & defined($docsB)) {
 }
 
 confessLog($logger, "Parameter 'strategy' is undefined") if (!defined($config->{strategy}));
+$config->{datasetResources} = $datasetsResourcesPath;
 my $strategy = newVerifStrategyFromId($config->{strategy}, $config, 1);
 $strategy->{obsTypesList} = readObsTypesFromConfigHash($config); # for verif strategy (DocProvder reads obs types separately)
 
