@@ -132,6 +132,9 @@ sub pickImpostors {
 	     $self->{logger}->debug("Selected $countDataset{$dataset} impostors from dataset $dataset.");
 	 }
      }
+    $self->{logger}->trace("Selected impostors: ".Dumper(\@resImpostors)) if ($self->{logger});
+
+    
     return \@resImpostors;
 }
 
@@ -159,7 +162,7 @@ sub computeGI {
     # $probeDocsListsByDataset->[0|1]->[docNo]->{impDataset}->{obsType}->{obs} = freq
     my @probeDocsListsByDataset;
     foreach my $impDataset (@impostorsDatasets) {
-	$self->{logger}->debug("Preparing impostors sets: dataset '$impDataset'") if ($self->{logger});
+	$self->{logger}->debug("Preparing probe docs w.r.t impostor sets: dataset '$impDataset'") if ($self->{logger});
 	my $minDocFreq = $self->{impostors}->{$impDataset}->getMinDocFreq();
 	if ($minDocFreq > 1) {
 	    $self->{logger}->trace("Applying minDocFreq=$minDocFreq for '$impDataset'") if ($self->{logger});
@@ -199,30 +202,38 @@ sub computeGI {
 	my @probeDocNo = (pickIndex($probeDocsListsByDataset[0]) , pickIndex($probeDocsListsByDataset[1]));
 	my $obsType = pickInList($obsTypes);
 	my $propObsRound = ($self->{propObsSubset} > 0) ? $self->{propObsSubset} : rand();
-	$self->{logger}->trace("round $roundNo: probeDocNos = ($probeDocNo[0],$probeDocNo[1]); obsType = $obsType; propObsRound = $propObsRound");
-	my @probeDocsRound = ($probeDocsListsByDataset[0]->[$probeDocNo[0]]->{$obsType}, $probeDocsListsByDataset[1]->[$probeDocNo[1]]->{$obsType} );
+	$self->{logger}->debug("round $roundNo: probeDocNos = ($probeDocNo[0],$probeDocNo[1]); obsType = $obsType; propObsRound = $propObsRound") if ($self->{logger});
+#	my @probeDocsRound = ($probeDocsListsByDataset[0]->[$probeDocNo[0]], $probeDocsListsByDataset[1]->[$probeDocNo[1]] );
+	my @probeDocsRound;
 	my @impDocRound;
 	if (defined($allObs)) {
 	    my $observs = $allObs->{$obsType};
 	    my $featSubset = pickNSloppy($propObsRound * scalar($observs), $observs);
+	    $self->{logger}->trace("byObs: picked ".scalar(@$featSubset)." observations.");
+	    $self->{logger}->trace("Filtering observations for probe docs");
 	    foreach my $impDataset (@impostorsDatasets) {
-		$probeDocsRound[0]->{$impDataset} =  filterObservations($probeDocsRound[0]->{$impDataset}, $featSubset);
-		$probeDocsRound[1]->{$impDataset} =  filterObservations($probeDocsRound[1]->{$impDataset}, $featSubset);
+		$probeDocsRound[0]->{$impDataset} = filterObservations($probeDocsListsByDataset[0]->[$probeDocNo[0]]->{$impDataset}->{$obsType}, $featSubset);
+		$probeDocsRound[1]->{$impDataset} = filterObservations($probeDocsListsByDataset[1]->[$probeDocNo[1]]->{$impDataset}->{$obsType}, $featSubset);
 	    }
-	    @impDocRound = map { [ filterObservations($_->[0]->{$obsType}, $featSubset) , $_->[1] ] } @$impostors; # remark: $_->[1] = dataset
+	    $self->{logger}->trace("Filtering observations for impostors");
+	    @impDocRound = map { [ filterObservations($_->[0]->getObservations($obsType), $featSubset) , $_->[1] ] } @$impostors; # remark: $_->[1] = dataset
 	} else {
+	    $self->{logger}->trace("byOccurrence: picking doc subset for probe docs");
 	    foreach my $impDataset (@impostorsDatasets) {
-		$probeDocsRound[0]->{$impDataset} =  pickDocSubset($probeDocsRound[0]->{$impDataset}, $propObsRound);
-		$probeDocsRound[1]->{$impDataset} =  pickDocSubset($probeDocsRound[1]->{$impDataset}, $propObsRound);
+		$probeDocsRound[0]->{$impDataset} = pickDocSubset($probeDocsListsByDataset[0]->[$probeDocNo[0]]->{$impDataset}->{$obsType}, $propObsRound, $self->{logger});
+		$probeDocsRound[1]->{$impDataset} = pickDocSubset($probeDocsListsByDataset[1]->[$probeDocNo[1]]->{$impDataset}->{$obsType}, $propObsRound, $self->{logger});
 	    }
-	    @impDocRound = map { [ pickDocSubset($_->[0]->{$obsType}, $propObsRound) , $_->[1] ] } @$impostors;
+	    $self->{logger}->trace("byOccurrence: picking doc subset for impostors");
+	    @impDocRound = map { [ pickDocSubset($_->[0]->getObservations($obsType), $propObsRound, $self->{logger}) , $_->[1] ] } @$impostors;
 	}
-	my $datasetRnd = pickInList(@probeDocsListsByDataset); # it makes sense to compare with the same minDocFreq as the impostors, but against which ref dataset doesn't matter so much
+	my $datasetRnd = pickInList(\@impostorsDatasets); # it makes sense to compare with the same minDocFreq as the impostors, but against which ref dataset doesn't matter so much
+	$self->{logger}->trace("computing similarity between selected probe docs (using dataset '$datasetRnd')");
 	my $probeDocsSim = $self->{simMeasure}->compute($probeDocsRound[0]->{$datasetRnd}, $probeDocsRound[1]->{$datasetRnd});
 	my @simRound;
 	for (my $probeDocNo=0; $probeDocNo<=1; $probeDocNo++) {
 	    for (my $impNo=0; $impNo<scalar(@$impostors); $impNo++) {
 		my ($impDoc, $dataset) = ( $impDocRound[$impNo]->[0], $impDocRound[$impNo]->[1] );
+		$self->{logger}->trace("computing similarity between probe doc side $probeDocNo and impostor $impNo from dataset '$dataset'");
 		$simRound[$probeDocNo]->[$impNo] = $self->{simMeasure}->compute($probeDocsRound[$probeDocNo]->{$dataset}, $impDoc);
 	    }
 	}
@@ -352,10 +363,12 @@ sub featuresFromScores {
     my ($self, $scores) = @_;
 
     my @features;
+    $self->{logger}->debug("Computing final features from table of scores") if ($self->{logger});
     $self->removeLeastSimilar($scores); # keeps only K most similar if K>0
     if ($self->{GI_useCountMostSimFeature} ne "0") {
 	my $mostSimImpNo = $self->getKMostSimilarImpostorsGlobal($scores, 1);
 	my @impNo = ($mostSimImpNo->[0]->[0], $mostSimImpNo->[1]->[0]); 
+	$self->{logger}->debug("GI_useCountMostSimFeature is true: most similar impostor for both probes = ".join(";", @impNo)) if ($self->{logger});
 	# extract vector of similarities (by round) for each probe (from the most similar impostor no)
 	my @simValuesMostSimImp = ( [ map { $_->[2]->[0]->[$impNo[0]] } (@$scores) ], [ map { $_->[2]->[1]->[$impNo[1]] } (@$scores) ] ); # nb rounds items
 	my @simValuesProbeDocs = map { $_->[1] } (@$scores);
@@ -381,6 +394,7 @@ sub removeLeastSimilar {
     my $nbRounds = scalar(@$scores);
     my $k = $self->{GI_kNearestNeighbors};
     if (($k>0) && ($k < $nbImp))  { # otherwise nothing to remove
+	$self->{logger}->debug("Retaining only $k most similar impostors for each run") if ($self->{logger});
 	my $keepOnly = undef;
 	if ($self->{GI_mostSimilarFirst} == "doc") {
 	    $keepOnly  = $self->getKMostSimilarImpostorsGlobal($scores, $k);
@@ -441,6 +455,7 @@ sub getKMostSimilarImpostorsGlobal {
     my $scores = shift; # as returned by computeGI
     my $k = shift;
 
+    $self->{logger}->debug("selecting $k most similar impostors globally") if ($self->{logger});
     $k--; # arrays slice last index (start at zero)
     my $nbImp = scalar(@{$scores->[0]->[2]->[0]});
     my $nbRounds = scalar(@$scores);
@@ -453,10 +468,12 @@ sub getKMostSimilarImpostorsGlobal {
 		$sum += $scores->[$roundNo]->[2]->[$probeNo]->[$impNo];
 	    }
 	    $meanSim[$impNo] = $sum / $nbRounds;
+	    $self->{logger}->trace("mean sim score for impostor $impNo w.r.t probe $probeNo: $meanSim") if ($self->{logger});
 	}
         my $last= $nbImp-1;
         my @avgSorted = sort { $meanSim[$b] <=> $meanSim[$a] } (0..$last);
         my @select = @avgSorted[0..$k];
+	$self->{logger}->debug("selected $k most similar impostors for probe $probeNo: ".join(",", @select)) if ($self->{logger});
 	$res[$probeNo] = \@select;
     }
     return \@res;

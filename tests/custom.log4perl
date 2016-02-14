@@ -1,6 +1,7 @@
 log4perl.logger              = TRACE, LOGFILE
 log4perl.logger.Threshold = OFF
 log4perl.logger.CLGTextTools.Observations = INFO, LOGFILE
+log4perl.logger.CLGTextTools.SimMeasures = DEBUG, LOGFILE
 
 log4perl.appender.LOGFILE           = Log::Log4perl::Appender::File
 log4perl.appender.LOGFILE.filename  = custom.log
