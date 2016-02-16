@@ -373,13 +373,6 @@ sub featuresFromScores {
 	my @impNo = ($mostSimImpNo->[0]->[0], $mostSimImpNo->[1]->[0]); 
 	$self->{logger}->debug("GI_useCountMostSimFeature is true: most similar impostor for both probe sides = ".join(";", @impNo)) if ($self->{logger});
 	# extract vector of similarities (by round) for each probe (from the most similar impostor no)
-	for (my $roundNo=0; $roundNo<scalar(@$scores); $roundNo++) {
-	    foreach my $probeSide (0,1) {
-		print STDERR "round = $roundNo, probe side = $probeSide, imps selected = ".join(";", @impNo)."\n";
-#		print STDERR Dumper($scores->);
-		print STDERR "DEBUG score between probe $probeSide vs imp $impNo[$probeSide] = ".$scores->[$roundNo]->[2]->[$probeSide]->[$impNo[$probeSide]]."\n";
-	    }
-	}
 	my @simImp0 = map { $_->[2]->[0]->[$impNo[0]] } @$scores; # nb rounds items
 	my @simImp1 = map { $_->[2]->[1]->[$impNo[1]] } @$scores; # nb rounds items
 	$self->{logger}->trace("Sim values for the selected impostor, probe side 0: ".join("; ", @simImp0))  if ($self->{logger});
