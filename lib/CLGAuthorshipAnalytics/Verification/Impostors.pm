@@ -23,6 +23,7 @@ our @ISA=qw/CLGAuthorshipAnalytics::Verification::VerifStrategy/;
 use base 'Exporter';
 our @EXPORT_OK = qw//;
 
+our $decimalDigits = 10;
 
 
 
@@ -54,7 +55,7 @@ our @EXPORT_OK = qw//;
 # * aggregRelRank: 0, median, arithm, geom, harmo. if not 0, computes the relative rank of the sim between A and B among sim against all impostors by round; the value is used to aggregate all relative ranks (i.e. the values by round). Default: 0.
 # * useAggregateSim: 0, diff, ratio. if not 0, computes X = the aggregate sim value between A and B across all runs and Y= the aggregate sim value between any probe and any impostor across all rounds; returns A-B (diff) or A/B (ratio); default : 0.
 # * aggregateSimStat:  median, arithm, geom, harmo. aggregate method to use if useAggregateSim is not 0 (ignored if 0). default: arithm.
-
+#
 
 #
 sub new {
@@ -92,16 +93,18 @@ sub new {
 #
 # * $probeDocsLists: [ [docA1, docA2, ...] ,  [docB1, docB2,...] ]
 #    ** where docX = DocProvider
-#
+# * writeScoresTableToFile (optional)
 sub compute {
     my $self = shift;
     my $probeDocsLists = shift;
+    my $writeScoresTableToFile = shift;
 
     $self->{logger}->debug("Impostors strategy: computing features between pair of sets of docs") if ($self->{logger});
     confessLog($self->{logger}, "Cannot process case: no obs types at all") if ((scalar(@{$self->{obsTypesList}})==0) && $self->{logger});
     my $preseletedImpostors = $self->preselectMostSimilarImpostorsDataset($probeDocsLists);
     my $selectedImpostors = $self->pickImpostors($preseletedImpostors);
     my $scores = $self->computeGI($probeDocsLists, $selectedImpostors);
+    $self->writeScoresToFile($scores, $writeScoresTableToFile) if (defined($writeScoresTableToFile));
     return $self->featuresFromScores($scores);
 }
 
@@ -368,16 +371,29 @@ sub featuresFromScores {
     if ($self->{GI_useCountMostSimFeature} ne "0") {
 	my $mostSimImpNo = $self->getKMostSimilarImpostorsGlobal($scores, 1);
 	my @impNo = ($mostSimImpNo->[0]->[0], $mostSimImpNo->[1]->[0]); 
-	$self->{logger}->debug("GI_useCountMostSimFeature is true: most similar impostor for both probes = ".join(";", @impNo)) if ($self->{logger});
+	$self->{logger}->debug("GI_useCountMostSimFeature is true: most similar impostor for both probe sides = ".join(";", @impNo)) if ($self->{logger});
 	# extract vector of similarities (by round) for each probe (from the most similar impostor no)
-	my @simValuesMostSimImp = ( [ map { $_->[2]->[0]->[$impNo[0]] } (@$scores) ], [ map { $_->[2]->[1]->[$impNo[1]] } (@$scores) ] ); # nb rounds items
+	for (my $roundNo=0; $roundNo<scalar(@$scores); $roundNo++) {
+	    foreach my $probeSide (0,1) {
+		print STDERR "round = $roundNo, probe side = $probeSide, imps selected = ".join(";", @impNo)."\n";
+#		print STDERR Dumper($scores->);
+		print STDERR "DEBUG score between probe $probeSide vs imp $impNo[$probeSide] = ".$scores->[$roundNo]->[2]->[$probeSide]->[$impNo[$probeSide]]."\n";
+	    }
+	}
+	my @simImp0 = map { $_->[2]->[0]->[$impNo[0]] } @$scores; # nb rounds items
+	my @simImp1 = map { $_->[2]->[1]->[$impNo[1]] } @$scores; # nb rounds items
+	$self->{logger}->trace("Sim values for the selected impostor, probe side 0: ".join("; ", @simImp0))  if ($self->{logger});
+	$self->{logger}->trace("Sim values for the selected impostor, probe side 1: ".join("; ", @simImp1))  if ($self->{logger});
 	my @simValuesProbeDocs = map { $_->[1] } (@$scores);
-	push(@features, $self->countMostSimFeature(\@simValuesProbeDocs ,\@simValuesMostSimImp));
+	$self->{logger}->trace("Sim values between the two probe sides:             ".join("; ", @simValuesProbeDocs))  if ($self->{logger});
+	push(@features, $self->countMostSimFeature(\@simValuesProbeDocs ,[\@simImp0, \@simImp1]));
     }
     push(@features, $self->relativeRankFeature($scores)) if ($self->{GI_aggregRelRank} != "0");
     push(@features, $self->aggregateSimComparison($scores)) if ($self->{GI_useAggregateSim} != "0");
     return \@features;
 }
+
+
 
 
 
@@ -435,8 +451,10 @@ sub countMostSimFeature {
 	    confessLog($self->{logger}, "Error: invalid value '".$self->{GI_useCountMostSimFeature}."' for param 'GI_useCountMostSimFeature' ");
 	}
     }
+    $self->{logger}->debug("Counting most similar between probe values and impostor values, method '".$self->{GI_useCountMostSimFeature}."': sum = $sum; nb rounds = ".scalar(@$probeSimVector)."; 'normalized' score = ".($sum / scalar(@$probeSimVector)))  if ($self->{logger});
+
     # IMPORTANT: the normalisation makes sense only for the original version
-    # I don't think we can normalise the two others since we don't can't be sure
+    # I don't think we can normalise the two others since we can't be sure
     # that B>=A in A/B (i.e. sim(Pi,Ii)>sim(P1,P2))
     # However dividing every score by the same value doesn't hurt, it's just
     # that the result shouldn't be interpreted as necessarily in [0,1]
@@ -468,12 +486,12 @@ sub getKMostSimilarImpostorsGlobal {
 		$sum += $scores->[$roundNo]->[2]->[$probeNo]->[$impNo];
 	    }
 	    $meanSim[$impNo] = $sum / $nbRounds;
-	    $self->{logger}->trace("mean sim score for impostor $impNo w.r.t probe $probeNo: $meanSim") if ($self->{logger});
+	    $self->{logger}->trace("mean sim score for impostor $impNo w.r.t probe $probeNo: $meanSim[$impNo]") if ($self->{logger});
 	}
         my $last= $nbImp-1;
         my @avgSorted = sort { $meanSim[$b] <=> $meanSim[$a] } (0..$last);
         my @select = @avgSorted[0..$k];
-	$self->{logger}->debug("selected $k most similar impostors for probe $probeNo: ".join(",", @select)) if ($self->{logger});
+	$self->{logger}->debug("selected ".($k+1)." most similar impostors for probe $probeNo: ".join(",", @select)) if ($self->{logger});
 	$res[$probeNo] = \@select;
     }
     return \@res;
@@ -534,6 +552,35 @@ sub aggregateSimComparison {
     } else {
 	confessLog($self->{logger}, "Error: invalid value '".$self->{useAggregateSim}."' for param 'useAggregateSim' ");
     }
+}
+
+
+#
+# scores: $scores->[roundNo] = [  [ probeDocNoA, probeDocNoB ], simProbeAvsB, $simRound ], with 
+#         $simRound->[probe0Or1]->[impostorNo] = sim between doc probe0or1 and imp $impostorNo (as returned by computeGI)
+#
+# file format: two lines by round (one for each probe side), line = <roundNo> <probeSide> <docNo for probeSide> <sim-probe-A-vs-B> <sim-Imp0> <sim-Imp1> ... <sim-ImpN>
+#
+#
+sub writeScoresToFile {
+    my ($self, $scores, $writeScoresTableToFile) = @_;
+
+    my $f = $writeScoresTableToFile;
+    my $fh;
+    $self->{logger}->debug("Printing scores table to file '$f'") if ($self->{logger});
+    open($fh, ">", $f) or confessLog($self->{logger}, "Error: cannot open file '$f' for writing.");
+    my $nbImp = scalar(@{$scores->[0]->[2]->[0]});
+    my $nbRounds = scalar(@$scores);
+    for (my $roundNo=0; $roundNo< $nbRounds; $roundNo++) {
+	for (my $probeSide=0; $probeSide<=1; $probeSide++)  {
+	    print $fh "$roundNo\t$probeSide\t".$scores->[$roundNo]->[0]->[$probeSide]."\t".$scores->[$roundNo]->[1];
+	    for (my $impNo = 0; $impNo<$nbImp; $impNo++) {
+		print $fh "\t".sprintf("%.${decimalDigits}f", $scores->[$roundNo]->[2]->[$probeSide]->[$impNo]);
+	    }
+	}
+	print $fh "\n";
+    }
+    close($fh);
 }
 
 

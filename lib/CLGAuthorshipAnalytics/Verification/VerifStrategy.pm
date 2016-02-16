@@ -55,7 +55,6 @@ sub newVerifStrategyFromId {
     my $removeStrategyIdPrefix = shift; # optional
  #   my $keepOtherParams = shift; # optional (used only if $removeStrategyIdPrefix is defined)
 
-    print STDERR "AAA logging=".$params->{logging}."\n";
     my $res;
     my $strategyParams; 
     if ($removeStrategyIdPrefix) { 

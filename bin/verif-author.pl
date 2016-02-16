@@ -66,14 +66,16 @@ sub usage {
 	print $fh "     -s interpret the first argument <config file> as a string which contains a\n";
 	print $fh "        list of parameter/value pairs: (quotes are needed if several parameters)\n";
 	print $fh "        'param1=val1;param2=val2;..;paramN=valN'\n";
-	print $fh "\n";
+	print $fh "     -p <dir> if specified, for every case processed the raw scores table is written\n";
+	print $fh "        to file <dir>/<NNN>.scores, where <NNN> is the number of the case in the\n";
+	print $fh "        input list (if reading input cases from STDIN) or '001' (if single case).\n";
 	print $fh "\n";
 }
 
 
 # PARSING OPTIONS
 my %opt;
-getopts('hl:L:mcv:sd:', \%opt ) or  ( print STDERR "Error in options" &&  usage(*STDERR) && exit 1);
+getopts('hl:L:mcv:sd:p:', \%opt ) or  ( print STDERR "Error in options" &&  usage(*STDERR) && exit 1);
 usage(*STDOUT) && exit 0 if $opt{h};
 print STDERR "Either 1 or 3 arguments expected, but ".scalar(@ARGV)." found: ".join(" ; ", @ARGV)  && usage(*STDERR) && exit 1 if ((scalar(@ARGV) != 1) && (scalar(@ARGV) != 3));
 
@@ -85,6 +87,8 @@ my $useCountFiles = $opt{c};
 my $vocabResourcesStr = $opt{v};
 my $configAsString=$opt{s};
 my $datasetsResourcesPath=$opt{d};
+my $printScoreDir = $opt{p};
+
 
 # init log
 my $logger;
@@ -137,6 +141,8 @@ $strategy->{obsTypesList} = readObsTypesFromConfigHash($config); # for verif str
 
 
 my %allDocs;
+my $caseNo =1;
+my $targetFileScoresTable = undef;
 foreach my $pair (@docsPairs) { # for each case to analyze
     $logger->debug("Initializing pair") if ($logger);
     my @casePair;
@@ -160,11 +166,15 @@ foreach my $pair (@docsPairs) { # for each case to analyze
 	push(@casePair, \@docProvSet);
     }
 
-    die "bug!" if (scalar(@casePair) != 2);
+    confess "bug! casePair must be of size 2!" if (scalar(@casePair) != 2);
 
     # process case
     $logger->debug("Computing similarity for case") if ($logger);
-    my $features = $strategy->compute(\@casePair);
+    if (defined($printScoreDir)) {
+	$targetFileScoresTable = "$printScoreDir/".sprintf("%03d", $caseNo).".scores";
+	$caseNo++;
+    }
+    my $features = $strategy->compute(\@casePair, $targetFileScoresTable);
     print join("\t", @$features)."\n";
 }
 
