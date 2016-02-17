@@ -273,7 +273,7 @@ sub preselectMostSimilarImpostorsDataset {
     my @impostorsDatasets = keys %{$self->{impostors}};
     my %preSelectedImpostors;
     if ($self->{selectNTimesMostSimilarFirst}>0) {
-	my $preSimValues = defined($self->{preSimValues}) ? $self->{preSimValues} : computePreSimValues($probeDocsLists);
+	my $preSimValues = defined($self->{preSimValues}) ? $self->{preSimValues} : $self->computePreSimValues($probeDocsLists);
 	my $nbByDataset = $self->{selectNTimesMostSimilarFirst} * $self->{nbImpostorsUsed} / scalar(@impostorsDatasets);
 	$self->{logger}->debug("Preselecting $nbByDataset impostors by dataset (selectNTimesMostSimilarFirst=".$self->{selectNTimesMostSimilarFirst}." x nbImpostorsUsed=".$self->{nbImpostorsUsed}." / nb datasets = ".scalar(@impostorsDatasets).")") if ($self->{logger});
 
@@ -291,24 +291,29 @@ sub preselectMostSimilarImpostorsDataset {
 		foreach my $probeSide (0,1) {
 		    foreach my $probeDoc (@{$probeDocsLists->[$probeSide]}) {
 			my $simByImpostor = $preSimValues->{$impDataset}->{$probeDoc->getFilename()}; # $simByImpostor->{impFilename} = sim value
-			confessLog("Error: could not find pre-similaritiy values for probe fine '".$probeDoc->getFilename()."'") if (!defined($simByImpostor));
+			confessLog("Error: could not find pre-similaritiy values for probe file '".$probeDoc->getFilename()."'") if (!defined($simByImpostor));
+			$self->{logger}->trace("Sorting impostors by similarity against  probe file '".$probeDoc->getFilename()."'") if ($self->{logger});
 			my @sortedImpBySim = sort { $simByImpostor->{$b} <=> $simByImpostor->{$a} } (keys %$simByImpostor) ;
 			$sortedImpBySimByProbe[$probeSide]->{$probeDoc} = \@sortedImpBySim;
 		    }
 		}
 		my $nbSelected=0;
 		my %selected;
+		$self->{logger}->debug("selecting impostors for dataset '$impDataset'") if ($self->{logger});
 		while ($nbSelected<$nbToSelect) {
 		    my $probeSide = int(rand(2)); # randomly picks one of the sides and one of the docs on this side
-		    my $doc = pickInList(@{$probeDocsLists->[$probeSide]});
+		    my $doc = pickInList($probeDocsLists->[$probeSide]);
 		    my $impSelected = shift(@{$sortedImpBySimByProbe[$probeSide]->{$doc}}); # gets the most similar impostor for this doc, removing it from the array
-		    if (defined($impSelected) && !defined($selected{$impSelected})) {
-			$selected{$impSelected} = 1; # not added if the impostor is already in the hash (from different probe docs)
+		    $self->{logger}->trace("picked probe doc '".$doc->getFilename()."' (side $probeSide) -> impostor '$impSelected' (sim=".$preSimValues->{$impDataset}->{$doc->getFilename()}->{$impSelected}.") ...") if ($self->{logger});
+		    if (defined($impSelected) && !defined($selected{$impSelected})) { # not added if the impostor is already in the hash (from different probe docs)
+			$self->{logger}->trace("impostor '$impSelected' added") if ($self->{logger});
+			$selected{$impSelected} = 1;
 			$nbSelected++;
 		    }
 		}
 		my $impDatasetDocsByFilename = $self->{impostors}->{$impDataset}->getDocsAsHash();
 		my @selectedDocs = map { $impDatasetDocsByFilename->{$_} } (keys %selected);
+		$self->{logger}->debug("selected ".scalar(@selectedDocs)." impostors for dataset '$impDataset'")  if ($self->{logger});
 		push(@mostSimilarDocs, @selectedDocs);
 	    }
 	    $preSelectedImpostors{$impDataset} = \@mostSimilarDocs;
@@ -333,10 +338,10 @@ sub computePreSimValues {
     my $self = shift;
     my $probeDocsLists = shift;
 
-    $self->{logger}->debug("Computing pre-sim values between probe docs and all impostors for pre-selection") if ($self->{logger});
     my %preSimValues;
     my @impostorsDatasets = keys %{$self->{impostors}};
     my $obsType = defined($self->{preSimObsType}) ? $self->{preSimObsType} : pickInList($self->{obsTypesList});
+    $self->{logger}->debug("Computing pre-sim values between probe docs and all impostors for pre-selection; obsType='$obsType'") if ($self->{logger});
     foreach my $impDataset (@impostorsDatasets) {
 	my %resDataset;
 	foreach my $probeSide (0,1) {
@@ -347,6 +352,7 @@ sub computePreSimValues {
 		my ($impId, $impDoc);
 		while (($impId, $impDoc) = each(%$impostors)) {
 		    $resProbe{$impId} = $self->{simMeasure}->compute($probeData, $impDoc->getObservations($obsType) );
+		    $self->{logger}->debug("Pre-sim value between probe '".$probeDoc->getFilename()."' (side $probeSide) and impostor '$impId' (dataset 'impDataset') = $resProbe{$impId}") if ($self->{logger});
 		}
 		$resDataset{$probeDoc->getFilename()} = \%resProbe;
 	    }
