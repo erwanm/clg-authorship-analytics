@@ -11,9 +11,9 @@ use Carp;
 use Log::Log4perl;
 use CLGTextTools::Stats qw/pickInList pickNSloppy aggregateVector pickDocSubset pickIndex/;
 use CLGAuthorshipAnalytics::Verification::VerifStrategy;
-use CLGTextTools::Logging qw/confessLog cluckLog/;
+use CLGTextTools::Logging qw/confessLog cluckLog warnLog/;
 use CLGTextTools::DocCollection qw/createDatasetsFromParams/;
-use CLGTextTools::Commons qw/assignDefaultAndWarnIfUndef/;
+use CLGTextTools::Commons qw/assignDefaultAndWarnIfUndef readTSVFileLinesAsHash/;
 use CLGTextTools::SimMeasures::Measure qw/createSimMeasureFromId/;
 
 use Data::Dumper;
@@ -21,7 +21,7 @@ use Data::Dumper;
 our @ISA=qw/CLGAuthorshipAnalytics::Verification::VerifStrategy/;
 
 use base 'Exporter';
-our @EXPORT_OK = qw//;
+our @EXPORT_OK = qw/loadPreSimValuesFile writePreSimValuesFile/;
 
 our $decimalDigits = 10;
 
@@ -46,7 +46,7 @@ our $decimalDigits = 10;
 # * propObsSubset: (0<=p<1) the proportion of observations/occurrences to keep in every document at each round; if zero, the proportion is picked randomly at every round (default 0.5)
 # * docSubsetMethod: "byOccurrence" -> the proportion is applied to the set of all occurrences; "byObservation" -> applied only to distinct observations (default ByObservation)
 # * simMeasure: a CLGTextTools::Measure object (initialized) (default minMax)
-# * preSimValues: used only if selectNTimesMostSimilarFirst>0. preSimValues = [ datasetA => preSimDatasetA, dataset2 => preSimDataset2, ...] which contains at least the datasets provided in <impostors>. each preSimDataset = { probeFilename => { impostorFileName => simValue } }, i.e preSimValues->{dataset}->{probeFilename}->{impostorFilename} = simValue.  This parameter is used (1) to provide similiarity values computed in a meaningful way and (2) avoid repeating the process as many times as the method is called, which might be prohibitive in computing time. If selectNTimesMostSimilarFirst>0 but preSimValues is undef, first-stage similarity between probe and impostors is computed using a random obsType, unless preSimObsType is defined (see below).
+# * preSimValues: used only if selectNTimesMostSimilarFirst>0. preSimValues = [ datasetA => preSimDatasetA, dataset2 => preSimDataset2, ...] which contains at least the datasets provided in <impostors>. each preSimDataset = { probeFilename => { impostorFileName => simValue } }, i.e preSimValues->{dataset}->{probeFilename}->{impostorFilename} = simValue.  This parameter is used (1) to provide similiarity values computed in a meaningful way and (2) avoid repeating the process as many times as the method is called, which might be prohibitive in computing time. If selectNTimesMostSimilarFirst>0 but preSimValues is undef or the specific similarity between a probe file and n impostors is not defined, then first-stage similarity between probe and impostors is computed using a random obsType, unless preSimObsType is defined (see below). In this latter case, if preSimValues is a defined hash (even an empty one) then it is updated (thus the caller can re-use or store the computed pre-sim values). See also diskReadAccess and diskWriteAccess.
 # * preSimObsType: the obs type to use to compute preselection similarity between probe docs and impostors, if selectNTimesMostSimilarFirst>0 but preSimValues is not. If preSimObsType is not defined either, then a random obs type is used (in this case the quality of the results could be more random)
 #
 # * useCountMostSimFeature: 0, original, ASGALF, ASGALFavg. if not "0", the "count most similar" feature is computed with the specified variant; default: "original".
@@ -55,7 +55,8 @@ our $decimalDigits = 10;
 # * aggregRelRank: 0, median, arithm, geom, harmo. if not 0, computes the relative rank of the sim between A and B among sim against all impostors by round; the value is used to aggregate all relative ranks (i.e. the values by round). Default: 0.
 # * useAggregateSim: 0, diff, ratio. if not 0, computes X = the aggregate sim value between A and B across all runs and Y= the aggregate sim value between any probe and any impostor across all rounds; returns A-B (diff) or A/B (ratio); default : 0.
 # * aggregateSimStat:  median, arithm, geom, harmo. aggregate method to use if useAggregateSim is not 0 (ignored if 0). default: arithm.
-#
+# * diskReadAccess: allow reading pre-sim values from files if existing.
+# * diskWriteAccess: allow writing computed pre-sim values to files.
 
 #
 sub new {
@@ -77,12 +78,15 @@ sub new {
     $self->{docSubsetMethod} = assignDefaultAndWarnIfUndef("docSubsetMethod", $params->{docSubsetMethod}, "byObservation", $self->{logger}) ;
     $self->{simMeasure} = createSimMeasureFromId(assignDefaultAndWarnIfUndef("simMeasure", $params->{simMeasure}, "minmax", $self->{logger}), $params, 1);
     $self->{preSimValues} = $params->{preSimValues};
+    $self->{preSimObsType} = assignDefaultAndWarnIfUndef("preSimObsType", $params->{preSimObsType}, "preSimObsType", $self->{logger}) ;
     $self->{GI_useCountMostSimFeature} = assignDefaultAndWarnIfUndef("useCountMostSimFeature", $params->{useCountMostSimFeature}, "original", $self->{logger});
     $self->{GI_kNearestNeighbors} = assignDefaultAndWarnIfUndef("kNearestNeighbors", $params->{kNearestNeighbors}, 0, $self->{logger});
     $self->{GI_mostSimilarFirst} =  assignDefaultAndWarnIfUndef("mostSimilarFirst", $params->{mostSimilarFirst}, "doc", $self->{logger});
     $self->{GI_aggregRelRank} = assignDefaultAndWarnIfUndef("aggregRelRank", $params->{aggregRelRank}, "0", $self->{logger});
     $self->{GI_useAggregateSim} = assignDefaultAndWarnIfUndef("useAggregateSim", $params->{useAggregateSim}, "0", $self->{logger});
     $self->{GI_aggregateSimStat} = assignDefaultAndWarnIfUndef("aggregateSimStat", $params->{aggregateSimStat},  "arithm", $self->{logger});
+    $self->{diskReadAccess} = assignDefaultAndWarnIfUndef("diskReadAccess", $params->{diskReadAccess}, 0, $self->{logger});
+    $self->{diskWriteAccess} = assignDefaultAndWarnIfUndef("diskWriteAccess", $params->{diskWriteAccess}, 0, $self->{logger});
     bless($self, $class);
     return $self;
 }
@@ -273,7 +277,8 @@ sub preselectMostSimilarImpostorsDataset {
     my @impostorsDatasets = keys %{$self->{impostors}};
     my %preSelectedImpostors;
     if ($self->{selectNTimesMostSimilarFirst}>0) {
-	my $preSimValues = defined($self->{preSimValues}) ? $self->{preSimValues} : $self->computePreSimValues($probeDocsLists);
+#	my $preSimValues = defined($self->{preSimValues}) ? $self->{preSimValues} : $self->computePreSimValues($probeDocsLists);
+	my $preSimValues = defined($self->{preSimValues}) ? $self->{preSimValues} : {};
 	my $nbByDataset = $self->{selectNTimesMostSimilarFirst} * $self->{nbImpostorsUsed} / scalar(@impostorsDatasets);
 	$self->{logger}->debug("Preselecting $nbByDataset impostors by dataset (selectNTimesMostSimilarFirst=".$self->{selectNTimesMostSimilarFirst}." x nbImpostorsUsed=".$self->{nbImpostorsUsed}." / nb datasets = ".scalar(@impostorsDatasets).")") if ($self->{logger});
 
@@ -291,7 +296,10 @@ sub preselectMostSimilarImpostorsDataset {
 		foreach my $probeSide (0,1) {
 		    foreach my $probeDoc (@{$probeDocsLists->[$probeSide]}) {
 			my $simByImpostor = $preSimValues->{$impDataset}->{$probeDoc->getFilename()}; # $simByImpostor->{impFilename} = sim value
-			confessLog("Error: could not find pre-similaritiy values for probe file '".$probeDoc->getFilename()."'") if (!defined($simByImpostor));
+			if (!defined($simByImpostor)) {
+			    $simByImpostor = $self->computeOrLoadPreSimValues($probeDoc, $impDataset);
+			    $preSimValues->{$impDataset}->{$probeDoc->getFilename()} = $simByImpostor;  # update the hash (for the caller to get the values back)
+			}
 			$self->{logger}->trace("Sorting impostors by similarity against  probe file '".$probeDoc->getFilename()."'") if ($self->{logger});
 			my @sortedImpBySim = sort { $simByImpostor->{$b} <=> $simByImpostor->{$a} } (keys %$simByImpostor) ;
 			$sortedImpBySimByProbe[$probeSide]->{$probeDoc} = \@sortedImpBySim;
@@ -332,34 +340,87 @@ sub preselectMostSimilarImpostorsDataset {
 
 
 #
-# $self->{selectNTimesMostSimilarFirst}>0 and $self->{preSimValues} undefined
+# returns a hash: preSim{impostorId} = simValue
 #
-sub computePreSimValues {
+sub computeOrLoadPreSimValues {
     my $self = shift;
-    my $probeDocsLists = shift;
+    my $probeDoc = shift;
+    my $impDataset = shift;
 
-    my %preSimValues;
-    my @impostorsDatasets = keys %{$self->{impostors}};
-    my $obsType = defined($self->{preSimObsType}) ? $self->{preSimObsType} : pickInList($self->{obsTypesList});
-    $self->{logger}->debug("Computing pre-sim values between probe docs and all impostors for pre-selection; obsType='$obsType'") if ($self->{logger});
-    foreach my $impDataset (@impostorsDatasets) {
-	my %resDataset;
-	foreach my $probeSide (0,1) {
-	    foreach my $probeDoc (@{$probeDocsLists->[$probeSide]}) {
-		my $probeData = $probeDoc->getObservations($obsType);
-		my $impostors = $self->{impostors}->{$impDataset}->getDocsAsHash();
-		my %resProbe;
-		my ($impId, $impDoc);
-		while (($impId, $impDoc) = each(%$impostors)) {
-		    $resProbe{$impId} = $self->{simMeasure}->compute($probeData, $impDoc->getObservations($obsType) );
-		    $self->{logger}->debug("Pre-sim value between probe '".$probeDoc->getFilename()."' (side $probeSide) and impostor '$impId' (dataset 'impDataset') = $resProbe{$impId}") if ($self->{logger});
-		}
-		$resDataset{$probeDoc->getFilename()} = \%resProbe;
-	    }
-	}
-	$preSimValues{$impDataset} = \%resDataset;
+    if ($self->{diskReadAccess}) {
+	$self->{logger}->debug("Trying to load pre-sim values from file...") if ($self->{logger});
+	my $res = loadPreSimValuesFile($probeDoc->getFilename(), $impDataset, $self->{logger});
+	return $res if (defined($res));
     }
-    return \%preSimValues;
+    my $obsType;
+    if (defined($self->{preSimObsType})) {
+	$obsType =  $self->{preSimObsType};
+    } else { 
+	$obsType = pickInList($self->{obsTypesList});
+	warnLog($self->{logger}, "Warning: parameter 'preSimObsType' undefined, picking random obs type for computing pre-similiarity values (probe='".$probeDoc->getFilename()."', dataset=$impDataset); picked '$obsType'");
+    }
+    $self->{logger}->debug("Computing pre-sim values between probe doc '".$probeDoc->getFilename()."' and all impostors in dataset '$impDataset' for pre-selection; obsType='$obsType'") if ($self->{logger});
+    my $probeData = $probeDoc->getObservations($obsType);
+    print STDERR "DEBUG PROBE: ".Dumper($probeData)."\n";
+    my $impostors = $self->{impostors}->{$impDataset}->getDocsAsHash();
+    my %resProbe;
+    my ($impId, $impDoc);
+    while (($impId, $impDoc) = each(%$impostors)) {
+	$resProbe{$impId} = $self->{simMeasure}->compute($probeData, $impDoc->getObservations($obsType) );
+	print STDERR "DEBUG IMP: ".Dumper($impDoc->getObservations($obsType))."\n";
+	die "stop debug";
+	$self->{logger}->debug("Pre-sim value between probe '".$probeDoc->getFilename()."' and impostor '$impId' (dataset 'impDataset') = $resProbe{$impId}") if ($self->{logger});
+    }
+    return \%resProbe;
+}
+
+
+#
+# loadPreSimValuesFile($probeFile, $impDataset, $logger)
+# static
+#
+# if the file exists, loads pre-similarty values from file <probeFile>.simdir/<impDataset>.similarities, which contains lines of the form: <impostor filename> <sim value>; returns undef otherwise
+#
+# * $logger is optional.
+#
+sub  loadPreSimValuesFile {
+    my ($probeFile, $impDataset, $logger) = @_;
+    my $f = "$probeFile.simdir/$impDataset.similarities";
+    if ( -f $f) {
+	$logger->debug("Load pre-sim values from '$f'") if ($logger);
+	my $sims = readTSVFileLinesAsHash($f, $logger);
+	return $sims;
+    } else {
+	$logger->debug("File '$f' does not exist, returning undef") if ($logger);
+	return undef;
+    }
+}
+
+
+#
+# writePreSimValuesFile($probeFile, $impDataset, $logger)
+# static
+#
+# writes pre-similarity values to file <probeFile>.simdir/<impDataset>.similarities (format: <impostor filename> <sim value>)
+# Warning: if the file already exists, nothing is written.
+#
+# * $logger is optional.
+#
+sub writePreSimValuesFile {
+    my ($values, $probeFile, $impDataset, $logger) = @_;
+
+    my $dir = "$probeFile.simdir";
+    if (! -d $dir) {
+	mkdir "$dir" or confessLog($logger, "Cannot create directory '$dir'");
+    }
+    my $f = "$dir/$impDataset.similarities";
+    if ( ! -f "$f") {
+	my $fh;
+	open($fh, ">:encoding(utf-8)", $f) or confessLog($logger, "Cannot open pre-sim file '$f' for writing");
+	$logger->debug("Wrote pre-sim values to file '$f'") if ($logger);
+    } else {
+	$logger->debug("pre-sim file '$f' already exists, nothing written") if ($logger);
+    }
 }
 
 
