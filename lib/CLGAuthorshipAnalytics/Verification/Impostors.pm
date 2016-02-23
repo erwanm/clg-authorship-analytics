@@ -350,7 +350,14 @@ sub computeOrLoadPreSimValues {
     if ($self->{diskReadAccess}) {
 	$self->{logger}->debug("Trying to load pre-sim values from file...") if ($self->{logger});
 	my $res = loadPreSimValuesFile($probeDoc->getFilename(), $impDataset, $self->{logger});
-	return $res if (defined($res));
+	if (defined($res)) { # the sim file was found and its content loaded
+	    # checking that we have a sim value for each impostor, because if not this will cause problems later
+	    my $impostors = $self->{impostors}->{$impDataset}->getDocsAsHash();
+	    foreach my $impId (keys %$impostors) {
+		confessLog($self->{logger}, "Error loading pre-sim values: no value found for impostor '$impId' (probe file ".$probeDoc->getFilename().", dataset '$impDataset')") if (!defined($res->{$impId}));
+	    }
+	    return $res ;
+	} # otherwise the file was not found, sim values have to be computed
     }
     my $obsType;
     if (defined($self->{preSimObsType})) {
@@ -361,15 +368,16 @@ sub computeOrLoadPreSimValues {
     }
     $self->{logger}->debug("Computing pre-sim values between probe doc '".$probeDoc->getFilename()."' and all impostors in dataset '$impDataset' for pre-selection; obsType='$obsType'") if ($self->{logger});
     my $probeData = $probeDoc->getObservations($obsType);
-    print STDERR "DEBUG PROBE: ".Dumper($probeData)."\n";
     my $impostors = $self->{impostors}->{$impDataset}->getDocsAsHash();
     my %resProbe;
     my ($impId, $impDoc);
     while (($impId, $impDoc) = each(%$impostors)) {
 	$resProbe{$impId} = $self->{simMeasure}->compute($probeData, $impDoc->getObservations($obsType) );
-	print STDERR "DEBUG IMP: ".Dumper($impDoc->getObservations($obsType))."\n";
-	die "stop debug";
 	$self->{logger}->debug("Pre-sim value between probe '".$probeDoc->getFilename()."' and impostor '$impId' (dataset 'impDataset') = $resProbe{$impId}") if ($self->{logger});
+    }
+    if ($self->{diskWriteAccess}) {
+	$self->{logger}->debug("Saving pre-sim values to file if the file doesn't exist yet...") if ($self->{logger});
+	writePreSimValuesFile(\%resProbe, $probeDoc->getFilename(), $impDataset, $self->{logger});
     }
     return \%resProbe;
 }
@@ -417,6 +425,11 @@ sub writePreSimValuesFile {
     if ( ! -f "$f") {
 	my $fh;
 	open($fh, ">:encoding(utf-8)", $f) or confessLog($logger, "Cannot open pre-sim file '$f' for writing");
+	my ($impId, $value);
+	while (($impId, $value) = each(%$values)) {
+	    printf $fh "$impId\t%.${decimalDigits}f\n", $value;
+	}
+	close($fh);
 	$logger->debug("Wrote pre-sim values to file '$f'") if ($logger);
     } else {
 	$logger->debug("pre-sim file '$f' already exists, nothing written") if ($logger);
