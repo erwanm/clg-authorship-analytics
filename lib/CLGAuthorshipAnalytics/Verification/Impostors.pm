@@ -12,8 +12,8 @@ use Log::Log4perl;
 use CLGTextTools::Stats qw/pickInList pickNSloppy aggregateVector pickDocSubset pickIndex/;
 use CLGAuthorshipAnalytics::Verification::VerifStrategy;
 use CLGTextTools::Logging qw/confessLog cluckLog warnLog/;
-use CLGTextTools::DocCollection qw/createDatasetsFromParams/;
-use CLGTextTools::Commons qw/assignDefaultAndWarnIfUndef readTSVFileLinesAsHash/;
+use CLGTextTools::DocCollection qw/createDatasetsFromParams filterMinDocFreq/;
+use CLGTextTools::Commons qw/assignDefaultAndWarnIfUndef readTSVFileLinesAsHash rankWithTies/;
 use CLGTextTools::SimMeasures::Measure qw/createSimMeasureFromId/;
 
 use Data::Dumper;
@@ -83,11 +83,12 @@ sub new {
     $self->{GI_kNearestNeighbors} = assignDefaultAndWarnIfUndef("kNearestNeighbors", $params->{kNearestNeighbors}, 0, $self->{logger});
     $self->{GI_mostSimilarFirst} =  assignDefaultAndWarnIfUndef("mostSimilarFirst", $params->{mostSimilarFirst}, "doc", $self->{logger});
     $self->{GI_aggregRelRank} = assignDefaultAndWarnIfUndef("aggregRelRank", $params->{aggregRelRank}, "0", $self->{logger});
-    $self->{GI_useAggregateSim} = assignDefaultAndWarnIfUndef("useAggregateSim", $params->{useAggregateSim}, "0", $self->{logger});
+    $self->{useAggregateSim} = assignDefaultAndWarnIfUndef("useAggregateSim", $params->{useAggregateSim}, "0", $self->{logger});
     $self->{GI_aggregateSimStat} = assignDefaultAndWarnIfUndef("aggregateSimStat", $params->{aggregateSimStat},  "arithm", $self->{logger});
     $self->{diskReadAccess} = assignDefaultAndWarnIfUndef("diskReadAccess", $params->{diskReadAccess}, 0, $self->{logger});
     $self->{diskWriteAccess} = assignDefaultAndWarnIfUndef("diskWriteAccess", $params->{diskWriteAccess}, 0, $self->{logger});
     bless($self, $class);
+#    print STDERR Dumper($self);
     return $self;
 }
 
@@ -184,10 +185,11 @@ sub computeGI {
 		foreach my $obsType (@{$self->{obsTypesList}}) {
 		    my ($obs, $docFreq);
 		    my @obsTypeObservs;
-		    while (($obs, $docFreq) = each %{$minDocFreq->{$obsType}}) {
+		    while (($obs, $docFreq) = each %{$docFreqTable->{$obsType}}) {
 			push(@obsTypeObservs, $obs) if ($docFreq >= $minDocFreq);
 		    }
-		    $allObs->{$obsType} = \@obsTypeObservs;
+		    push(@{$allObs->{$obsType}}, @obsTypeObservs);
+		    $self->{logger}->debug("byObservations: added ".scalar(@obsTypeObservs)." observations to allObs for obs type $obsType. Current total: ".scalar(@{$allObs->{$obsType}})) if ($self->{logger});
 		}
 	    }	
 	} else {
@@ -195,6 +197,13 @@ sub computeGI {
 	    for (my $probeDocNo=0; $probeDocNo<=1; $probeDocNo++) {
 		for (my $docNo=0; $docNo<scalar(@{$probeDocsLists->[$probeDocNo]}); $docNo++) {
 		    $probeDocsListsByDataset[$probeDocNo]->[$docNo]->{$impDataset} = $probeDocsLists->[$probeDocNo]->[$docNo]->getObservations();
+		}
+	    }
+	    if ($self->{docSubsetMethod} eq "byObservation") {
+		my $docFreqTable = $self->{impostors}->{$impDataset}->getDocFreqTable();
+		foreach my $obsType (@{$self->{obsTypesList}}) {
+		    push(@{$allObs->{$obsType}}, keys %{$docFreqTable->{$obsType}});
+		    $self->{logger}->debug("byObservations: added observations to allObs for obs type $obsType. Current total: ".scalar(@{$allObs->{$obsType}})) if ($self->{logger});
 		}
 	    }
 	}
@@ -215,7 +224,11 @@ sub computeGI {
 	my @impDocRound;
 	if (defined($allObs)) {
 	    my $observs = $allObs->{$obsType};
-	    my $featSubset = pickNSloppy($propObsRound * scalar($observs), $observs);
+#	    print STDERR Dumper($observs);
+#	    die "stop";
+	    my $nb = int($propObsRound * scalar(@$observs) +0.5);
+	    $self->{logger}->trace("byObs: propObsRound=$propObsRound; scalar(observs)=".scalar(@$observs)."; picking $nb observations.");
+	    my $featSubset = pickNSloppy($nb, $observs);
 	    $self->{logger}->trace("byObs: picked ".scalar(@$featSubset)." observations.");
 	    $self->{logger}->trace("Filtering observations for probe docs");
 	    foreach my $impDataset (@impostorsDatasets) {
@@ -225,6 +238,7 @@ sub computeGI {
 	    $self->{logger}->trace("Filtering observations for impostors");
 	    @impDocRound = map { [ filterObservations($_->[0]->getObservations($obsType), $featSubset) , $_->[1] ] } @$impostors; # remark: $_->[1] = dataset
 	} else {
+	    die "bug byocc" if ($self->{docSubsetMethod} eq "byObservation");
 	    $self->{logger}->trace("byOccurrence: picking doc subset for probe docs");
 	    foreach my $impDataset (@impostorsDatasets) {
 		$probeDocsRound[0]->{$impDataset} = pickDocSubset($probeDocsListsByDataset[0]->[$probeDocNo[0]]->{$impDataset}->{$obsType}, $propObsRound, $self->{logger});
@@ -461,8 +475,8 @@ sub featuresFromScores {
 	$self->{logger}->trace("Sim values between the two probe sides:             ".join("; ", @simValuesProbeDocs))  if ($self->{logger});
 	push(@features, $self->countMostSimFeature(\@simValuesProbeDocs ,[\@simImp0, \@simImp1]));
     }
-    push(@features, $self->relativeRankFeature($scores)) if ($self->{GI_aggregRelRank} != "0");
-    push(@features, $self->aggregateSimComparison($scores)) if ($self->{GI_useAggregateSim} != "0");
+    push(@features, $self->relativeRankFeature($scores)) if ($self->{GI_aggregRelRank} ne "0");
+    push(@features, $self->aggregateSimComparison($scores)) if ($self->{useAggregateSim} ne "0");
     return \@features;
 }
 
@@ -483,22 +497,27 @@ sub removeLeastSimilar {
     my $nbRounds = scalar(@$scores);
     my $k = $self->{GI_kNearestNeighbors};
     if (($k>0) && ($k < $nbImp))  { # otherwise nothing to remove
-	$self->{logger}->debug("Retaining only $k most similar impostors for each run") if ($self->{logger});
+	$self->{logger}->debug("Retaining only $k most similar impostors for each run, either globally or by run") if ($self->{logger});
 	my $keepOnly = undef;
-	if ($self->{GI_mostSimilarFirst} == "doc") {
-	    $keepOnly  = $self->getKMostSimilarImpostorsGlobal($scores, $k);
+	if ($self->{GI_mostSimilarFirst} eq "doc") {
+	    $keepOnly  = $self->getKMostSimilarImpostorsGlobal($scores, $k); # $keepOnly->[probeSide] = [ i1, i2, ... ]
+	    $self->{logger}->trace("using scores from globally-selected $k most similar impostors: side 0 = [".join(",", @{$keepOnly->[0]})."] ; side 1 = [".join(",", @{$keepOnly->[1]})."]") if ($self->{logger});
 	}
 	for (my $roundNo = 0; $roundNo < $nbRounds; $roundNo++) {
 	    foreach my $probeNo (0,1) {
 		if (defined($keepOnly)) { # global (doc)
-		    $scores->[$roundNo]->[2]->[$probeNo] =  [ map { $scores->[$roundNo]->[2]->[$probeNo]->[$_] } @$keepOnly ];
-		} else {
+		    my @selected = map { $scores->[$roundNo]->[2]->[$probeNo]->[$_] } @{$keepOnly->[$probeNo]};
+		    $scores->[$roundNo]->[2]->[$probeNo] =  \@selected;
+		} else { # most similar by run
 		    my @sorted0 = sort { $b <=> $a } @{$scores->[$roundNo]->[2]->[$probeNo]}; # sim values!
 		    my @sortedK = @sorted0[0..$k-1];
+		    $self->{logger}->trace("round=$roundNo,side=$probeNo: using scores from $k most similar impostors for this run: [".join(",", @sortedK)."]") if ($self->{logger});
 		    $scores->[$roundNo]->[2]->[$probeNo] = \@sortedK;
 		}
 	    }
 	}
+    } else {
+	warnLog($self->{logger}, "Warning: using $k most similar among $nbImp impostors") if ($k >= $nbImp);
     }
 }
 
@@ -616,8 +635,8 @@ sub aggregateSimComparison {
 	    push(@aggregImp, @{$scores->[$run]->[2]->[$probeNo]});
 	}
     }
-    my $valProbe = aggregateVector(@aggregProbe, $self->{GI_aggregateSimStat});
-    my $valImp = aggregateVector(@aggregImp, $self->{GI_aggregateSimStat});
+    my $valProbe = aggregateVector(\@aggregProbe, $self->{GI_aggregateSimStat});
+    my $valImp = aggregateVector(\@aggregImp, $self->{GI_aggregateSimStat});
     if ($self->{useAggregateSim} eq "diff") {
 	return $valProbe - $valImp;
     } elsif ($self->{useAggregateSim} eq "ratio") {
