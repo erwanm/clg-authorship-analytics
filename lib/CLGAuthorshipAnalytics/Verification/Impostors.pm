@@ -227,34 +227,33 @@ sub computeGI {
 #	    print STDERR Dumper($observs);
 #	    die "stop";
 	    my $nb = int($propObsRound * scalar(@$observs) +0.5);
-	    $self->{logger}->trace("byObs: propObsRound=$propObsRound; scalar(observs)=".scalar(@$observs)."; picking $nb observations.");
+	    $self->{logger}->trace("byObs: propObsRound=$propObsRound; scalar(observs)=".scalar(@$observs)."; picking $nb observations.") if($self->{logger});
 	    my $featSubset = pickNSloppy($nb, $observs);
-	    $self->{logger}->trace("byObs: picked ".scalar(@$featSubset)." observations.");
-	    $self->{logger}->trace("Filtering observations for probe docs");
+	    $self->{logger}->trace("byObs: picked ".scalar(@$featSubset)." observations.") if($self->{logger});
+	    $self->{logger}->trace("Filtering observations for probe docs") if($self->{logger});
 	    foreach my $impDataset (@impostorsDatasets) {
 		$probeDocsRound[0]->{$impDataset} = filterObservations($probeDocsListsByDataset[0]->[$probeDocNo[0]]->{$impDataset}->{$obsType}, $featSubset);
 		$probeDocsRound[1]->{$impDataset} = filterObservations($probeDocsListsByDataset[1]->[$probeDocNo[1]]->{$impDataset}->{$obsType}, $featSubset);
 	    }
-	    $self->{logger}->trace("Filtering observations for impostors");
+	    $self->{logger}->trace("Filtering observations for impostors") if($self->{logger});
 	    @impDocRound = map { [ filterObservations($_->[0]->getObservations($obsType), $featSubset) , $_->[1] ] } @$impostors; # remark: $_->[1] = dataset
 	} else {
-	    die "bug byocc" if ($self->{docSubsetMethod} eq "byObservation");
-	    $self->{logger}->trace("byOccurrence: picking doc subset for probe docs");
+	    $self->{logger}->trace("byOccurrence: picking doc subset for probe docs") if ($self->{logger});
 	    foreach my $impDataset (@impostorsDatasets) {
 		$probeDocsRound[0]->{$impDataset} = pickDocSubset($probeDocsListsByDataset[0]->[$probeDocNo[0]]->{$impDataset}->{$obsType}, $propObsRound, $self->{logger});
 		$probeDocsRound[1]->{$impDataset} = pickDocSubset($probeDocsListsByDataset[1]->[$probeDocNo[1]]->{$impDataset}->{$obsType}, $propObsRound, $self->{logger});
 	    }
-	    $self->{logger}->trace("byOccurrence: picking doc subset for impostors");
+	    $self->{logger}->trace("byOccurrence: picking doc subset for impostors") if ($self->{logger});
 	    @impDocRound = map { [ pickDocSubset($_->[0]->getObservations($obsType), $propObsRound, $self->{logger}) , $_->[1] ] } @$impostors;
 	}
 	my $datasetRnd = pickInList(\@impostorsDatasets); # it makes sense to compare with the same minDocFreq as the impostors, but against which ref dataset doesn't matter so much
-	$self->{logger}->trace("computing similarity between selected probe docs (using dataset '$datasetRnd')");
+	$self->{logger}->trace("computing similarity between selected probe docs (using dataset '$datasetRnd')") if ($self->{logger});
 	my $probeDocsSim = $self->{simMeasure}->compute($probeDocsRound[0]->{$datasetRnd}, $probeDocsRound[1]->{$datasetRnd});
 	my @simRound;
 	for (my $probeDocNo=0; $probeDocNo<=1; $probeDocNo++) {
 	    for (my $impNo=0; $impNo<scalar(@$impostors); $impNo++) {
 		my ($impDoc, $dataset) = ( $impDocRound[$impNo]->[0], $impDocRound[$impNo]->[1] );
-		$self->{logger}->trace("computing similarity between probe doc side $probeDocNo and impostor $impNo from dataset '$dataset'");
+		$self->{logger}->trace("computing similarity between probe doc side $probeDocNo and impostor $impNo from dataset '$dataset'") if ($self->{logger});
 		$simRound[$probeDocNo]->[$impNo] = $self->{simMeasure}->compute($probeDocsRound[$probeDocNo]->{$dataset}, $impDoc);
 	    }
 	}
