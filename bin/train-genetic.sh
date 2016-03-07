@@ -19,12 +19,12 @@ function usage {
   echo
   echo "Usage: $progName [options] <input/output dir> <cases file> <prefix genetic params>"
   echo
-  echo " <input/output dir> must contain prepared-data."
-  echo
-  echo "TODO, DEPRECATED!"
   echo "  Reads multi-conf files from STDIN. "
   echo "  High level training script which runs the training process with multiple"
-  echo "  configurations of parameters. <input dir> is the input (raw) data;"
+  echo "  configurations of parameters. <input/outupt dir> contains the input"
+  echo "  data (PAN format); addiitonal data and output files are also written"
+  echo "  in this directory."
+  echo
   echo "  a list of multi-config files is read from STDIN; in these files "
   echo "  each parameter can have several values separated by spaces, e.g.:"
   echo "    key=val1 val2 \"val 3\" ..."
@@ -35,7 +35,10 @@ function usage {
   echo "    -h this help"
   echo "    -o <train-cv options> options to transmit to train-cv.sh, e.g. '-c -s'."
   echo "    -r resume previous process at first incomplete generation found"
-  echo "    -P <parallel prefix> TODO"
+  echo "    -P <parallel prefix> specifies a path (possibly with filename prefix) where"
+  echo "       tasks are going to be written as individual files instead of being"
+  echo "       sequentially executed. This requires an external process which reads the"
+  echo "       task files and executes them in parallel."
   echo "    -f <first gen configs list file> use a list of individual configs"
   echo "       to initiate the genetic process (reads only the first column"
   echo "       of the file)"

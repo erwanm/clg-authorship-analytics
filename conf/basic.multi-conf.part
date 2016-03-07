@@ -1,0 +1,17 @@
+# ****************************************************************
+# REDEFINED COMMON PARAMETERS
+# ****************************************************************
+
+strategy=basic
+
+obsType.WORD.T.lc1.sl1.mf3=0 1
+
+
+# ***************************************************************
+# PARAMETERS FOR BASIC STRATEGY
+# ***************************************************************
+
+
+
+basic.simMeasure=cosine minmax
+multipleProbeAggregate=random  median arithm geom harmo
