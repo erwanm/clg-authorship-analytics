@@ -267,9 +267,9 @@ dieIfNoSuchDir "$outputDir" "$progName,$LINENO: "
 dieIfNoSuchFile "$configFile" "$progName,$LINENO: "
 
 readFromParamFile "$configFile" "strategy" "$progName,$LINENO: "
-if [ "$strategy" != "meta" ]; then
-    checkResourcesDir "$resourcesDir" "$progName,$LINENO: "
-fi
+#if [ "$strategy" != "meta" ]; then
+#    checkResourcesDir "$resourcesDir" "$progName,$LINENO: "
+#fi
 
 readFromParamFile "$configFile" "confidenceTrainProp" "$progName,$LINENO: " "=" 1 "0"
 #echo "DEBUG confidenceTrainProp=$confidenceTrainProp" 1>&2

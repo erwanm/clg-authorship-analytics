@@ -16,16 +16,12 @@ function usage {
   echo
   echo "Usage: $progName [options] <config file> <input data dir> <output eval dir>"
   echo
-  echo   DEPRECATED
-  echo "  High level script which takes as input an <input data dir> and a set of"
-  echo "  configurations specified in the files in <config list file>; every config is"
-  echo "  evaluated using cross-validation, and its performance is stored in a file"
-  echo "  with the same prefix in <output eval dir>. Only config files following the"
-  echo "  pattern <prefix>.conf are taken into account, and the resulting perf file"
-  echo "  is <prefix>.perf."
+  echo "  High level script which takes as input an <input data dir> and a config"
+  echo "  file; the config is is evaluated using cross-validation, and its "
+  echo "  performance is stored in a file with the same prefix in <output eval dir>."
+  echo "  The resulting perf file is <prefix>.perf."
+  echo "  "
   echo "  The cases (problems) taken into account are read from <output dir>/cases.list"
-  echo
-  echo "  <input data dir> is the complete 'prepared data' dir."
   echo
   echo "  Options:"
   echo "    -h this help"
@@ -101,6 +97,7 @@ mkdirSafe "$outputPerfDir/$prefix" "$progName,$LINENO: "
 # test if there is at least one obs type (OR indiv config!)
 #readFromParamFile "$configFile" "obsTypesList" "$progName,$LINENO: " "=" 1 # no warning if empty
 obsTypesList=$(echo "$configFile" | extractPossibleObsTypes)
+
 
 if [ ! -z "$obsTypesList" ]; then
     testCasesColFile=$(mktemp --tmpdir "tmp.$progName.main1.XXXXXXXXXX")

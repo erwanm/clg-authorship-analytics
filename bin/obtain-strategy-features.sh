@@ -56,13 +56,6 @@ dieIfNoSuchFile "$casesFile" "$progName,$LINENO: "
 dieIfNoSuchDir "$inputDataDir"  "$progName,$LINENO: "
 dieIfNoSuchFile "$configFile" "$progName,$LINENO: "
 
-vocabResources=""
-for f in "$resourcesDir"/stop-words/*.list; do
-    id=$(filename "${f%.list}")
-    vocabResources="$vocabResources;$id=$f"
-done
-vocabResources="${vocabResources:1}"
-
 readFromParamFile "$resourcesOptionFile" "vocabResources"  "$progName,$LINENO: "
 readFromParamFile "$resourcesOptionFile" "useCountFiles"  "$progName,$LINENO: "
 readFromParamFile "$resourcesOptionFile" "datasetResourcesPath"  "$progName,$LINENO: "

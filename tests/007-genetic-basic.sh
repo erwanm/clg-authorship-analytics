@@ -1,6 +1,7 @@
 #!/bin/bash
 
 source common-lib.sh
+source file-lib.sh
 
 mcFile=""
 inputData="tests/data/english-20-cases/"
@@ -26,14 +27,17 @@ fi
 
 targetDir=$(mktemp -d --tmpdir "007-genetic-basic.XXXXXX")
 echo "$0 info: target dir = $targetDir"
-inputDataDir=$(fullPathDir "$inputData")
 
-pushd $targetDir >/dev/null
-ln -s  "$inputDataDir" input
+inputDataDir=$(absolutePath "$inputData")
+pushd "$targetDir" >/dev/null
+ln -s "$inputDataDir" input
 popd >/dev/null
 
+
 # generating multi-config
-evalSafe "generate-multi-conf.sh -s basic -c common.TEST.multi-conf.part -g genetic.TEST.multi-conf.part 1 '$targetDir'"
+evalSafe "generate-multi-conf.sh -s basic -c common.TEST.multi-conf.part -g genetic.TEST.multi-conf.part 1 '$targetDir/0'" "$progName, $LINENO: "
+dieIfNoSuchFile "$targetDir/0/multi-conf-files/basic.multi-conf" "$progName, $LINENO: "
+
 
 # writing resources options file
 echo >"$targetDir/$resourcesOptionsFilename"
@@ -43,6 +47,6 @@ echo "datasetResourcesPath=$datasetResourcesPath" >>"$targetDir/$resourcesOption
 echo "resourcesAccess=$resourcesAccess" >>"$targetDir/$resourcesOptionsFilename"
 
 # run
-evalSafe "ls '$targetDir'/multi-conf-files/*.multi-conf |  train-genetic.sh '$targetDir' '$targetDir/input/truth.txt' indivGenetic_1_"
+evalSafe "ls $targetDir/0/multi-conf-files/*.multi-conf |  train-genetic.sh '$targetDir' '$targetDir/input/truth.txt' indivGenetic_1_" "$progName, $LINENO: "
 
 

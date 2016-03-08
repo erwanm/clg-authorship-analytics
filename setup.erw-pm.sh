@@ -9,3 +9,4 @@ addToEnvVar "$(pwd)/bin" PATH :
 addToEnvVar "$(pwd)/lib" PERL5LIB :
 erw-pm activate CLGTextTools
 erw-pm activate erw-ml-utils
+erw-pm activate erw-tsv-commons

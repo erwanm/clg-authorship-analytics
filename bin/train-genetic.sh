@@ -246,7 +246,7 @@ while [ $stopLoop -eq 0 ]; do
 	echo "$progName, gen $genNoStr: generating $population config files by genetic crossover"
 	evalSafe "ls \"$mcDir\"/* | expand-multi-config.pl -g \"$prevGenDir/train/configs.results:$population:$geneticParams\" -p \"$genDir/configs/\" >\"$genDir/configs.list\"" "$progName,$LINENO: "
     fi
-    echo "$progName, gen $genNoStr: evaluating configs; perfCriterion=$perfCriterion; nbFolds=$nbFoldsOrProp; prepared data=$outputDir/prepared-data; multi-config list is:"
+    echo "$progName, gen $genNoStr: evaluating configs; perfCriterion=$perfCriterion; nbFolds=$nbFoldsOrProp; input data=$outputDir/input; multi-config list is:"
     ls "$mcDir"/* 
     if [ ! -z "$parallelPrefix" ]; then
 	params="-P \"$parallelPrefix.$genNoStr\""
@@ -255,7 +255,7 @@ while [ $stopLoop -eq 0 ]; do
 	params="$params -r"
     fi
     # TODO: sleep time set to 20s for meta-training, should be much longer for strategy training
-    evalSafe "train-generation.sh -s 20s -o  \"$trainCVParams\" $params -p $perfCriterion -f $nbFoldsOrProp \"$genDir/configs.list\" \"$outputDir/prepared-data\" \"$genDir/train\"" "$progName,$LINENO: "
+    evalSafe "train-generation.sh -s 20s -o  \"$trainCVParams\" $params -p $perfCriterion -f $nbFoldsOrProp \"$genDir/configs.list\" \"$outputDir/input\" \"$genDir/train\"" "$progName,$LINENO: "
     dieIfNoSuchFile "$genDir/train/configs.results" "$progName,$LINENO: "
     stopLoop=$(evalSafe "ls \"$outputDir/generations\"/*/train/configs.results | stop-criterion.pl -c 2 -l \"$genDir/stop-criterion.log\"  \"$population\" \"$stopCriterionNbWindows\" \"$stopCriterionNbGenerationsByWindow\"" "$progName,$LINENO: ")
     echo "INFO $progName: average perf for the $stopCriterionNbWindows last ${stopCriterionNbGenerationsByWindow}-long windows: "

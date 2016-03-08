@@ -50,7 +50,7 @@ function waitFilesList {
 
 
 #
-# inputDir is prepared-data/ which contains <input> subdir
+# inputDir is the <input> subdir
 # writes two columns
 #
 function generateTruthCasesFile {
@@ -61,7 +61,7 @@ function generateTruthCasesFile {
     local truthFile="$5" # optional; if not defined, uses the official truth file with Y/N and all cases
 
     if [ -z "$truthFile" ]; then
-	truthFile=$(ls "$inputDir/input"/*/data/truth.txt | head -n 1)
+	truthFile=$(ls "$inputDir"/truth.txt | head -n 1)
 	if [ -z "$truthFile" ]; then
 	    echo "$progName error: could not find any file 'truth.txt' in $inputDir/input/*/data/truth.txt" 1>&2
 	    exit 1
@@ -124,8 +124,8 @@ function requiresPOSTags {
 function extractPossibleObsTypes {
     local res=$(
     while read file; do
-	grep "^obsTypeActive." "$file" |  while read line; do
-	    local obsType=${line#obsTypeActive.}
+	grep "^obsType." "$file" |  while read line; do
+	    local obsType=${line#obsType.}
 	    local values=${obsType#*=}
 	    memberList "1" "$values"
 	    if [ $? -eq 0 ]; then # 1 in possible values => possible type
