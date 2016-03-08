@@ -10,20 +10,14 @@ source pan-utils.sh
 
 progName=$(basename "$BASH_SOURCE")
 
-learnMode=
-trainFile=
-testFile=
-maxAttemptsRandomSubset=5
-
-
 function usage {
   echo
-  echo "Usage: $progName [options] <cases file> <input data dir> <config file> <resourcesDir>"
+  echo "Usage: $progName [options] <cases file> <input data dir> <config file> <resourcesOptionsFile>"
   echo
   echo "  Computes the verif strategy features, as specified in the config file,"
   echo "  for every case indicated in <cases file>. The actual cases are"
-  echo "  read in <input dir>/<case>, and specific resources (depending on the"
-  echo "  strategy) are located under <resourcesDir>. Resulting features are"
+  echo "  read in <input dir>/<case>, and other resources options are"
+  echo "  specified in <resourcesOptionsFile>. Resulting features are"
   echo "  printed to STDOUT."
   echo
   echo "  Options:"
@@ -56,7 +50,7 @@ fi
 casesFile="$1"
 inputDataDir="$2"
 configFile="$3"
-resourcesDir="$4"
+resourcesOptionFile="$4"
 
 dieIfNoSuchFile "$casesFile" "$progName,$LINENO: "
 dieIfNoSuchDir "$inputDataDir"  "$progName,$LINENO: "
@@ -69,6 +63,10 @@ for f in "$resourcesDir"/stop-words/*.list; do
 done
 vocabResources="${vocabResources:1}"
 
+readFromParamFile "$resourcesOptionFile" "vocabResources"  "$progName,$LINENO: "
+readFromParamFile "$resourcesOptionFile" "useCountFiles"  "$progName,$LINENO: "
+readFromParamFile "$resourcesOptionFile" "datasetResourcesPath"  "$progName,$LINENO: "
+readFromParamFile "$resourcesOptionFile" "resourcesAccess"  "$progName,$LINENO: "
 
 readFromParamFile "$configFile" "strategy" "$progName,$LINENO: "
 if [ "$strategy" == "meta" ]; then
@@ -81,11 +79,18 @@ else
 	echo "$progName error: invalid value for parameter 'strategy': '$strategy'" 1>&2
 	exit 1
     fi
+    verifParams="-w $resourcesAccess -v '$vocabResources' -d '$resourcesDir/impostors-data' "
+    if [ "$useCountFiles" == "1" ]; then
+	verifParams="-c $verifParams"
+    fi
+    tmpCasesFile=$(mktemp  --tmpdir  "$progName.main.XXXXXXXXX")
     cut -f 1 "$casesFile" | while read line; do
 	knownDocsList=$(ls "$inputDir/$caseId"/known*.txt)
 	knownDocsList=$(echo "$knownDocsList" | tr ' ' ':')
 	echo "$knownDocsList $inputDir/$caseId/unknown.txt"
-    done | "evalSafe verif-strategy.pl -w rw -c -v '$vocabResources' -d '$resourcesDir/impostors-data' '$configFile' " "$progName,$LINENO: "
+    done >"$tmpCasesFile"
+    evalSafe "verif-author.pl  $verifParams '$configFile' " "$progName,$LINENO: "
+    rm -f $tmpCasesFile
 fi
 
 

@@ -69,7 +69,7 @@ sub usage {
 	print $fh "     -p <dir> if specified, for every case processed the raw scores table is written\n";
 	print $fh "        to file <dir>/<NNN>.scores, where <NNN> is the number of the case in the\n";
 	print $fh "        input list (if reading input cases from STDIN) or '001' (if single case).\n";
-	print $fh "     -w <r|w|rw> allow verif strategy to read/write/both to/from resources disk;\n";
+	print $fh "     -i <r|w|rw> allow verif strategy to read/write/both to/from resources disk;\n";
 	print $fh "        this is currently only used by the impostors strategy for pre-sim values.\n";
 	print $fh "\n";
 }

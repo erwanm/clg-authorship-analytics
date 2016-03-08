@@ -29,6 +29,9 @@ function usage {
   echo "  each parameter can have several values separated by spaces, e.g.:"
   echo "    key=val1 val2 \"val 3\" ..."
   echo
+  echo "  <prefix genetic param> is the prefix for the series of genetic parameters"
+  echo "  to be used in the (multi-)config file, e.g. 'indivGenetic_1_'."
+  echo
   echo "  Returns the optimal config+model, which is written to <output dir>."
   echo
   echo "  Options:"
