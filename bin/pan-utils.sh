@@ -50,7 +50,7 @@ function waitFilesList {
 
 
 #
-# inputDir is the <input> subdir
+# inputDir contains the <input> subdir
 # writes two columns
 #
 function generateTruthCasesFile {
@@ -61,7 +61,7 @@ function generateTruthCasesFile {
     local truthFile="$5" # optional; if not defined, uses the official truth file with Y/N and all cases
 
     if [ -z "$truthFile" ]; then
-	truthFile=$(ls "$inputDir"/truth.txt | head -n 1)
+	truthFile=$(ls "$inputDir"/input/truth.txt | head -n 1)
 	if [ -z "$truthFile" ]; then
 	    echo "$progName error: could not find any file 'truth.txt' in $inputDir/input/*/data/truth.txt" 1>&2
 	    exit 1

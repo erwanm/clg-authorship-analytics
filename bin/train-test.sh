@@ -11,6 +11,8 @@ source pan-utils.sh
 
 progName=$(basename "$BASH_SOURCE")
 
+resourcesOptFilename="resources-options.conf"
+
 learnMode=
 trainFile=
 testFile=
@@ -19,7 +21,7 @@ maxAttemptsRandomSubset=5
 
 function usage {
   echo
-  echo "Usage: $progName [options] <input data dir> <config file> <resourcesDir> <output dir>"
+  echo "Usage: $progName [options] <input data dir> <config file> <output dir>"
   echo
   echo "  Trains or applies a model as specified by the parameters in"
   echo "   <config file>, using cases in <input data dir> as train/test data."
@@ -72,13 +74,12 @@ function pickRandomFromList {
 function computeFeaturesTSV {
     local casesFile="$1"
     local inputDir="$2"
-    local resourcesDir="$3"
-    local configFile="$4"
-    local outputDir="$5"
+    local configFile="$3"
+    local outputDir="$4"
 
 
     featuresFile=$(mktemp --tmpdir "tmp.$progName.computeFeaturesTSV1.XXXXXXXXXX")
-    evalSafe "obtain-strategy-features.sh '$casesFile' '$inputDir' '$configFile' '$resourcesDir' >'$featuresFile' " "$progName,$LINENO: "
+    evalSafe "obtain-strategy-features.sh '$casesFile' '$inputDir/input' '$configFile' '$inputDir/$resourcesOptFilename' >'$featuresFile' " "$progName,$LINENO: "
     # small sanity check below
     nbInstances=$(cat "$featuresFile" | wc -l)
     if [ $nbInstances -ne $(cat "$casesFile" | wc -l) ]; then
@@ -230,7 +231,7 @@ while getopts 'hl:a:r:m:' option ; do
     esac
 done
 shift $(($OPTIND - 1))
-if [ $# -ne 4 ]; then
+if [ $# -ne 3 ]; then
     echo "Error: expecting 4 args." 1>&2
     printHelp=1
 fi
@@ -257,19 +258,17 @@ if [ ! -z "$printHelp" ]; then
     usage 1>&2
     exit 1
 fi
-inputDataDir="$1"
+inputDir="$1"
 configFile="$2"
-resourcesDir="$3"
-outputDir="$4"
+outputDir="$3"
 
-dieIfNoSuchDir "$inputDataDir"  "$progName,$LINENO: "
+dieIfNoSuchDir "$inputDir"  "$progName,$LINENO: "
 dieIfNoSuchDir "$outputDir" "$progName,$LINENO: "
 dieIfNoSuchFile "$configFile" "$progName,$LINENO: "
+dieIfNoSuchDir "$inputDir/input" "$progName,$LINENO: "
+dieIfNoSuchFile "$inputDir/$resourcesOptFilename" "$progName,$LINENO: "
 
 readFromParamFile "$configFile" "strategy" "$progName,$LINENO: "
-#if [ "$strategy" != "meta" ]; then
-#    checkResourcesDir "$resourcesDir" "$progName,$LINENO: "
-#fi
 
 readFromParamFile "$configFile" "confidenceTrainProp" "$progName,$LINENO: " "=" 1 "0"
 #echo "DEBUG confidenceTrainProp=$confidenceTrainProp" 1>&2
@@ -278,7 +277,7 @@ if [ ! -z "$trainFile" ]; then # features for training
     dieIfNoSuchFile "$trainFile" "$progName,$LINENO: "
     mkdirSafe "$outputDir/train"
     mkdirSafe "$modelDir"
-    computeFeaturesTSV "$trainFile" "$inputDataDir" "$resourcesDir" "$configFile" "$outputDir/train"
+    computeFeaturesTSV "$trainFile" "$inputDir" "$configFile" "$outputDir/train"
     nbCols=$(head -n 1 "$outputDir/train/features.tsv" | wc -w)
     if [ "$confidenceTrainProp" != "0" ] && [ "$confidenceTrainProp" != "1" ]; then # if 0, nothing to do; if 1, same training data
 	nbCases=$(cat "$trainFile" | wc -l)
@@ -317,7 +316,7 @@ fi
 if [ ! -z "$testFile" ]; then # features for testing
     dieIfNoSuchFile "$testFile" "$progName,$LINENO: "
     mkdirSafe "$outputDir/test"
-    computeFeaturesTSV "$testFile" "$inputDataDir"  "$resourcesDir" "$configFile" "$outputDir/test"
+    computeFeaturesTSV "$testFile" "$inputDir"  "$configFile" "$outputDir/test"
     generateArff "$outputDir/test/features.tsv" "$outputDir/test/data.arff"
 fi
 

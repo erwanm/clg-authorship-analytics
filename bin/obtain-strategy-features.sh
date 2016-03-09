@@ -50,16 +50,17 @@ fi
 casesFile="$1"
 inputDataDir="$2"
 configFile="$3"
-resourcesOptionFile="$4"
+resourcesOptionsFile="$4"
 
 dieIfNoSuchFile "$casesFile" "$progName,$LINENO: "
 dieIfNoSuchDir "$inputDataDir"  "$progName,$LINENO: "
 dieIfNoSuchFile "$configFile" "$progName,$LINENO: "
+dieIfNoSuchFile "$resourcesOptionsFile" "$progName,$LINENO: "
 
-readFromParamFile "$resourcesOptionFile" "vocabResources"  "$progName,$LINENO: "
-readFromParamFile "$resourcesOptionFile" "useCountFiles"  "$progName,$LINENO: "
-readFromParamFile "$resourcesOptionFile" "datasetResourcesPath"  "$progName,$LINENO: "
-readFromParamFile "$resourcesOptionFile" "resourcesAccess"  "$progName,$LINENO: "
+readFromParamFile "$resourcesOptionsFile" "vocabResources"  "$progName,$LINENO: "
+readFromParamFile "$resourcesOptionsFile" "useCountFiles"  "$progName,$LINENO: "
+readFromParamFile "$resourcesOptionsFile" "datasetResourcesPath"  "$progName,$LINENO: "
+readFromParamFile "$resourcesOptionsFile" "resourcesAccess"  "$progName,$LINENO: "
 
 readFromParamFile "$configFile" "strategy" "$progName,$LINENO: "
 if [ "$strategy" == "meta" ]; then
@@ -72,17 +73,18 @@ else
 	echo "$progName error: invalid value for parameter 'strategy': '$strategy'" 1>&2
 	exit 1
     fi
-    verifParams="-w $resourcesAccess -v '$vocabResources' -d '$resourcesDir/impostors-data' "
+    verifParams="-i $resourcesAccess -v '$vocabResources' -d '$resourcesDir/impostors-data' "
     if [ "$useCountFiles" == "1" ]; then
 	verifParams="-c $verifParams"
     fi
     tmpCasesFile=$(mktemp  --tmpdir  "$progName.main.XXXXXXXXX")
-    cut -f 1 "$casesFile" | while read line; do
-	knownDocsList=$(ls "$inputDir/$caseId"/known*.txt)
+    cut -f 1 "$casesFile" | while read caseId; do
+	knownDocsList=$(ls "$inputDataDir/$caseId"/known*.txt)
 	knownDocsList=$(echo "$knownDocsList" | tr ' ' ':')
-	echo "$knownDocsList $inputDir/$caseId/unknown.txt"
+	echo "$knownDocsList $inputDataDir/$caseId/unknown.txt"
     done >"$tmpCasesFile"
-    evalSafe "verif-author.pl  $verifParams '$configFile' " "$progName,$LINENO: "
+#    echo "DEBUG cases for verif-author = $tmpCasesFile" 1>&2
+    evalSafe "cat '$tmpCasesFile' | verif-author.pl  $verifParams '$configFile' " "$progName,$LINENO: "
     rm -f $tmpCasesFile
 fi
 

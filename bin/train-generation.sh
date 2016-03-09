@@ -83,20 +83,21 @@ if [ ! -z "$printHelp" ]; then
     exit 1
 fi
 configsFile="$1"
-inputDataDir="$2"
+inputDir="$2"
 outputPerfDir="$3"
 
 
 dieIfNoSuchFile "$configsFile" "$progName,$LINENO: "
-dieIfNoSuchDir "$inputDataDir"  "$progName,$LINENO: "
+dieIfNoSuchDir "$inputDir"  "$progName,$LINENO: "
 dieIfNoSuchDir "$outputPerfDir" "$progName,$LINENO: "
 casesFile="$outputPerfDir/cases.list"
 dieIfNoSuchFile "$casesFile" "$progName,$LINENO: "
 
+
 echo "$progName: generating folds"
 
 truthFile="$outputPerfDir/truth"
-generateTruthCasesFile "$inputDataDir" "$truthFile" 1 " | filter-column.pl \"$casesFile\" 1 1" # filter only the  specified cases
+generateTruthCasesFile "$inputDir" "$truthFile" 1 " | filter-column.pl \"$casesFile\" 1 1" # filter only the  specified cases
 nbCases=$(cat "$truthFile" | wc -l)
 #echo "DEBUG truthFile=$truthFile; nbCases=$nbCases" 1>&2
 #exit 2
@@ -106,8 +107,8 @@ if [ $resume -eq 0 ] || [ ! -d "$outputPerfDir/folds" ]; then
     mkdirSafe "$outputPerfDir/folds"
     evalSafe "generate-random-cross-fold-ids.pl $nbFoldsCV $nbCases \"$outputPerfDir/folds/fold\"" "$progName: "
     for foldIndexesFile in "$outputPerfDir/folds"/fold*.indexes; do
-#    echo  "DEBUG fold generation: generateTruthCasesFile \"$inputDataDir\" \"${foldIndexesFile%.indexes}.cases\" 0  \" | select-lines-nos.pl \\\"$foldIndexesFile\\\" 1\" \"$truthFile\"" 1>&2
-	generateTruthCasesFile "$inputDataDir" "${foldIndexesFile%.indexes}.cases" 0  " | select-lines-nos.pl \"$foldIndexesFile\" 1" "$truthFile"
+#    echo  "DEBUG fold generation: generateTruthCasesFile \"$inputDir\" \"${foldIndexesFile%.indexes}.cases\" 0  \" | select-lines-nos.pl \\\"$foldIndexesFile\\\" 1\" \"$truthFile\"" 1>&2
+	generateTruthCasesFile "$inputDir" "${foldIndexesFile%.indexes}.cases" 0  " | select-lines-nos.pl \"$foldIndexesFile\" 1" "$truthFile"
     done
 fi
 
@@ -121,11 +122,11 @@ cat "$configsFile" | while read configFile; do
     if [ $resume -eq 0 ] || [ ! -s "$outputPerfDir/$prefix.perf" ]; then
 	echo "$progName: computing for config $prefix from '$configFile'"
 	if [ -z "$parallelPrefix" ]; then
-	    echo "$progName: calling 'train-cv.sh $trainCVParams \"$configFile\" \"$inputDataDir\" \"$outputPerfDir\""
-	    evalSafe "train-cv.sh $trainCVParams \"$configFile\" \"$inputDataDir\" \"$outputPerfDir\"" "$progName,$LINENO: "
+	    echo "$progName: calling 'train-cv.sh $trainCVParams \"$configFile\" \"$inputDir\" \"$outputPerfDir\""
+	    evalSafe "train-cv.sh $trainCVParams \"$configFile\" \"$inputDir\" \"$outputPerfDir\"" "$progName,$LINENO: "
 	else
 	    taskFile=$(evalSafe "mktemp  $parallelPrefix.$prefix.XXXXXXXXX" "$progName,$LINENO: ")
-	    echo "train-cv.sh $trainCVParams \"$configFile\" \"$inputDataDir\" \"$outputPerfDir\" >\"$outputPerfDir/$prefix.log.out\" 2>\"$outputPerfDir/$prefix.log.err\"" >"$taskFile"
+	    echo "train-cv.sh $trainCVParams \"$configFile\" \"$inputDir\" \"$outputPerfDir\" >\"$outputPerfDir/$prefix.log.out\" 2>\"$outputPerfDir/$prefix.log.err\"" >"$taskFile"
 	fi
     else
 	echo "$progName: using existing results for config $prefix for '$configFile': '$outputPerfDir/$prefix.perf'"
