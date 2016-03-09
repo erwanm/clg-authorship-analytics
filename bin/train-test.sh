@@ -93,6 +93,7 @@ function computeFeaturesTSV {
 	if [ -z "$gold" ]; then
 	    gold="?"
 	fi
+	echo "$gold"
     done | paste "$featuresFile" - >"$outputDir/features.tsv"
 
     # step 2: clean up weird NaN values and add header
