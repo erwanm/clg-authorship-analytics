@@ -102,8 +102,8 @@ for stageId in $stagesIds; do
 	    params="$params -P \"$parallelPrefix.$stageId\""
 	fi
 	mkdirSafe "$outputDir/$stageId"
-	rm -f "$outputDir/$stageId/prepared-data"
-	linkAbsolutePath "$outputDir/$stageId" "$outputDir/prepared-data"
+	rm -f "$outputDir/$stageId/input"  "$outputDir/$stageId/resources-options.conf"
+	linkAbsolutePath "$outputDir/$stageId" "$outputDir/input" "$outputDir/resources-options.conf"
 	if [ "$strategy" == "meta" ]; then
 	    rm -f "$outputDir/$stageId/apply-strategy-configs"
 	    linkAbsolutePath "$outputDir/$stageId" "$outputDir/apply-strategy-configs"
@@ -134,7 +134,7 @@ mkdirSafe "$bestDir"  "$progName,$LINENO: "
 
 echo "$progName: generating folds for CV (unbiased predictions)"
 truthFile="$bestDir/truth"
-generateTruthCasesFile "$outputDir/prepared-data" "$truthFile" 1 " | filter-column.pl \"$casesFile\" 1 1" # filter only the  specified cases
+generateTruthCasesFile "$outputDir" "$truthFile" 1 " | filter-column.pl \"$casesFile\" 1 1" # filter only the  specified cases
 nbCases=$(cat "$truthFile" | wc -l)
 if [ $resume -eq 0 ] || [ ! -d "$bestDir/folds" ]; then
     rm -rf "$bestDir/folds"
@@ -145,11 +145,10 @@ if [ $resume -eq 0 ] || [ ! -d "$bestDir/folds" ]; then
     done
 fi
 
-
 confNo=1
 rm -f "$outputDir/best.prefix-list"
 casesForRetrainingFile="$bestDir/cases"
-generateTruthCasesFile "$outputDir/prepared-data" "$casesForRetrainingFile" 0 " | filter-column.pl \"$casesFile\" 1 1" # different from truthFile above: 0/1 instead of Y/N
+generateTruthCasesFile "$outputDir" "$casesForRetrainingFile" 0 " | filter-column.pl \"$casesFile\" 1 1" # different from truthFile above: 0/1 instead of Y/N
 waitFile=$(mktemp --tmpdir "$progName.main.wait.XXXXXXXXX")
 #echo "DEBUG $waitFile" 1>&2
 cat "$outputDir/runs/runs.final-rank" | cut -f 1 | while read configFile; do
@@ -157,15 +156,13 @@ cat "$outputDir/runs/runs.final-rank" | cut -f 1 | while read configFile; do
     if [ $resume -eq 0 ] || [ ! -d "$bestDir/$confNoStr.model" ] || [ ! -s "$bestDir/$confNoStr/predicted.answers" ] ; then
 	evalSafe "cat \"$configFile\" >\"$bestDir/$confNoStr.conf\""  "$progName,$LINENO: "
 	mkdirSafe "$bestDir/$confNoStr.model"  "$progName,$LINENO: "
-#	mkdirSafe "$bestDir/$confNoStr"  "$progName,$LINENO: " # done in train-cv
-	if [ "$strategy" != "meta" ]; then
-	    specificPreparedInputDir=$(getPreparedSpecificDir "$bestDir/$confNoStr.conf" "$outputDir/prepared-data/input" "input")
-	else
-	    specificPreparedInputDir="$outputDir/prepared-data" # not used
-	fi
-	command1="train-test.sh -l \"$casesForRetrainingFile\" -m \"$bestDir/$confNoStr.model\" \"$specificPreparedInputDir\" \"$bestDir/$confNoStr.conf\" \"$outputDir/prepared-data\" \"$bestDir/$confNoStr.model\""
-	command2="train-cv.sh  \"$bestDir/$confNoStr.conf\" \"$outputDir/prepared-data\" \"$bestDir\""
-
+#	if [ "$strategy" != "meta" ]; then
+#	    specificPreparedInputDir=$(getPreparedSpecificDir "$bestDir/$confNoStr.conf" "$outputDir/prepared-data/input" "input")
+#	else
+#	    specificPreparedInputDir="$outputDir/prepared-data" # not used
+#	fi
+	command1="train-test.sh -l \"$casesForRetrainingFile\" -m \"$bestDir/$confNoStr.model\" \"$outputDir\" \"$bestDir/$confNoStr.conf\" \"$outputDir\" \"$bestDir/$confNoStr.model\""
+	command2="train-cv.sh  \"$bestDir/$confNoStr.conf\" \"$outputDir\" \"$bestDir\""
 
 	if [ -z "$parallelPrefix"  ]; then
 	    echo "$progName: calling '$command1'"

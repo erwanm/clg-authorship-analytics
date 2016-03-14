@@ -107,8 +107,8 @@ for multiConfStrategyFile in "$multiConfDir"/*.multi-conf; do
     strategyDir="$outputDir/strategy-training/$strategy"
     rm -f "$strategyDir/done.signal"
     mkdirSafe "$strategyDir"
-    rm -f "$strategyDir/prepared-data" 
-    linkAbsolutePath "$strategyDir" "$outputDir/prepared-data"
+    rm -f "$strategyDir/input" "$strategyDir/resources-options.conf" 
+    linkAbsolutePath "$strategyDir" "$outputDir/input"  "$outputDir/resources-options.conf" 
     echo "$progName: launching training process for strategy '$strategy' in '$strategyDir'; multiConfStrategyFile=$multiConfStrategyFile"
     rm -f "$strategyDir/done.signal"
     if [ -z "$parallelPrefix" ]; then
@@ -130,9 +130,9 @@ rm -f  "$waitFile"
 applyDir="$outputDir/apply-strategy-configs"
 mkdirSafe "$applyDir"
 
-generateTruthCasesFile "$outputDir/prepared-data" "$applyDir/train.truth" 1 " | filter-column.pl \"$trainCasesFile\" 1 1"
+generateTruthCasesFile "$outputDir" "$applyDir/train.truth" 1 " | filter-column.pl \"$trainCasesFile\" 1 1"
 #evalSafe "cut -d ' ' -f 1 \"$applyDir/train.truth\" >\"$applyDir/train.cases\""  "$progName,$LINENO: "
-generateTruthCasesFile "$outputDir/prepared-data" "$applyDir/test.truth" 1 " | filter-column.pl \"$testCasesFile\" 1 1"
+generateTruthCasesFile "$outputDir" "$applyDir/test.truth" 1 " | filter-column.pl \"$testCasesFile\" 1 1"
 #evalSafe "cut -d ' ' -f 1 \"$applyDir/test.truth\" >\"$applyDir/test.cases\""  "$progName,$LINENO: "
 
 mkdirSafe "$applyDir/fold.train"
@@ -199,8 +199,8 @@ generateMetaMultiConf "$outputDir/meta-template.multi-conf" "$outputDir/selected
 rm -f "$metaDir/$(basename "$applyDir")" 
 linkAbsolutePath "$metaDir" "$applyDir" 
 # prepared-data because sub-scripts use the truth file from there; not great design but harmless
-rm -f "$metaDir/prepared-data" 
-linkAbsolutePath "$metaDir" "$outputDir/prepared-data"
+#rm -f "$metaDir/prepared-data" 
+#linkAbsolutePath "$metaDir" "$outputDir/prepared-data"
 
 echo "$progName: launching training process for meta stage in '$metaDir'; multiConfStrategyFile=$metaMC"
 if [ -z "$parallelPrefix" ]; then

@@ -3,7 +3,7 @@
 source common-lib.sh
 source file-lib.sh
 
-progName="007-genetic-basic.sh"
+progName="008-genetic-all.sh"
 
 mcFile=""
 inputData="tests/data/english-20-cases/"
@@ -27,7 +27,7 @@ else
 fi
 
 
-targetDir=$(mktemp -d --tmpdir "007-genetic-basic.XXXXXX")
+targetDir=$(mktemp -d --tmpdir "$progName.XXXXXX")
 echo "$0 info: target dir = $targetDir"
 
 inputDataDir=$(absolutePath "$inputData")
@@ -37,8 +37,11 @@ popd >/dev/null
 
 
 # generating multi-config
-evalSafe "generate-multi-conf.sh -s basic -c common.TEST.multi-conf.part -g genetic.TEST.multi-conf.part 1 '$targetDir/0'" "$progName, $LINENO: "
-dieIfNoSuchFile "$targetDir/0/multi-conf-files/basic.multi-conf" "$progName, $LINENO: "
+evalSafe "generate-multi-conf.sh -c common.std.multi-conf.part -g genetic.TEST.multi-conf.part 1 '$targetDir/'" "$progName, $LINENO: "
+rm -f "$targetDir/meta-template.multi-conf"
+cp "conf/meta-template.TEST.multi-conf" "$targetDir/meta-template.multi-conf"
+dieIfNoSuchFile "$targetDir/multi-conf-files/basic.multi-conf" "$progName, $LINENO: "
+dieIfNoSuchFile "$targetDir/meta-template.multi-conf" "$progName, $LINENO: "
 
 
 # writing resources options file
@@ -49,6 +52,6 @@ echo "datasetResourcesPath=$datasetResourcesPath" >>"$targetDir/$resourcesOption
 echo "resourcesAccess=$resourcesAccess" >>"$targetDir/$resourcesOptionsFilename"
 
 # run
-echo "$targetDir/0/multi-conf-files/basic.multi-conf" | evalSafe "train-genetic.sh '$targetDir' '$targetDir/input/truth.txt' indivGenetic_1_" "$progName, $LINENO: "
+evalSafe "train-top-level.sh '$targetDir'" "$progName, $LINENO: "
 
 

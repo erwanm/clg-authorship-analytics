@@ -258,7 +258,7 @@ while [ $stopLoop -eq 0 ]; do
     evalSafe "train-generation.sh -s 20s -o  \"$trainCVParams\" $params -p $perfCriterion -f $nbFoldsOrProp \"$genDir/configs.list\" \"$outputDir\" \"$genDir/train\"" "$progName,$LINENO: "
     dieIfNoSuchFile "$genDir/train/configs.results" "$progName,$LINENO: "
     stopLoop=$(evalSafe "ls \"$outputDir/generations\"/*/train/configs.results | stop-criterion.pl -c 2 -l \"$genDir/stop-criterion.log\"  \"$population\" \"$stopCriterionNbWindows\" \"$stopCriterionNbGenerationsByWindow\"" "$progName,$LINENO: ")
-    echo "INFO $progName: average perf for the $stopCriterionNbWindows last ${stopCriterionNbGenerationsByWindow}-long windows: "
+    echo "INFO $progName: average perf for the last $stopCriterionNbWindows ${stopCriterionNbGenerationsByWindow}-long windows: "
     evalSafe "cat \"$genDir/stop-criterion.log\"" "$progName,$LINENO: "
     genNo=$(( $genNo + 1 ))
 done

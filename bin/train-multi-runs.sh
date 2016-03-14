@@ -21,7 +21,7 @@ function usage {
   echo
   echo "Usage: $progName [options] <input/output dir> <cases file> <configs file>"
   echo
-  echo " <input/output dir> must contain prepared-data."
+#  echo " <input/output dir> must contain prepared-data."
   echo
   echo "  By default, does a 10x2 train/test validation, i.e. does 10 runs of"
   echo "  a 2 folds CV of all the configs as input. Returns stats for each individual config."
@@ -122,13 +122,13 @@ for runNo in $(seq 1 $nbRuns); do
     mkdirSafe "$runDir"
     if [ $resume -eq 0 ] || [ ! -s "$runDir/configs.results" ]; then
 	evalSafe "cat \"$casesFile\" > \"$runDir/cases.list\"" "$progName,$LINENO: "
-	echo "$progName, run $runNoStr: evaluating configs; nbFolds=$nbFolds; prepared data=$outputDir/prepared-data"
+	echo "$progName, run $runNoStr: evaluating configs; nbFolds=$nbFolds; "
 	params=""
 	if [ ! -z "$parallelPrefix" ]; then
 	    params="-P \"$parallelPrefix.$runNoStr\""
 	fi
  	# remark: -r (resume) ok even if resume=0, since without resume the dir has been removed
-	evalSafe "train-generation.sh -s 10s -r $params -o \"$trainCVParams\" -f $nbFolds \"$outputDir/runs/configs.list\" \"$outputDir/prepared-data\" \"$runDir\"" "$progName,$LINENO: "
+	evalSafe "train-generation.sh -s 10s -r $params -o \"$trainCVParams\" -f $nbFolds \"$outputDir/runs/configs.list\" \"$outputDir\" \"$runDir\"" "$progName,$LINENO: "
 	dieIfNoSuchFile "$runDir/configs.results" "$progName,$LINENO: "
     else
 	echo "$progName, run $runNoStr: using existing results"

@@ -3,6 +3,11 @@
 # PARAMETERS USED IN DATA PREPARATION
 # ***********************************
 
+formatting=0
+wordTokenization=1
+
+
+
 # special: observation types allowed
 
 obsType.WORD.T.lc1.sl1.mf2=0 1

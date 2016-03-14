@@ -29,7 +29,7 @@ function usage {
   echo "  The cases (problems) taken into account are read from <output dir>/cases.list,"
   echo "  and the gold standard (true answer) is read from <output dir>/truth."
   echo
-  echo "  <input data dir> is the complete 'prepared data' dir."
+#  echo "  <input data dir> is the complete 'prepared data' dir."
   echo
   echo "  Options:"
   echo "    -h this help"

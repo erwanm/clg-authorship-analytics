@@ -19,7 +19,7 @@ function usage {
   echo
   echo "Usage: $progName [options] <input/output dir>"
   echo
-  echo "  the data must have been prepared in <input/output dir>/prepared-data."
+#  echo "  the data must have been prepared in <input/output dir>/prepared-data."
   echo "  Reads the multi-config files in <input/output dir>/multi-conf-files/*.multi-conf"
   echo "  For each multi-conf file (strategy), a full training process is launched."
   echo "  '<input/output dir>/meta-template.multi-conf' must exist."
@@ -77,12 +77,12 @@ outputDir="$1"
 
 dieIfNoSuchDir "$outputDir" "$progName,$LINENO: "
 dieIfNoSuchDir "$outputDir/multi-conf-files" "$progName,$LINENO: "
-dieIfNoSuchDir "$outputDir/prepared-data" "$progName,$LINENO: "
+#dieIfNoSuchDir "$outputDir/prepared-data" "$progName,$LINENO: "
 dieIfNoSuchFile "$outputDir/meta-template.multi-conf" "$progName,$LINENO: "
 
 
 
-truthFile="$outputDir/prepared-data/input/docSize.0/data/truth.txt"
+truthFile="$outputDir/input/truth.txt"
 dieIfNoSuchFile "$truthFile"  "$progName,$LINENO: "
 nbCases=$(cat "$truthFile" | wc -l)
 
@@ -111,8 +111,8 @@ for foldIndexesFile in "$outputDir/outerCV-folds"/*.train.indexes; do
     rm -f "$outputDir/$foldId/best-meta-configs.list"
     # remove symlink prepared-data in case the dir structure has changed, and link back to the (possibly new) good dir/link
     # remark: in the unlikely event that this would be a real dir, it wouldn't be removed because rm -f (no -r)
-    rm -f "$outputDir/$foldId/prepared-data"
-    linkAbsolutePath "$outputDir/$foldId" "$outputDir/prepared-data"
+    rm -f "$outputDir/$foldId/input" "$outputDir/$foldId/resources-options.conf"
+    linkAbsolutePath  "$outputDir/$foldId" "$outputDir/input" "$outputDir/resources-options.conf"
     cat "$outputDir/meta-template.multi-conf" >"$outputDir/$foldId/meta-template.multi-conf"
     echo "$progName: calling train-outerCV-1fold.sh for fold $foldId in $outputDir/$foldId"
     rm -f "$outputDir/$foldId/best-meta-configs.list"

@@ -1,0 +1,11 @@
+
+strategy=univ
+
+univ.simMeasure=cosine minmax
+univ.nbRounds=10 25 50 100
+univ.propObsSubset=0.1 0.2 0.5
+univ.withReplacement=0 1
+univ.finalScoresMethod=aggregSimByRound countMostSimByRound both
+univ.aggregSimByRound=all homogeneity sameCat mergedOrNot
+univ.countMostSimByRound=all homogeneity sameCat mergedOrNot
+univ.aggregSimByRoundAggregType=median arithm geom harmo

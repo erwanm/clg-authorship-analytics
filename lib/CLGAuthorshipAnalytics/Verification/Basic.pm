@@ -69,9 +69,9 @@ sub compute {
 		    push(@values, $res);
 		}
 	    }
-	    $self->{logger}->debug("similarity value for '$obsType' = $simValue") if ($self->{logger});
 	    $simValue = aggregateVector(\@values, $self->{multipleProbeAggregate});
 	}
+	$self->{logger}->debug("similarity value for '$obsType' = $simValue") if ($self->{logger});
 	push(@features, $simValue);
     }
 
