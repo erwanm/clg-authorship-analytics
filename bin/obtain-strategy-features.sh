@@ -84,7 +84,9 @@ else
 	echo "$knownDocsList $inputDataDir/$caseId/unknown.txt"
     done >"$tmpCasesFile"
 #    echo "DEBUG cases for verif-author = $tmpCasesFile" 1>&2
-    evalSafe "cat '$tmpCasesFile' | verif-author.pl  $verifParams '$configFile' " "$progName,$LINENO: "
+    command="cat '$tmpCasesFile' | verif-author.pl  $verifParams '$configFile' "
+#   echo "DEBUG: command='$command'" 1>&2
+    evalSafe "$command" "$progName,$LINENO: "
     rm -f $tmpCasesFile
 fi
 

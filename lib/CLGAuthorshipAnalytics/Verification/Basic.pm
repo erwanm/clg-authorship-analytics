@@ -70,6 +70,7 @@ sub compute {
 		}
 	    }
 	    $simValue = aggregateVector(\@values, $self->{multipleProbeAggregate});
+	    $simValue = 0 if (!defined($simValue)); # todo: questionable simplification, maybe should be NaN?
 	}
 	$self->{logger}->debug("similarity value for '$obsType' = $simValue") if ($self->{logger});
 	push(@features, $simValue);
