@@ -62,6 +62,8 @@ readFromParamFile "$resourcesOptionsFile" "useCountFiles"  "$progName,$LINENO: "
 readFromParamFile "$resourcesOptionsFile" "datasetResourcesPath"  "$progName,$LINENO: "
 readFromParamFile "$resourcesOptionsFile" "resourcesAccess"  "$progName,$LINENO: "
 
+dieIfNoSuchDir "$datasetResourcesPath"  "$progName,$LINENO: "
+
 readFromParamFile "$configFile" "strategy" "$progName,$LINENO: "
 if [ "$strategy" == "meta" ]; then
 	# TODO VERY DIRTY
@@ -73,7 +75,7 @@ else
 	echo "$progName error: invalid value for parameter 'strategy': '$strategy'" 1>&2
 	exit 1
     fi
-    verifParams="-i $resourcesAccess -v '$vocabResources' -d '$resourcesDir/impostors-data' "
+    verifParams="-i $resourcesAccess -v '$vocabResources' -d '$datasetResourcesPath/' "
     if [ "$useCountFiles" == "1" ]; then
 	verifParams="-c $verifParams"
     fi

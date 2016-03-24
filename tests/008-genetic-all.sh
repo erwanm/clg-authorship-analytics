@@ -52,6 +52,6 @@ echo "datasetResourcesPath=$datasetResourcesPath" >>"$targetDir/$resourcesOption
 echo "resourcesAccess=$resourcesAccess" >>"$targetDir/$resourcesOptionsFilename"
 
 # run
-evalSafe "train-top-level.sh '$targetDir'" "$progName, $LINENO: "
+evalSafe "train-top-level.sh -r '$targetDir'" "$progName, $LINENO: "
 
 

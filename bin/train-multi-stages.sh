@@ -161,7 +161,7 @@ cat "$outputDir/runs/runs.final-rank" | cut -f 1 | while read configFile; do
 #	else
 #	    specificPreparedInputDir="$outputDir/prepared-data" # not used
 #	fi
-	command1="train-test.sh -l \"$casesForRetrainingFile\" -m \"$bestDir/$confNoStr.model\" \"$outputDir\" \"$bestDir/$confNoStr.conf\" \"$outputDir\" \"$bestDir/$confNoStr.model\""
+	command1="train-test.sh -l \"$casesForRetrainingFile\" -m \"$bestDir/$confNoStr.model\" \"$outputDir\" \"$bestDir/$confNoStr.conf\" \"$bestDir/$confNoStr.model\""
 	command2="train-cv.sh  \"$bestDir/$confNoStr.conf\" \"$outputDir\" \"$bestDir\""
 
 	if [ -z "$parallelPrefix"  ]; then

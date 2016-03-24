@@ -29,7 +29,7 @@ function usage {
   echo "    -h this help"
 #  echo "    -s fail safe model for train-cv.sh  (do not abort on error)."
   echo "    -o <train-cv options> options to transmit to train-cv.sh, e.g. '-c -s'."
-  echo "    -r <num> resume previous process"
+  echo "    -r resume previous process"
 #  echo "       remark: recomputes generation <num> and following if existing"
   echo "    -P <parallel prefix> TODO"
 #  echo "    -f <first gen configs list file> use a list of individual configs"

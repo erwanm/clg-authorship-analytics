@@ -19,7 +19,7 @@ use CLGTextTools::SimMeasures::Measure qw/createSimMeasureFromId/;
 use Data::Dumper;
 
 our @ISA=qw/CLGAuthorshipAnalytics::Verification::VerifStrategy/;
-
+our $nanStr = "NA";
 use base 'Exporter';
 our @EXPORT_OK = qw/loadPreSimValuesFile writePreSimValuesFile/;
 
@@ -298,11 +298,14 @@ sub preselectMostSimilarImpostorsDataset {
 	foreach my $impDataset (@impostorsDatasets) {
 	    my $nbToSelect = $nbByDataset;
 	    my $impostors = $self->{impostors}->{$impDataset}->getDocsAsList();
+	    confessLog($self->{logger}, "Error: 0 impostors in dataset 'impDataset'") if (scalar(@$impostors) == 0);
+	    $self->{logger}->debug("dataset '$impDataset': ".scalar(@$impostors)." impostors available, we need $nbToSelect.") if ($self->{logger});
 	    my @mostSimilarDocs=();
 	    while (scalar(@mostSimilarDocs) <= $nbToSelect - scalar(@$impostors)) { # in case not enough impostors
+		$self->{logger}->trace("padding dataset '$impDataset': we have ".scalar(@mostSimilarDocs).", we need $nbToSelect.") if ($self->{logger});
 		push(@mostSimilarDocs, @$impostors);
 	    }
-	    warnLog("Warning: not enough impostors in dataset '$impDataset' for preselecting $nbByDataset docs, using all impostors") if (scalar(@mostSimilarDocs > 0));
+	    warnLog("Warning: not enough impostors in dataset '$impDataset' for preselecting $nbByDataset docs, using all impostors") if (scalar(@mostSimilarDocs) > 0);
 	    $nbToSelect = $nbToSelect - scalar(@mostSimilarDocs); # guaranteed to have  0 <= $nbToSelect < scalar(@$impostors)
 	    if ($nbToSelect > 0) {
 		my @sortedImpBySimByProbe;
@@ -360,6 +363,7 @@ sub computeOrLoadPreSimValues {
     my $probeDoc = shift;
     my $impDataset = shift;
 
+    $self->{logger}->debug("Pre-sim values: load from file if possible, or compute...") if ($self->{logger});
     if ($self->{diskReadAccess}) {
 	$self->{logger}->debug("Trying to load pre-sim values from file...") if ($self->{logger});
 	my $res = loadPreSimValuesFile($probeDoc->getFilename(), $impDataset, $self->{logger});
@@ -370,7 +374,9 @@ sub computeOrLoadPreSimValues {
 		confessLog($self->{logger}, "Error loading pre-sim values: no value found for impostor '$impId' (probe file ".$probeDoc->getFilename().", dataset '$impDataset')") if (!defined($res->{$impId}));
 	    }
 	    return $res ;
-	} # otherwise the file was not found, sim values have to be computed
+	} else { # otherwise the file was not found, sim values have to be computed
+	    $self->{logger}->debug("Pre-sim values: not found in file, going to compute them.") if ($self->{logger});
+	}
     }
     my $obsType;
     if (defined($self->{preSimObsType})) {
@@ -531,25 +537,34 @@ sub countMostSimFeature {
     my $impSimVectors = shift;
 
     my $sum=0;
+    my $nbCounted=0;
     for (my $i=0; $i<scalar(@$probeSimVector); $i++) { # iterate rounds
 	if ($self->{GI_useCountMostSimFeature} eq "original") {
 	    $sum++ if ( $probeSimVector->[$i]**2 > ($impSimVectors->[0]->[$i] * $impSimVectors->[1]->[$i]) );
+	    $nbCounted++;
 	} elsif ($self->{GI_useCountMostSimFeature} eq "ASGALF") {
-	    $sum +=  ( $probeSimVector->[$i]**2 / ($impSimVectors->[0]->[$i] * $impSimVectors->[1]->[$i]) );
+	    if ($impSimVectors->[0]->[$i] * $impSimVectors->[1]->[$i] != 0) {
+		$sum +=  ( $probeSimVector->[$i]**2 / ($impSimVectors->[0]->[$i] * $impSimVectors->[1]->[$i]) );
+		$nbCounted++;
+	    }
 	} elsif ($self->{GI_useCountMostSimFeature} eq "ASGALFavg") {
-	    $sum +=  ( $probeSimVector->[$i] * 2 / ($impSimVectors->[0]->[$i] + $impSimVectors->[1]->[$i]) );
+	    if ($impSimVectors->[0]->[$i] + $impSimVectors->[1]->[$i] != 0) {
+		$sum +=  ( $probeSimVector->[$i] * 2 / ($impSimVectors->[0]->[$i] + $impSimVectors->[1]->[$i]) );
+		$nbCounted++;
+	    }
 	} else {
 	    confessLog($self->{logger}, "Error: invalid value '".$self->{GI_useCountMostSimFeature}."' for param 'GI_useCountMostSimFeature' ");
 	}
     }
-    $self->{logger}->debug("Counting most similar between probe values and impostor values, method '".$self->{GI_useCountMostSimFeature}."': sum = $sum; nb rounds = ".scalar(@$probeSimVector)."; 'normalized' score = ".($sum / scalar(@$probeSimVector)))  if ($self->{logger});
+    $self->{logger}->debug("Counting most similar between probe values and impostor values, method '".$self->{GI_useCountMostSimFeature}."': sum = $sum; nb rounds counted = $nbCounted; 'normalized' score = ".($sum / $nbCounted))  if ($self->{logger});
+    confessLog($self->{logger}, "Error: no round counted at all in 'countMostSimFeature'") if ($nbCounted == 0);
 
     # IMPORTANT: the normalisation makes sense only for the original version
     # I don't think we can normalise the two others since we can't be sure
     # that B>=A in A/B (i.e. sim(Pi,Ii)>sim(P1,P2))
     # However dividing every score by the same value doesn't hurt, it's just
     # that the result shouldn't be interpreted as necessarily in [0,1]
-    return $sum / scalar(@$probeSimVector);
+    return $sum / $nbCounted;
 }
 
 
@@ -612,7 +627,7 @@ sub relativeRankFeature {
 	}
 	$res[$run] = ( $relRankByProbe[0] + $relRankByProbe[1] ) /2; # simple average between the two sides for each run
     }
-    my $finalScore = aggregateVector(\@res, $self->{GI_aggregRelRank});
+    my $finalScore = aggregateVector(\@res, $self->{GI_aggregRelRank}, $nanStr);
     return $finalScore;
 
 }
@@ -634,11 +649,13 @@ sub aggregateSimComparison {
 	    push(@aggregImp, @{$scores->[$run]->[2]->[$probeNo]});
 	}
     }
-    my $valProbe = aggregateVector(\@aggregProbe, $self->{GI_aggregateSimStat});
-    my $valImp = aggregateVector(\@aggregImp, $self->{GI_aggregateSimStat});
+    my $valProbe = aggregateVector(\@aggregProbe, $self->{GI_aggregateSimStat}, $nanStr);
+    my $valImp = aggregateVector(\@aggregImp, $self->{GI_aggregateSimStat}, $nanStr);
+    return $nanStr if (!defined($valProbe) || !defined($valImp) || ($valProbe eq $nanStr) || ($valImp eq $nanStr));
     if ($self->{useAggregateSim} eq "diff") {
 	return $valProbe - $valImp;
     } elsif ($self->{useAggregateSim} eq "ratio") {
+	return  $nanStr if ($valImp == 0);
 	return $valProbe / $valImp;
     } else {
 	confessLog($self->{logger}, "Error: invalid value '".$self->{useAggregateSim}."' for param 'useAggregateSim' ");
