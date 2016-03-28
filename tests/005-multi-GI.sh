@@ -22,5 +22,5 @@ fi
 echo "$0 info: printing scores tables to dir '$scoresDir'"
 for d in tests/data/english-20-cases/*/; do 
     echo "$d/known01.txt $d/unknown.txt"
-done | eval "verif-author.pl -v '$vocabResources' -i rw $logOpt -p $scoresDir -d tests/data/pan14.impostors tests/005-multi-GI.conf"
+done | eval "verif-author.pl -c -v '$vocabResources' -i rw $logOpt -p $scoresDir -d tests/data/pan14.impostors tests/005-multi-GI.conf"
 

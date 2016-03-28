@@ -66,10 +66,13 @@ sub new {
     my $impostors =  $params->{impostors};
     $self->{impostors} = $impostors;
     confessLog($self->{logger}, "Error: at least one impostor dataset must be provided") if (!defined($impostors) || (ref($impostors) && (scalar(@$impostors)==0)) || (!ref($impostors) && ($impostors eq "")));
+    $self->{diskWriteAccess} = assignDefaultAndWarnIfUndef("diskWriteAccess", $params->{diskWriteAccess}, 0, $self->{logger}); # possibly used for useCountFiles impostors jut below!
     if (!ref($impostors)) { # if impostors not provided directly as a list of DocCollection objects
 	confessLog("Error: if impostors are not provided as a list of DocCollection objects, then parameter 'datasetResources' must be defined.") if (!defined($params->{datasetResources}));
 	my @impDatasetsIds = split(/;/, $impostors);
-	$self->{impostors} = createDatasetsFromParams($params, \@impDatasetsIds, $params->{datasetResources}, $params->{minDocFreq}, $params->{filePattern}, $self->{logger});
+	my %impParams = %$params;
+	$impParams{useCountFiles} = $self->{diskWriteAccess}; # i think that's what makes more sense, but it's a bit weird
+	$self->{impostors} = createDatasetsFromParams(\%impParams, \@impDatasetsIds, $params->{datasetResources}, $params->{minDocFreq}, $params->{filePattern}, $self->{logger});
     }
     $self->{nbImpostorsUsed} = assignDefaultAndWarnIfUndef("nbImpostorsUsed", $params->{nbImpostorsUsed}, 25, $self->{logger});
     $self->{selectNTimesMostSimilarFirst} = assignDefaultAndWarnIfUndef("selectNTimesMostSimilarFirst", $params->{selectNTimesMostSimilarFirst}, 0, $self->{logger});
@@ -86,7 +89,6 @@ sub new {
     $self->{useAggregateSim} = assignDefaultAndWarnIfUndef("useAggregateSim", $params->{useAggregateSim}, "0", $self->{logger});
     $self->{GI_aggregateSimStat} = assignDefaultAndWarnIfUndef("aggregateSimStat", $params->{aggregateSimStat},  "arithm", $self->{logger});
     $self->{diskReadAccess} = assignDefaultAndWarnIfUndef("diskReadAccess", $params->{diskReadAccess}, 0, $self->{logger});
-    $self->{diskWriteAccess} = assignDefaultAndWarnIfUndef("diskWriteAccess", $params->{diskWriteAccess}, 0, $self->{logger});
     bless($self, $class);
 #    print STDERR Dumper($self);
     return $self;

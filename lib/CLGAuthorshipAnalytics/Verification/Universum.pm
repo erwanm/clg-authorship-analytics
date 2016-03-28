@@ -12,7 +12,7 @@ use Log::Log4perl;
 use CLGTextTools::Stats qw/pickInList pickNSloppy pickNIndexesAmongMExactly aggregateVector pickDocSubset splitDocRandomAvoidEmpty/;
 use CLGTextTools::Commons qw/getArrayValuesFromIndexes containsUndef mergeDocs assignDefaultAndWarnIfUndef/;
 use CLGAuthorshipAnalytics::Verification::VerifStrategy;
-use CLGTextTools::Logging qw/confessLog cluckLog/;
+use CLGTextTools::Logging qw/confessLog cluckLog warnLog/;
 use CLGTextTools::SimMeasures::Measure qw/createSimMeasureFromId/;
 use Data::Dumper;
 
@@ -20,7 +20,7 @@ our @ISA=qw/CLGAuthorshipAnalytics::Verification::VerifStrategy/;
 
 use base 'Exporter';
 our @EXPORT_OK = qw//;
-
+my $nanStr = "NA";
 
 
 
@@ -98,6 +98,7 @@ sub computeUniversum {
     my $nbEmpty=0;
     my $obsTypes = $self->{obsTypesList};
     for (my $roundNo=0; $roundNo < $self->{nbRounds}; $roundNo++) {
+	$self->{logger}->debug("Universum strategy: starting round $roundNo ") if ($self->{logger});
 	my $obsType = pickInList($obsTypes);
 	my @thirds;
 	# Goal is to obtain 6 subsets: 2 x P0, 2 x P1, 2 x M (where Px = Probe x and M = merged P0-P1)
@@ -106,19 +107,26 @@ sub computeUniversum {
 	#
 	# 1; splitting the 2 docs in thirds; if serveral docs on one side, pick a third at random
 	for my $probeSide (0,1) {
+	    $self->{logger}->trace("round $roundNo, splitting probe doc side $probeSide ") if ($self->{logger});
 	    if ($self->{withReplacement}) {
 		for my $thirdNo (0..2) {
+		    $self->{logger}->trace("round $roundNo, probe doc side $probeSide, with replacement, third $thirdNo ") if ($self->{logger});
 		    my $doc = pickInList($probeDocsLists->[$probeSide]);
 		    $thirds[$probeSide]->[$thirdNo] = pickDocSubset($doc->getObservations($obsType), 1/3);
 		}
 	    } else {
 		my @allPossibleThirds;
 		foreach my $doc (@{$probeDocsLists->[$probeSide]}) {
+		    $self->{logger}->trace("round $roundNo, probe doc side $probeSide, without replacement, doc '".$doc->getFilename()."' ") if ($self->{logger});
 		    my $docObsHash = $doc->getObservations($obsType);
 		    my $thirdsDoc = splitDocRandomAvoidEmpty($self->{splitWithoutReplacementMaxNbAttempts}, $docObsHash, 3, undef, $self->{logger});
+		    $self->{logger}->trace("thirdsDoc = ".Dumper($thirdsDoc)) if ($self->{logger});
 		    $nbEmpty++ if (containsUndef($thirdsDoc));
+		    $self->{logger}->trace("nb observations for obs type '$obsType' = ".scalar(keys %$docObsHash)." nb empty subsets = $nbEmpty") if ($self->{logger});
+
 		    push(@allPossibleThirds, @$thirdsDoc);
 		}
+		$self->{logger}->trace("picking 3 thirds among all possible thirds (".scalar(@allPossibleThirds).")") if ($self->{logger});
 		my $selectedThirdsIndexes = pickNIndexesAmongMExactly(3, scalar(@allPossibleThirds));
 		$thirds[$probeSide] = getArrayValuesFromIndexes(\@allPossibleThirds, $selectedThirdsIndexes);
 	    }
@@ -206,7 +214,7 @@ sub computeFeatureFromCatListAggreg {
 	my $valueRound = $sumRound / scalar(@$catList);
 	push(@values, $valueRound);
     }
-    return aggregateVector(\@values, $aggregType);
+    return aggregateVector(\@values, $aggregType, $nanStr);
 }
 
 

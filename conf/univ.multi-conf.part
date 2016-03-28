@@ -9,3 +9,4 @@ univ.finalScoresMethod=aggregSimByRound countMostSimByRound both
 univ.aggregSimByRound=all homogeneity sameCat mergedOrNot
 univ.countMostSimByRound=all homogeneity sameCat mergedOrNot
 univ.aggregSimByRoundAggregType=median arithm geom harmo
+univ.splitWithoutReplacementMaxNbAttempts=10
