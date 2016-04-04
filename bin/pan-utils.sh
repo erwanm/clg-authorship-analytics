@@ -122,10 +122,14 @@ function requiresPOSTags {
 # echoes space separated string
 #
 function extractPossibleObsTypes {
+    local prefix="${1:-obsType.}"
+#    echo "DEBUG prefix='$prefix'" 1>&2
     local res=$(
     while read file; do
-	grep "^obsType." "$file" |  while read line; do
-	    local obsType=${line#obsType.}
+#	echo "DEBUG file='$file'" 1>&2
+	grep "^$prefix" "$file" |  while read line; do
+#	    echo "DEBUG grep line='$line'" 1>&2
+	    local obsType=${line#$prefix}
 	    local values=${obsType#*=}
 	    memberList "1" "$values"
 	    if [ $? -eq 0 ]; then # 1 in possible values => possible type

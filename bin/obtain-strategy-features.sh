@@ -68,7 +68,7 @@ readFromParamFile "$configFile" "strategy" "$progName,$LINENO: "
 if [ "$strategy" == "meta" ]; then
 	# TODO VERY DIRTY
 	# remark: $inputDir = dir/prepared-data, plus it's a link so ../ doesn't work
-    myInputDir=$(dirname "$inputDir")
+    myInputDir=$(dirname "$inputDataDir")
     evalSafe "meta-training-extract-scores.pl \"$casesFile\" \"$myInputDir\" \"$configFile\"" "$progName,$LINENO: "
 else
     if [ "$strategy" == "DUMMYSTRATEGY" ]; then  # any other strategy goes here

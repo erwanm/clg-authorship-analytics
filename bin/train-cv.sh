@@ -87,7 +87,7 @@ prefix=$(basename ${configFile%.conf})
 #echo -en "\r$prefix / $nbConfigs: "
 mkdirSafe "$outputPerfDir/$prefix" "$progName,$LINENO: "
 
-#readFromParamFile "$configFile" "strategy" "$progName,$LINENO: "
+readFromParamFile "$configFile" "strategy" "$progName,$LINENO: "
 #if [ "$strategy" != "meta" ]; then
 #    specificPreparedInputDir=$(getPreparedSpecificDir "$configFile" "$inputDir/input" "input")
 #else
@@ -96,10 +96,16 @@ mkdirSafe "$outputPerfDir/$prefix" "$progName,$LINENO: "
 
 # test if there is at least one obs type (OR indiv config!)
 #readFromParamFile "$configFile" "obsTypesList" "$progName,$LINENO: " "=" 1 # no warning if empty
-obsTypesList=$(echo "$configFile" | extractPossibleObsTypes)
+if [ "$strategy" != "meta" ]; then
+    obsTypesListOrStrategiesList=$(echo "$configFile" | extractPossibleObsTypes)
+else
+    obsTypesListOrStrategiesList=$(echo "$configFile" | extractPossibleObsTypes "indivConf_")
+fi
+
+#echo "DEBUG: obsTypesListOrStrategiesList='$obsTypesListOrStrategiesList'" 1>&2
 
 
-if [ ! -z "$obsTypesList" ]; then
+if [ ! -z "$obsTypesListOrStrategiesList" ]; then
     testCasesColFile=$(mktemp --tmpdir "tmp.$progName.main1.XXXXXXXXXX")
     resultsColFile=$(mktemp --tmpdir "tmp.$progName.main2.XXXXXXXXXX")
     status=0 # for non failsafe mode: assume everything ok
@@ -153,8 +159,12 @@ if [ ! -z "$obsTypesList" ]; then
 	exit 1
     fi
     echo -e "$scoreFinal\t$scoreAUC\t$scoreC1" >"$outputPerfDir/$prefix.perf"
-else # no obs type at all: all scores = zero
-    echo "$progName, Warning: no obs type selected at all, returning null scores for '$outputPerfDir/$prefix'" 1>&2
+else # no obs type at all, or no strategy config at all if meta: all scores = zero
+    if [ "$strategy" == "meta" ]; then
+	echo "$progName, Warning: no strategy config selected at all, returning null scores for '$outputPerfDir/$prefix'" 1>&2
+    else
+	echo "$progName, Warning: no obs type selected at all, returning null scores for '$outputPerfDir/$prefix'" 1>&2
+    fi
     echo -e "0\t0\t0" >"$outputPerfDir/$prefix.perf"
 fi
 

@@ -201,6 +201,8 @@ linkAbsolutePath "$metaDir" "$applyDir"
 # prepared-data because sub-scripts use the truth file from there; not great design but harmless
 #rm -f "$metaDir/prepared-data" 
 #linkAbsolutePath "$metaDir" "$outputDir/prepared-data"
+linkAbsolutePath "$metaDir" "$outputDir/input" "$outputDir/resources-options.conf"
+
 
 echo "$progName: launching training process for meta stage in '$metaDir'; multiConfStrategyFile=$metaMC"
 if [ -z "$parallelPrefix" ]; then
@@ -217,6 +219,8 @@ echo "$progName: applying every selected meta-config to all cases (meta train fo
 metaApplyDir="$outputDir/apply-meta-configs"
 mkdirSafe "$metaApplyDir"
 mkdirSafe "$metaApplyDir/fold.meta-train" 
+#echo "DEBUG command:" 1>&2
+#echo  "apply-multi-configs.sh $applyMultiConfigsParams -m \"$outputDir\" \"$metaDir/best.prefix-list\" \"$metaTestCasesFile\" \"$metaApplyDir/fold.meta-test\"" 1>&2
 evalSafe "apply-multi-configs.sh $applyMultiConfigsParams -m \"$outputDir\" \"$metaDir/best.prefix-list\" \"$metaTestCasesFile\" \"$metaApplyDir/fold.meta-test\""  "$progName,$LINENO: "
 evalSafe "apply-multi-configs.sh $applyMultiConfigsParams -m \"$outputDir\" \"$metaDir/best.prefix-list\" \"$trainCasesFile\" \"$metaApplyDir/fold.strategy-train\""  "$progName,$LINENO: "
 

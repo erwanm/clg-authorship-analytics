@@ -89,7 +89,7 @@ function computeFeaturesTSV {
     cat "$casesFile" | while read line; do
 	set -- $line
 	gold="$2"
-#	    echo "DEBUG case='$caseId' gold='$gold' from $casesFile" 1>&2
+#	echo "DEBUG case='$caseId' gold='$gold' from $casesFile" 1>&2
 	if [ -z "$gold" ]; then
 	    gold="?"
 	fi
