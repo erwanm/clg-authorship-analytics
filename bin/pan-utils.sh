@@ -100,14 +100,17 @@ function generateTestCasesFile {
 }
 
 
+# OBSOLETE???
 #
 # input: list of obs types as multiple arguments (space separated)
 #
 function requiresPOSTags {
     while [ ! -z "$1" ]; do
         local obsType="$1"
-        local containsOnlyPTS=$(echo "$obsType" | tr -d "PTS")
-        if [ -z "$containsOnlyPTS" ]; then # pattern with only PTS= requires POS tags
+	local isPOS=$(echo "$obsType" | grep "^POS")
+#	echo "DEBUG: obs type = '$obsType', isPOS='$isPOS'" 1>&2
+#        local containsOnlyPTS=$(echo "$obsType" | tr -d "PTS")
+        if [ ! -z "$isPOS" ]; then
             return 1
         fi
         shift
@@ -123,7 +126,7 @@ function requiresPOSTags {
 #
 function extractPossibleObsTypes {
     local prefix="${1:-obsType.}"
-#    echo "DEBUG prefix='$prefix'" 1>&2
+ #   echo "DEBUG prefix='$prefix'" 1>&2
     local res=$(
     while read file; do
 #	echo "DEBUG file='$file'" 1>&2
@@ -138,67 +141,12 @@ function extractPossibleObsTypes {
 	    fi
 	done 
     done | sort -u | tr '\n' ' ')
+ #   echo "DEBUG extractPossibleObsTypes done" 1>&2
     echo ${res% } # remove trailing space
     return 0
 }
 
 
-# expects a file "contents.json" in the dir as arg,
-# from which parameters "language" and "genre" can be extracted
-function pan14ExtractLggeGenre {
-    local sourceDir="$1"
-    language=$(grep language "$sourceDir/contents.json" | cut -d '"' -f 4)
-    genre=$(grep genre "$sourceDir/contents.json" | cut -d '"' -f 4)
-    if [ -z "$language" ] || [ -z "$genre" ]; then
-        echo "$progName: Warning: could not extract the language and genre from '$sourceDir/contents.json', will use generic name 'default'"  1>&2
-        echo "default.model"
-    else
-        echo "$language-$genre.model" | tr '[:upper:]' '[:lower:]'
-    fi
-}
-
-
-
-
-
-
-
-function resizeTokAndPOS {
-    local destDir="$1"
-    local language="$2"
-    local docSize="$3"
-    local tokenizeAndPOS="$4"
-    local errMsg="$5"
-
-    local filesList="$destDir/all-data.files"
-    if [ $docSize -gt 0 ]; then
-#	echo "$progName; doc size $docSize: resizing documents"
-	cat "$filesList" | while read f; do
-	    evalSafe "cat \"$f\" | resize-nb-words.pl $docSize > \"$f.tmp\""
-	    rm -f "$f"
-	    mv "$f.tmp" "$f"
-	done
-	if [ $? -ne 0 ]; then
-	    echo "$errMsg: an error happened in 'resizeTokAndPOS' first part (pan-utils.sh), aborting." 1>&2
-	    exit 5
-	fi
-    fi
-    if [ $tokenizeAndPOS -ne 0 ]; then
-#	echo "$progName; doc size $docSize: tokenizing and POS tagging"
-	cat "$filesList" | while read f; do
-	    if [ ! -s "$f.POS" ]; then
-		evalSafe "pan-tokenizer.sh $language \"$f\" \"$f.tok\""  "$progName: "
-		evalSafe "pan-POS.sh $language \"$f.tok\" \"$f.POS\""  "$progName: "
-	    fi
-	done
-	if [ $? -ne 0 ]; then
-	    echo "$errMsg: an error happened in 'resizeTokAndPOS' second part (pan-utils.sh), aborting." 1>&2
-	    exit 5
-	fi
-#    else
-#	echo "$progName; doc size $docSize: not performing tokenization / POS tagging"
-    fi
-}
 
 
 function listDocFiles {

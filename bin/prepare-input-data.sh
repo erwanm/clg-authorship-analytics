@@ -2,6 +2,12 @@
 
 # EM April 16
 
+
+# TODO
+# - -r option
+# - parallel processing
+# - impostors similarities
+
 source common-lib.sh
 source file-lib.sh
 source pan-utils.sh
@@ -12,8 +18,9 @@ force=0
 addToExisting=0
 resourcesDir=""
 impostorsData=""
+impostorsParam="GI.impostors"
 
-basicTokensObsType="WORD.T.lc1.sl1.mf3"
+basicTokensObsType="WORD.T.lc1.sl1.mf1"
 
 
 
@@ -78,7 +85,7 @@ function usage {
 #  echo "    -n do not tokenize and tag POS (tokenization with TreeTagger only needed"
 #  echo "       for POS tagging; n-grams tokenized in another way)"
   echo "    -i <id:path[;id2:path2...]> specify where to find additional impostors"
-  echo "       documents; these will be used if the config parameter impostorsDataIds"
+  echo "       documents; these will be used if the config parameter 'impostors'"
   echo "       contains the corresponding id(s)." #special id 'web' is reserved."
   echo "       This option is ignored if '-r' is supplied."
 #  echo "    -s <stop words directory> provide path to stop words directory:"
@@ -90,12 +97,12 @@ function usage {
 #
 # reads config files from STDIN
 #
-function readParamFromMultipleConfigFiles {
+function readParamFromMultipleConfigFilesFailOnDiff {
     local paramName="$1"
 
-    res=""
+    local res=""
     while read mcFile; do
-	readFromParamFile  "$mcFile" "$paramName" "$progName,$LINENO: " 0 NA "tmpVar"
+	readFromParamFile  "$mcFile" "$paramName" "$progName,$LINENO: " "" 0 NA "tmpVar"
 	if [ "$tmpVar" != "NA" ]; then
 	    if [ -z "$res" ]; then
 		res="$tmpVar"
@@ -108,6 +115,25 @@ function readParamFromMultipleConfigFiles {
     done
     echo "$res"
 }
+
+
+#
+# reads config files from STDIN
+#
+function readParamFromMultipleConfigFilesListUnion {
+    local paramName="$1"
+    local sepa="$2"
+
+    local res=""
+    while read mcFile; do
+	readFromParamFile  "$mcFile" "$paramName" "$progName,$LINENO: " "" 0 NA "tmpVar"
+#	echo "DEBUG: mcFile=$mcFile; tmpVar=$tmpVar" 1>&2
+	if [ "$tmpVar" != "NA" ]; then
+	    echo "$tmpVar" | sed "s/$sepa/\n/g"
+	fi
+    done | sort -u
+}
+
 
 
 #
@@ -127,6 +153,24 @@ function extractStopWordsLimitFromObsTypes {
     done | sort -u -n
 }
 
+
+#
+# args = targetImpId impId1:impPath1 impId2:ipmpPath2 ...
+#
+function getImpostorsDir {
+    local impId="$1"
+    shift
+
+    while [ ! -z "$1" ]; do
+	if [ "${1%:*}" == "$impId" ]; then
+	    echo "${1#*:}"
+	    return
+	fi
+	shift
+    done
+    echo "$progName: error, no path found for impostors dataset '$impId'" 1>&2
+    exit 4
+ }
 
 
 while getopts 'hfar:i:' option ; do 
@@ -218,15 +262,18 @@ fi
 
 
 mkdirSafe "$destDir/input"  "$progName:$LINENO: "
+mkdirSafe "$destDir/resources"  "$progName:$LINENO: "
 
 echo "$progName init: copying input data"
-cloneDir "$sourceDir" "$destDir"
-listDocFiles "$destDir" >"$destDir/all-data.files" 
+cloneDir "$sourceDir" "$destDir/input"
+listDocFiles "$destDir/input" >"$destDir/input/all-data.files" 
 
 # find formatting options in config files
-formatting=$(ls "$destDir"/multi-conf-files/*.multi-conf | readParamFromMultipleConfigFiles "formatting")
-wordTokenization=$(ls "$destDir"/multi-conf-files/*.multi-conf | readParamFromMultipleConfigFiles "wordTokenization")
-paramsDataset="-g"
+formatting=$(ls "$destDir"/multi-conf-files/*.multi-conf | readParamFromMultipleConfigFilesFailOnDiff "formatting")
+wordTokenization=$(ls "$destDir"/multi-conf-files/*.multi-conf | readParamFromMultipleConfigFilesFailOnDiff "wordTokenization")
+#echo "DEBUG $progName: fomatting='$formatting' wordTokenization='$wordTokenization'" 1>&2
+
+paramsDataset=""
 if [ ! -z "$formatting" ]; then
     paramsDataset="$paramsDataset -s $formatting"
 fi
@@ -234,31 +281,66 @@ if [ ! -z "$wordTokenization" ] && [ "$wordTokenization" == 0 ] ; then
     paramsDataset="$paramsDataset -t"
 fi
 
-echo "$progName: generating count files pass 1: tokens only (for stop words)"
-evalSafe "count-obs-dataset.sh -i '$destDir/all-data.files' -o '$paramsDataset' $language $basicTokensObsType" "$progName:$LINENO: "
-
-mkdirSafe "$destDir/stop-words" "$progName:$LINENO: "
 stopWordsLimits=$(extractStopWordsLimitFromObsTypes $possibleObsTypes)
-vocabResources=""
-for stopWordLimit in $stopWordsLimits; do
-    evalSafe "sort -r -n +1 -2 \"$destDir/global.$basicTokensObsType.count\" | head -n $stopWordLimit >\"$destDir/stop-words/$stopWordLimit.stop-list\" " "$progName:$LINENO: "
-    vocabResources="$vocabResources:$stopWordLimit:$destDir/stop-words/$stopWordLimit.stop-list"
-done
+if [ -z "$resourcesDir" ]; then
+
+    echo "$progName: stop words: generating count files, tokens only"
+    evalSafe "count-obs-dataset.sh -i '$destDir/input/all-data.files' -o '-g $paramsDataset' $language $basicTokensObsType" "$progName:$LINENO: "
+
+    mkdirSafe "$destDir/resources/stop-words" "$progName:$LINENO: "
+    vocabResources=""
+    for stopWordLimit in $stopWordsLimits; do
+	evalSafe "sort -r -n +1 -2 \"$destDir/input/global.$basicTokensObsType.count\" | cut -f 1 | head -n $stopWordLimit >\"$destDir/resources/stop-words/$stopWordLimit.stop-list\" " "$progName:$LINENO: "
+	vocabResources="$vocabResources;$stopWordLimit:$destDir/resources/stop-words/$stopWordLimit.stop-list"
+    done
+else
+    dieIfNoSuchDir "$resourcesDir/stop-words" "$progName,$LINENO: "
+    rm -f "$destDir/resources/stop-words"
+    linkAbsolutePath "$destDir/resources" "$resourcesDir/stop-words"
+    for stopWordLimit in $stopWordsLimits; do
+	dieIfNoSuchFile "$destDir/resources/stop-words/$nb.stop-list"  "$progName:$LINENO: "
+	vocabResources="$vocabResources;$stopWordLimit:$destDir/resources/stop-words/$stopWordLimit.stop-list"
+    done
+fi
 vocabResources=${vocabResources:1}
+#echo "DEBUG $progName: vocabResources='$vocabResources'" 1>&2
 
-echo "$progName: generating count files pass 2: all obs types"
+echo "$progName: input data, generating count files for all obs types"
 paramsDataset="$paramsDataset -r '$vocabResources'"
-evalSafe "count-obs-dataset.sh -i '$destDir/all-data.files' -o '$paramsDataset' $language $obsTypesColonSep" "$progName:$LINENO: "
+evalSafe "count-obs-dataset.sh -i \"$destDir/input/all-data.files\" -o \"$paramsDataset\" $language $obsTypesColonSep" "$progName:$LINENO: "
+
+
+echo "$progName: input data, preparing impostors data"
+usedImpostorsIds=$(ls "$destDir"/multi-conf-files/*.multi-conf | readParamFromMultipleConfigFilesListUnion "$impostorsParam" ";")
+echo "$progName DEBUG: usedImpostorsIds='$usedImpostorsIds'" 1>&2
+mkdirSafe "$destDir/resources/impostors/" "$progName,$LINENO: "
+
+for impId in $usedImpostorsIds; do
+
+    impPath=$(getImpostorsDir "$impId" $impostorsData)
+    echo "$progName DEBUG: imp path='$impPath'" 1>&2
+
+    echo "$progName, impostors dataset '$impId' copying impostors file"
+    mkdirSafe "$destDir/resources/impostors/$impId" "$progName,$LINENO: "
+    cloneDir "$impPath" "$destDir/resources/impostors/$impId"
+    listDocFiles "$destDir/resources/impostors/$impId" >"$destDir/resources/impostors/$impId/all-data.files" 
+
+    echo "$progName, impostors dataset '$impId': generating count files for all obs types"
+    evalSafe "count-obs-dataset.sh -i \"$destDir/resources/impostors/$impId/all-data.files\" -o \"$paramsDataset\" $language $obsTypesColonSep" "$progName:$LINENO: "
+
+    echo "$progName, impostors dataset '$impId': computing pre-similarity values against all probe files"
+    evalSafe "sim-collections-doc-by-doc.pl $paramsDataset $obsTypesColonSep \"$destDir/input/all-data.files\" \"$destDir/resources/impostors/$impId/all-data.files\"" "$progName:$LINENO: "
+
+done
 
 
 
-#todo
-# - generate stop words
-# - case where -r is used (testing, stop words etc provided)
-#
 
 echo "DEBUG: not finished yet...." 1>&2
 exit 1
+
+
+
 
 
 
