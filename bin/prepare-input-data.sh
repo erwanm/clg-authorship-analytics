@@ -5,8 +5,8 @@
 
 # TODO
 # - -r option
-# - parallel processing
-# - impostors similarities
+# - parallel processing??
+# + impostors similarities
 
 source common-lib.sh
 source file-lib.sh
@@ -20,7 +20,7 @@ resourcesDir=""
 impostorsData=""
 impostorsParam="GI.impostors"
 
-basicTokensObsType="WORD.T.lc1.sl1.mf1"
+basicTokensObsType="WORD.T.lc1.sl1.mf2"
 
 
 
@@ -150,7 +150,7 @@ function extractStopWordsLimitFromObsTypes {
 	    fi
 	fi
 	shift
-    done | sort -u -n
+    done | sort -u -n | tr '\n' ' '
 }
 
 
@@ -298,7 +298,7 @@ else
     rm -f "$destDir/resources/stop-words"
     linkAbsolutePath "$destDir/resources" "$resourcesDir/stop-words"
     for stopWordLimit in $stopWordsLimits; do
-	dieIfNoSuchFile "$destDir/resources/stop-words/$nb.stop-list"  "$progName:$LINENO: "
+	dieIfNoSuchFile "$destDir/resources/stop-words/$stopWordLimit.stop-list"  "$progName:$LINENO: "
 	vocabResources="$vocabResources;$stopWordLimit:$destDir/resources/stop-words/$stopWordLimit.stop-list"
     done
 fi
@@ -307,7 +307,7 @@ vocabResources=${vocabResources:1}
 
 echo "$progName: input data, generating count files for all obs types"
 paramsDataset="$paramsDataset -r '$vocabResources'"
-evalSafe "count-obs-dataset.sh -i \"$destDir/input/all-data.files\" -o \"$paramsDataset\" $language $obsTypesColonSep" "$progName:$LINENO: "
+evalSafe "count-obs-dataset.sh -i \"$destDir/input/all-data.files\" -o \"$paramsDataset\" $language $basicTokensObsType:$obsTypesColonSep" "$progName:$LINENO: "
 
 
 echo "$progName: input data, preparing impostors data"
@@ -317,331 +317,27 @@ mkdirSafe "$destDir/resources/impostors/" "$progName,$LINENO: "
 
 for impId in $usedImpostorsIds; do
 
-    impPath=$(getImpostorsDir "$impId" $impostorsData)
-    echo "$progName DEBUG: imp path='$impPath'" 1>&2
+    if [ -z "$resourcesDir" ]; then
+	impPath=$(getImpostorsDir "$impId" $impostorsData)
+	echo "$progName DEBUG: imp path='$impPath'" 1>&2
 
-    echo "$progName, impostors dataset '$impId' copying impostors file"
-    mkdirSafe "$destDir/resources/impostors/$impId" "$progName,$LINENO: "
-    cloneDir "$impPath" "$destDir/resources/impostors/$impId"
-    listDocFiles "$destDir/resources/impostors/$impId" >"$destDir/resources/impostors/$impId/all-data.files" 
+	echo "$progName, impostors dataset '$impId' copying impostors file"
+	mkdirSafe "$destDir/resources/impostors/$impId" "$progName,$LINENO: "
+	cloneDir "$impPath" "$destDir/resources/impostors/$impId"
+	listDocFiles "$destDir/resources/impostors/$impId" >"$destDir/resources/impostors/$impId/all-data.files" 
 
-    echo "$progName, impostors dataset '$impId': generating count files for all obs types"
-    evalSafe "count-obs-dataset.sh -i \"$destDir/resources/impostors/$impId/all-data.files\" -o \"$paramsDataset\" $language $obsTypesColonSep" "$progName:$LINENO: "
+	echo "$progName, impostors dataset '$impId': generating count files for all obs types"
+	evalSafe "count-obs-dataset.sh -i \"$destDir/resources/impostors/$impId/all-data.files\" -o \"$paramsDataset\" $language $basicTokensObsType:$obsTypesColonSep" "$progName:$LINENO: "
+    else
+	dieIfNoSuchDir "$resourcesDir/impostors/$impId" "$progName,$LINENO: "
+        rm -f "$destDir/resources/impostors/$impId"
+        linkAbsolutePath "$destDir/resources/impostors" "$resourcesDir/impostors/$impId"
+    fi
 
     echo "$progName, impostors dataset '$impId': computing pre-similarity values against all probe files"
-    evalSafe "sim-collections-doc-by-doc.pl $paramsDataset $obsTypesColonSep \"$destDir/input/all-data.files\" \"$destDir/resources/impostors/$impId/all-data.files\"" "$progName:$LINENO: "
+    evalSafe "sim-collections-doc-by-doc.pl -o '$basicTokensObsType' $paramsDataset $basicTokensObsType:$obsTypesColonSep \"$destDir/input/all-data.files\" \"$destDir/resources/impostors/$impId/all-data.files\"" "$progName:$LINENO: "
 
 done
-
-
-
-
-echo "DEBUG: not finished yet...." 1>&2
-exit 1
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-function getImpostorsDataDirById {
-    local targetId="$1"
-#    echo "DEBUG targetId='$targetId'" 1>&2
-    for idPath in $impostorsData; do
-	id=${idPath%:*}
-#	echo "DEBUG id='$id'" 1>&2
-	if [ "$id" == "$targetId" ]; then
-	    echo "${idPath#*:}"
-	    return 0
-	fi
-    done
-    # not found: don't print anything
-}
-
-
-
-
-
-function getUniqueImpostorsDataIds {
-    local paramsFile="$1"
-    readFromParamFile  "$paramsFile" "impostorsDataIds" "$progName,$LINENO: "
-    neededIds=""
-    for dataIdGroup in $impostorsDataIds; do
-	for dataId in $(echo "$dataIdGroup" | tr ':' ' '); do
-	    memberList "$dataId" "$neededIds" 
-	    if [ $? -ne 0 ]; then # not found
-		neededIds="$neededIds $dataId"
-	    fi
-	done
-    done
-    echo "$neededIds"
-}
-
-
-
-
-function impSimilarity {
-    local destDir="$1"
-    local impDataPath="$2"
-    local obsType="$3"
-    local optionalParam="$4"
-
-    echo "$progName: computing basic similarities (cosine) for cartesian product documents x impostors for impostors dataset $impDataPath" 
-    evalSafe "sim-all-cosine.pl $optionalParam -p \"$destDir/impostors-similarities/$impDataPath/\" \"$destDir/input/docSize.0/data/all-data.files\" \"$destDir/impostors-data/$impDataPath/docSize.0/data/all-data.files\" \".$obsType.count\" \".similarities\"" "$progName,$LINENO: "
-}
-
-
-
-
-
-function prepareImpostorsDir {
-    local impSourceDir="$1"
-    local rootDestDir="$2"
-    local impPath="$3"
-    local configFile="$4"
-    local noPOSParam="$5"
-    local language="$6"
-
-    impDestDir="$rootDestDir/impostors-data/$impPath"
-    impSimDir="$rootDestDir/impostors-similarities/$impPath"
-    mkdirSafe "$impDestDir" "$progName,$LINENO: "
-    mkdirSafe "$impSimDir" "$progName,$LINENO: "
-    readFromParamFile "$configFile" "impostorsPrepaSimObs" "$progName,$LINENO: "
-    readFromParamFile "$configFile" "maxMostSimilarImpostorsByDataset" "$progName,$LINENO: "
-    generateTokensDocSize0 "$impSourceDir" "$impDestDir" "tokens"
-    impSimilarity "$rootDestDir" "$impPath" "$impostorsPrepaSimObs" "-m $maxMostSimilarImpostorsByDataset"
-    mv "$impDestDir/docSize.0/data/all-data.files" "$impDestDir/docSize.0/data/all-data.files.before-pruning"
-    evalSafe "cat \"$impSimDir\"/*/*.similarities | cut -f 1 | sort -u | sed \"s:^:$impDestDir/docSize.0/data/:g\" >\"$impDestDir/docSize.0/data/all-data.files\"" "$progName,$LINENO: "
-    if [ $(cat "$impDestDir/docSize.0/data/all-data.files" | wc -l) -ne $(cat "$impDestDir/docSize.0/data/all-data.files.before-pruning" | wc -l) ]; then
-	evalSafe "cat  \"$impDestDir/docSize.0/data/all-data.files.before-pruning\" | filter-column.pl -n \"$impDestDir/docSize.0/data/all-data.files\" 1 1 | xargs rm " "$progName,$LINENO: "
-    fi
-    #################################################################
-    # May 27 2015 - BUG HERE
-    # introduced in commit e5440ceb1ff8e2bbc4ebe876abe4a3f6ce8b0efe, probably when I was coding the optimizations in prepare-subdir.
-    # Below is the original line with its original comment; the comment is the reason I don't remove the line: although I can't see today
-    # what will not be re-generated and how a different docSize would be impacted by the existence of these count files, I assume
-    # it could cause some issues to remove it.
-    # But this is still a bug, because the count files are needed if the prepared dir is used later as a resources for another
-    # input data (typically in test mode), against which the similarities have to be computed (remark: this function is called only
-    # if no resources were provided).
-    #
-    # remark: re-generated the count files externally this time
-    #
-    rm -f "$impDestDir/docSize.0/data"/*.count* # otherwise it will not be re-generated with different docSize
-    evalSafe "prepare-subdir-input-data.sh -s \"$rootDestDir/stop-words/\" $noPOSParam \"$impDestDir/docSize.0/data\" \"$impDestDir\" $language \"$configFile\" $obsTypesColonSep" "$progName,$LINENO: "
-}
-
-
-
-
-while getopts 'hfar:ni:' option ; do 
-    case $option in
-	"f" ) force=1;;
-	"a" ) echo "$progName: adding mode is ON"
-	      addToExisting=1;;
-	"r" ) resourcesDir="$OPTARG";;
-	"n" ) tokenizeAndPOS=0;;
-	"i" ) impostorsData=$(echo "$OPTARG" | tr ';' ' ');;
-	"h" ) usage
- 	      exit 0;;
-	"?" ) 
-	    echo "Error, unknow option." 1>&2
-            printHelp=1;;
-    esac
-done
-shift $(($OPTIND - 1))
-if [ $# -ne 2 ]; then
-    echo "Error: expecting 2 args." 1>&2
-    printHelp=1
-fi
-sourceDir="$1"
-destDir="$2"
-
-if [ ! -z "$printHelp" ]; then
-    usage 1>&2
-    exit 1
-fi
-
-
-# check if valid directories, prepare dest dir
-dieIfNoSuchDir "$sourceDir" "$progName:$LINENO: "
-dieIfNoSuchFile "$sourceDir/contents.json"  "$progName:$LINENO: " # extract language
-if [ $force -ne 0 ]; then
-    rm -rf "$destDir"
-fi
-mkdirSafe "$destDir"  "$progName:$LINENO: "
-nbEntries=$(ls "$destDir" | wc -l)
-if [ $nbEntries -ne 0 ]; then
-    if [ $addToExisting -ne 0 ]; then
-	echo "$progName warning: adding data to non empty dest dir '$destDir'" 1>&2
-    else
-	echo "$progName error: dest dir '$destDir' not empty. use -f to force overwriting, -a to add to existing data" 1>&2
-	exit 2
-    fi
-fi
-
-if [ ! -z "$resourcesDir" ]; then
-    dieIfNoSuchDir "$resourcesDir" "$progName:$LINENO: " 
-fi
-
-# extract language from json description file
-language=$(grep language "$sourceDir/contents.json" | cut -d '"' -f 4)
-language=$(echo "$language" | tr '[:upper:]' '[:lower:]')
-echo "$progName: language is '$language'"
-echo $language >"$destDir/id.language"
-
-
-# first pass on multi-config files, only to extract all the possible obs types,
-# and save the list for second pass.
-possibleObsTypes=$(tee "$destDir/multi-config-files.list" | extractPossibleObsTypes)
-obsTypesColonSep=$(echo "$possibleObsTypes" | sed 's/ /:/g')
-
-
-# checks whether POS tagging is needed
-noPOSParam=""
-tokAndPOS=1
-requiresPOSTags $possibleObsTypes
-if [ $? -eq 0 ]; then
-    noPOSParam="-n"
-    tokAndPOS=0 # TODO two different variables for the same purpose, confusing.
-    echo "   $progName: no TreeTagger tokenization/POS tagging needed"
-fi
-
-mkdirSafe "$destDir/input"  "$progName:$LINENO: "
-
-echo "$progName init: copying input data"
-generateTokensDocSize0 "$sourceDir" "$destDir/input" "tokens"
-if [ -z "$resourcesDir" ]; then
-    echo "$progName init: generating global vocabulary for stop words"
-    mkdirSafe "$destDir/stop-words"
-    evalSafe "cat \"$inputDir0\"/all-data.files | count-ngrams-pattern.pl -l -s -m 3 1 \"$destDir\"/stop-words/all.tokens.count >/dev/null"    "$progName:$LINENO: "
-fi
-
-
-# 2nd pass on the multi-config files: proceed with preparing required data
-# IN THIS LOOP, ALWAYS CHECK IF THE DATA HAS BEEN ALREADY GENERATED
-cat "$destDir/multi-config-files.list" | while read multiConfigFile; do
-
-    readFromParamFile "$multiConfigFile" "web_enableWebQueries" "$progName,$LINENO: "
-    impDataIds=$(getUniqueImpostorsDataIds "$multiConfigFile")
-    echo "Unique impostors datasets ids = $impDataIds"
-
-    # stop words nb words + LDA (topics) input data (special format)
-    if [ -z "$resourcesDir" ]; then
-	echo "$progName: no stop words data provided, generating from input data" 
-	readFromParamFile "$multiConfigFile" "nbStopWords" "$progName,$LINENO: "
-	for nb in $nbStopWords; do
-	    if [ ! -f "$destDir"/stop-words/$nb.list ]; then
-	    # generate stop-words lists from global tokens count files
-		sort -r -n +1 -2 "$destDir"/stop-words/all.tokens.count | head -n $nb | cut -f 1 >"$destDir"/stop-words/$nb.list
-	    fi
-	    readFromParamFile "$multiConfigFile" "strategy" "$progName,$LINENO: "
-	    memberList "topics" "$strategy" 
-	    if [ $? -eq 0 ]; then # found
-		obsTypes=$(echo "$multiConfigFile" | extractPossibleObsTypes)
-		generateLDAInputData "$destDir" $nb "$obsTypes"
-	    fi
-	done
-    else
-	dieIfNoSuchDir "$resourcesDir/stop-words" "$progName,$LINENO: "
-	rm -f "$destDir/stop-words"
-	linkAbsolutePath "$destDir/" "$resourcesDir/stop-words"
-	readFromParamFile "$multiConfigFile" "nbStopWords" "$progName,$LINENO: "
-	for nb in $nbStopWords; do
-	    dieIfNoSuchFile "$destDir/stop-words/$nb.list"
-	    readFromParamFile "$multiConfigFile" "strategy" "$progName,$LINENO: "
-	    memberList "topics" "$strategy" 
-	    if [ $? -eq 0 ]; then # found
-		obsTypes=$(echo "$multiConfigFile" | extractPossibleObsTypes)
-		generateLDAInputData "$destDir" $nb "$obsTypes"
-	    fi
-	done
-    fi
-
-    # input data, all parameters
-    if [ -z "$resourcesDir" ]; then
-	echo "$progName: no reference data provided, will compute stats for ref data using all input data" 
-	if [ ! -d "$destDir/reference" ]; then
-	    pushd "$destDir" >/dev/null
-	    ln -s "input/reference"  # the target dir might not exist yet, but it doesn't matter
-	    popd >/dev/null
-	fi
-	paramRefProvided=""
-    else
-	dieIfNoSuchDir "$resourcesDir/reference" "$progName,$LINENO: "
-	rm -f "$destDir/reference"
-	linkAbsolutePath "$destDir/" "$resourcesDir/reference"
-	paramRefProvided="-r \"$destDir/reference\""
-    fi
-    stopDir="$destDir/stop-words/"
-    # option -r for input data only
-    evalSafe "prepare-subdir-input-data.sh -k $paramRefProvided -s \"$stopDir\" $noPOSParam \"$sourceDir\" \"$destDir/input\" \"$language\" \"$multiConfigFile\" $obsTypesColonSep" "$progName,$LINENO: "
-
-    # TODO all the impostors data part is terribly designed
-
-    # impostors datasets
-    for dataId in $impDataIds; do
-	mkdirSafe "$destDir/impostors-data"
-	mkdirSafe "$destDir/impostors-similarities"
-	if [ ! -z "$resourcesDir" ]; then
-	    dieIfNoSuchDir "$resourcesDir/impostors-data" "$progName,$LINENO: "
-	    dieIfNoSuchDir "$resourcesDir/impostors-data/$dataId" "$progName,$LINENO: "
-	    mkdirSafe "$destDir/impostors-data"
-	    rm -f "$destDir/impostors-data/$dataId"
-	    linkAbsolutePath "$destDir/impostors-data" "$resourcesDir/impostors-data/$dataId"
-	    mkdirSafe "$destDir/impostors-similarities/$dataId"
-	    readFromParamFile "$multiConfigFile" "impostorsPrepaSimObs" "$progName,$LINENO: "
-	    if [ "$dataId" == "web" ]; then # TODO doesn't work if the multiconf contains several values for web_wordsByQuery
-		readFromParamFile "$multiConfigFile" "web_wordsByQuery" "$progName,$LINENO: "
-		dieIfNoSuchDir "$destDir/impostors-data/web/wordsByQuery.$web_wordsByQuery" "$progName,$LINENO: "
-		mkdirSafe "$destDir/impostors-similarities/web/wordsByQuery.$web_wordsByQuery" "$progName,$LINENO: "
-		impSimilarity "$destDir" "web/wordsByQuery.$web_wordsByQuery" "$impostorsPrepaSimObs"
-	    else
-		impSimilarity "$destDir" "$dataId" "$impostorsPrepaSimObs"
-	    fi
-	else
-	    if [ "$dataId" == "web" ]; then
-		if [ $web_enableWebQueries -eq 1 ]; then
-		    evalSafe "prepare-web-impostors.sh $noPOSParam \"$destDir\" \"$multiConfigFile\" $language $obsTypesColonSep" "$progName,$LINENO: "
-		    for d in "$destDir/web-queries"/*; do
-			if [ -d "$d" ]; then # to be safe
-			    dbase=$(basename "$d")
-			    mkdirSafe "$destDir/impostors-data/web"
-			    mkdirSafe "$destDir/impostors-similarities/web"
-			    prepareImpostorsDir "$d" "$destDir" "web/$dbase" "$multiConfigFile" "$noPOSParam" "$language"
-			fi
-		    done
-		else
-		    echo "Warning: $progName: prepareImpostorsWebQueries: parameter web_enableWebQueries is 0 but impostor dataset 'web' is selected" 1>&2
-		fi
-	    else
-		impostorsDataDir=$(getImpostorsDataDirById "$dataId")
-		if [ -z "$impostorsDataDir" ]; then
-		    echo "$progName:$LINENO error: no impostor id '$dataId' found in '-i' parameter" 1>&2
-		    exit 4
-		fi
-		prepareImpostorsDir "$impostorsDataDir" "$destDir" "$dataId" "$multiConfigFile" "$noPOSParam" "$language"
-	    fi
-	fi
-
-    done
-
-
-
-done
-if [ $? -ne 0 ]; then
-    echo "$progName: an error happened in the main loop, aborting."
-    exit 14
-fi
 
 echo "$progName: done."
 
