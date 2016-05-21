@@ -23,6 +23,7 @@ function usage {
   echo "  Reads the multi-config files in <input/output dir>/multi-conf-files/*.multi-conf"
   echo "  For each multi-conf file (strategy), a full training process is launched."
   echo "  '<input/output dir>/meta-template.multi-conf' must exist."
+  echo "  ''"
   echo "TODO"
   echo
   echo "  Options:"
@@ -79,7 +80,7 @@ dieIfNoSuchDir "$outputDir" "$progName,$LINENO: "
 dieIfNoSuchDir "$outputDir/multi-conf-files" "$progName,$LINENO: "
 #dieIfNoSuchDir "$outputDir/prepared-data" "$progName,$LINENO: "
 dieIfNoSuchFile "$outputDir/meta-template.multi-conf" "$progName,$LINENO: "
-
+dieIfNoSuchFile "$outputDir/resources-options.conf"  "$progName,$LINENO: "
 
 
 truthFile="$outputDir/input/truth.txt"

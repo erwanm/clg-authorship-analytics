@@ -14,13 +14,12 @@ source pan-utils.sh
 
 currentDir=$(pwd)
 progName="prepare-input-data.sh"
-force=0
-addToExisting=0
 resourcesDir=""
 impostorsData=""
 impostorsParam="GI.impostors"
 
 basicTokensObsType="WORD.T.lc1.sl1.mf2"
+resourcesOptionsFilename="resources-options.conf"
 
 
 
@@ -30,9 +29,11 @@ function usage {
   echo 
   echo "Usage: $progName [options] <original input dir> <dest dir>"
   echo
-  echo "  Reads a list of multi-config files from <STDIN>, stores them in"
-  echo "  <dest dir>/multi-conf-files/*.multi-conf, and prepares the input data"
-  echo "  accordingly. The input data is one dataset (unique language, at least)."
+  echo "  A list of multi-conf files is either:"
+  echo "  -contained in <dest dir>/multi-conf-files/*.multi-conf,"
+  echo "  - or read from <STDIN>, and then stored <dest dir>/multi-conf-files/"
+  echo "  Then prepares the input data according to these MC files."
+  echo "  The input data is one dataset (unique language, at least)."
   echo "  Preparation of the author verification cases includes:"
   echo "    - tokenization and POS tagging (if needed)"
   echo "    - counting observations"
@@ -70,10 +71,6 @@ function usage {
   echo
   echo "  Options:"
   echo "    -h this help"
-  echo "    -f force overwriting the destination directory if it is not empty;"
-  echo "       default: error and exit (to avoid deleting stuff accidentally)." 
-  echo "    -a add to existing data in destination directory if it is not empty;"
-  echo "       default: error and exit (to avoid deleting stuff accidentally)."
   echo "    -r <resources data dir> a dir which must contain these 3 subdirs:"
 #  echo "       -'reference' must have been 'prepared', with .stats, .relfreqs"
 #  echo "        and .histo files"
@@ -173,11 +170,8 @@ function getImpostorsDir {
  }
 
 
-while getopts 'hfar:i:' option ; do 
+while getopts 'hr:i:' option ; do 
     case $option in
-	"f" ) force=1;;
-	"a" ) echo "$progName: adding mode is ON"
-	      addToExisting=1;;
 	"r" ) resourcesDir="$OPTARG";;
 	"i" ) impostorsData=$(echo "$OPTARG" | tr ';' ' ');;
 	"h" ) usage
@@ -205,19 +199,6 @@ fi
 # check if valid directories, prepare dest dir
 dieIfNoSuchDir "$sourceDir" "$progName:$LINENO: "
 dieIfNoSuchFile "$sourceDir/contents.json"  "$progName:$LINENO: " # extract language
-if [ $force -ne 0 ]; then
-    rm -rf "$destDir"
-fi
-mkdirSafe "$destDir"  "$progName:$LINENO: "
-nbEntries=$(ls "$destDir" | wc -l)
-if [ $nbEntries -ne 0 ]; then
-    if [ $addToExisting -ne 0 ]; then
-	echo "$progName warning: adding data to non empty dest dir '$destDir'" 1>&2
-    else
-	echo "$progName error: dest dir '$destDir' not empty. use -f to force overwriting, -a to add to existing data" 1>&2
-	exit 2
-    fi
-fi
 
 if [ ! -z "$resourcesDir" ]; then
     dieIfNoSuchDir "$resourcesDir" "$progName:$LINENO: " 
@@ -231,10 +212,12 @@ echo $language >"$destDir/id.language"
 
 
 # stores multi-config files and check that at least one is supplied
-mkdirSafe "$destDir"/multi-conf-files  "$progName:$LINENO: "
-while read mcFile; do
-    cat "$mcFile" > "$destDir/multi-conf-files/$(basename "$mcFile")"
-done
+if [ ! -d "$destDir"/multi-conf-files ]; then
+    mkdirSafe "$destDir"/multi-conf-files  "$progName:$LINENO: "
+    while read mcFile; do
+	cat "$mcFile" > "$destDir/multi-conf-files/$(basename "$mcFile")"
+    done
+fi
 n=$(ls "$destDir"/multi-conf-files/*.multi-conf 2>/dev/null| wc -l)
 if [ $n -eq 0 ]; then
     echo "$progName error: no multi-conf file found in '$destDir/multi-conf-files'" 1>&2
@@ -312,14 +295,14 @@ evalSafe "count-obs-dataset.sh -i \"$destDir/input/all-data.files\" -o \"$params
 
 echo "$progName: input data, preparing impostors data"
 usedImpostorsIds=$(ls "$destDir"/multi-conf-files/*.multi-conf | readParamFromMultipleConfigFilesListUnion "$impostorsParam" ";")
-echo "$progName DEBUG: usedImpostorsIds='$usedImpostorsIds'" 1>&2
+#echo "$progName DEBUG: usedImpostorsIds='$usedImpostorsIds'" 1>&2
 mkdirSafe "$destDir/resources/impostors/" "$progName,$LINENO: "
 
 for impId in $usedImpostorsIds; do
 
     if [ -z "$resourcesDir" ]; then
 	impPath=$(getImpostorsDir "$impId" $impostorsData)
-	echo "$progName DEBUG: imp path='$impPath'" 1>&2
+#	echo "$progName DEBUG: imp path='$impPath'" 1>&2
 
 	echo "$progName, impostors dataset '$impId' copying impostors file"
 	mkdirSafe "$destDir/resources/impostors/$impId" "$progName,$LINENO: "
@@ -338,6 +321,14 @@ for impId in $usedImpostorsIds; do
     evalSafe "sim-collections-doc-by-doc.pl -o '$basicTokensObsType' $paramsDataset $basicTokensObsType:$obsTypesColonSep \"$destDir/input/all-data.files\" \"$destDir/resources/impostors/$impId/all-data.files\"" "$progName:$LINENO: "
 
 done
+
+echo "$progName: writing resources options file"
+echo >"$destDir/$resourcesOptionsFilename"
+echo "useCountFiles=1" >>"$destDir/$resourcesOptionsFilename" # use count files (otherwise there's no point precomputing them)
+echo "resourcesAccess=r" >>"$destDir/$resourcesOptionsFilename" # only read access, normally everything has been pre-computed
+echo "datasetResourcesPath=$destDir/resources" >>"$destDir/$resourcesOptionsFilename"
+echo "vocabResources=$vocabResources" >>"$destDir/$resourcesOptionsFilename"
+
 
 echo "$progName: done."
 
