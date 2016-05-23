@@ -117,7 +117,7 @@ $config->{logging} = $opt{l} || $opt{L};
 # word vocab resources
 if ($vocabResourcesStr) {
     $config->{wordVocab} = {} if (!defined($config->{wordVocab})); # this way it is possible to define some resources in the config file and some other on the command line
-    parseParamsFromString($vocabResourcesStr, $config->{wordVocab});
+    parseParamsFromString($vocabResourcesStr, $config->{wordVocab}, $logger, ":");
 }
 
 # extract input sets of documents
@@ -142,8 +142,8 @@ $config->{datasetResources} = $datasetsResourcesPath;
 #      currently used only for pre-sim values for the impostors strategy
 #     rationale: this script is not supposed to deal with strategy-specific options, but on the other hand
 #                reading/writing to disk is not something which should be specified in the config file
-$config->{diskReadAccess} = 1 if (defined($strategyDiskAccess) && (($strategyDiskAccess eq "r") || ($strategyDiskAccess eq "rw")));
-$config->{diskWriteAccess} = 1 if (defined($strategyDiskAccess) && (($strategyDiskAccess eq "w") || ($strategyDiskAccess eq "rw")));
+$config->{diskReadAccess} = (defined($strategyDiskAccess) && (($strategyDiskAccess eq "r") || ($strategyDiskAccess eq "rw"))) ? 1 : 0;
+$config->{diskWriteAccess} = (defined($strategyDiskAccess) && (($strategyDiskAccess eq "w") || ($strategyDiskAccess eq "rw"))) ? 1 : 0;
 my $strategy = newVerifStrategyFromId($config->{strategy}, $config, 1);
 $strategy->{obsTypesList} = readObsTypesFromConfigHash($config); # for verif strategy (DocProvder reads obs types separately)
 

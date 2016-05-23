@@ -72,7 +72,7 @@ sub new {
 	my @impDatasetsIds = split(/;/, $impostors);
 	my %impParams = %$params;
 	$impParams{useCountFiles} = $self->{diskWriteAccess}; # i think that's what makes more sense, but it's a bit weird
-	$self->{impostors} = createDatasetsFromParams(\%impParams, \@impDatasetsIds, $params->{datasetResources}, $params->{minDocFreq}, $params->{filePattern}, $self->{logger});
+	$self->{impostors} = createDatasetsFromParams(\%impParams, \@impDatasetsIds, $params->{datasetResources}."/impostors", $params->{minDocFreq}, $params->{filePattern}, $self->{logger});
     }
     $self->{nbImpostorsUsed} = assignDefaultAndWarnIfUndef("nbImpostorsUsed", $params->{nbImpostorsUsed}, 25, $self->{logger});
     $self->{selectNTimesMostSimilarFirst} = assignDefaultAndWarnIfUndef("selectNTimesMostSimilarFirst", $params->{selectNTimesMostSimilarFirst}, 0, $self->{logger});

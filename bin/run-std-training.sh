@@ -44,8 +44,7 @@ OPTIND=1
 while getopts 'hfai:o:P:' option ; do
     case $option in
         "f" ) force=1;;
-        "a" ) addToExisting=1
-	      trainingParams="$trainingParams -r";;
+        "a" ) addToExisting=1;;
         "i" ) impostorsData=$(echo "$OPTARG" | tr ';' ' ')
 	      prepareParams="$prepareParams -i \"$impostorsData\"";;
         "P" ) parallelPrefix="$OPTARG"
@@ -118,7 +117,11 @@ dieIfNoSuchFile "$workDir/meta-template.multi-conf" "$progName, $LINENO: "
 
 # prepare
 evalSafe "ls $workDir/*.multi-conf | prepare-input-data.sh $prepareParams '$sourceDir' '$workDir'" "$progName, $LINENO: "
+
 # run
+if [ $addToExisting -ne 0 ] && [ -d "$workDir/outerCV-folds" ] ; then
+    trainingParams="$trainingParams -r"
+fi
 evalSafe "train-top-level.sh $trainingParams '$workDir'" "$progName, $LINENO: "
 
 
