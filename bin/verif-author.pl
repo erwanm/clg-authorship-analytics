@@ -144,6 +144,7 @@ $config->{datasetResources} = $datasetsResourcesPath;
 #                reading/writing to disk is not something which should be specified in the config file
 $config->{diskReadAccess} = (defined($strategyDiskAccess) && (($strategyDiskAccess eq "r") || ($strategyDiskAccess eq "rw"))) ? 1 : 0;
 $config->{diskWriteAccess} = (defined($strategyDiskAccess) && (($strategyDiskAccess eq "w") || ($strategyDiskAccess eq "rw"))) ? 1 : 0;
+
 my $strategy = newVerifStrategyFromId($config->{strategy}, $config, 1);
 $strategy->{obsTypesList} = readObsTypesFromConfigHash($config); # for verif strategy (DocProvder reads obs types separately)
 

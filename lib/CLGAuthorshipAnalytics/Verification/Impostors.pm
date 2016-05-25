@@ -16,6 +16,7 @@ use CLGTextTools::DocCollection qw/createDatasetsFromParams filterMinDocFreq/;
 use CLGTextTools::Commons qw/assignDefaultAndWarnIfUndef readTSVFileLinesAsHash rankWithTies/;
 use CLGTextTools::SimMeasures::Measure qw/createSimMeasureFromId/;
 
+use File::Basename;
 use Data::Dumper;
 
 our @ISA=qw/CLGAuthorshipAnalytics::Verification::VerifStrategy/;
@@ -109,6 +110,12 @@ sub compute {
     $self->{logger}->debug("Impostors strategy: computing features between pair of sets of docs") if ($self->{logger});
     confessLog($self->{logger}, "Cannot process case: no obs types at all") if ((scalar(@{$self->{obsTypesList}})==0) && $self->{logger});
     my $preseletedImpostors = $self->preselectMostSimilarImpostorsDataset($probeDocsLists);
+#    foreach my $dataset (keys %$preseletedImpostors) {
+#	print STDERR "DEBUG imp dataset = $dataset\n";
+#	foreach my $imp (@{$preseletedImpostors->{$dataset}}) {
+#	    print STDERR "DEBUG  imp id = '".$imp->getId()."'\n";
+#	}
+#   }
     my $selectedImpostors = $self->pickImpostors($preseletedImpostors);
     my $scores = $self->computeGI($probeDocsLists, $selectedImpostors);
     $self->writeScoresToFile($scores, $writeScoresTableToFile) if (defined($writeScoresTableToFile));
@@ -321,6 +328,7 @@ sub preselectMostSimilarImpostorsDataset {
 			$self->{logger}->trace("Sorting impostors by similarity against  probe file '".$probeDoc->getFilename()."'") if ($self->{logger});
 			my @sortedImpBySim = sort { $simByImpostor->{$b} <=> $simByImpostor->{$a} } (keys %$simByImpostor) ;
 			$sortedImpBySimByProbe[$probeSide]->{$probeDoc} = \@sortedImpBySim;
+#			print STDERR Dumper($sortedImpBySimByProbe[$probeSide]->{$probeDoc});
 		    }
 		}
 		my $nbSelected=0;
@@ -338,8 +346,15 @@ sub preselectMostSimilarImpostorsDataset {
 		    }
 		}
 		my $impDatasetDocsByFilename = $self->{impostors}->{$impDataset}->getDocsAsHash();
-		my @selectedDocs = map { $impDatasetDocsByFilename->{$_} } (keys %selected);
+		# CAUTION!! converting to obtain the basename, which is used as id in the precomputed similarities. not clean, but too hard to change everything now (and not sure how)
+		my ($filename, $doc);
+		my %impDatasetDocsById;
+		while (my ($filename, $doc)  = each %$impDatasetDocsByFilename) {
+		   $impDatasetDocsById{basename($filename)} = $doc; 
+		}
+		my @selectedDocs = map { $impDatasetDocsById{$_} } (keys %selected);
 		$self->{logger}->debug("selected ".scalar(@selectedDocs)." impostors for dataset '$impDataset'")  if ($self->{logger});
+#		print STDERR Dumper(\@selectedDocs);
 		push(@mostSimilarDocs, @selectedDocs);
 	    }
 	    $preSelectedImpostors{$impDataset} = \@mostSimilarDocs;
@@ -372,7 +387,8 @@ sub computeOrLoadPreSimValues {
 	if (defined($res)) { # the sim file was found and its content loaded
 	    # checking that we have a sim value for each impostor, because if not this will cause problems later
 	    my $impostors = $self->{impostors}->{$impDataset}->getDocsAsHash();
-	    foreach my $impId (keys %$impostors) {
+	    foreach my $impFile (keys %$impostors) {
+		my $impId=basename($impFile);
 		confessLog($self->{logger}, "Error loading pre-sim values: no value found for impostor '$impId' (probe file ".$probeDoc->getFilename().", dataset '$impDataset')") if (!defined($res->{$impId}));
 	    }
 	    return $res ;
@@ -391,8 +407,9 @@ sub computeOrLoadPreSimValues {
     my $probeData = $probeDoc->getObservations($obsType);
     my $impostors = $self->{impostors}->{$impDataset}->getDocsAsHash();
     my %resProbe;
-    my ($impId, $impDoc);
-    while (($impId, $impDoc) = each(%$impostors)) {
+    my ($impFile, $impDoc);
+    while (($impFile, $impDoc) = each(%$impostors)) {
+	my $impId=basename($impFile);
 	$resProbe{$impId} = $self->{simMeasure}->compute($probeData, $impDoc->getObservations($obsType) );
 	$self->{logger}->debug("Pre-sim value between probe '".$probeDoc->getFilename()."' and impostor '$impId' (dataset 'impDataset') = $resProbe{$impId}") if ($self->{logger});
     }

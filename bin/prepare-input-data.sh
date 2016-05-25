@@ -318,7 +318,7 @@ for impId in $usedImpostorsIds; do
     fi
 
     echo "$progName, impostors dataset '$impId': computing pre-similarity values against all probe files"
-    evalSafe "sim-collections-doc-by-doc.pl -o '$basicTokensObsType' $paramsDataset $basicTokensObsType:$obsTypesColonSep \"$destDir/input/all-data.files\" \"$destDir/resources/impostors/$impId/all-data.files\"" "$progName:$LINENO: "
+    evalSafe "sim-collections-doc-by-doc.pl -o '$basicTokensObsType' -R \"BASENAME\" $paramsDataset $basicTokensObsType:$obsTypesColonSep \"$destDir/input/all-data.files\" \"$impId:$destDir/resources/impostors/$impId/all-data.files\"" "$progName:$LINENO: "
 
 done
 
