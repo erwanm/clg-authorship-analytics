@@ -117,7 +117,7 @@ $config->{logging} = $opt{l} || $opt{L};
 # word vocab resources
 if ($vocabResourcesStr) {
     $config->{wordVocab} = {} if (!defined($config->{wordVocab})); # this way it is possible to define some resources in the config file and some other on the command line
-    parseParamsFromString($vocabResourcesStr, $config->{wordVocab}, $logger, ":");
+    parseParamsFromString($vocabResourcesStr, $config->{wordVocab}, $logger);
 }
 
 # extract input sets of documents
@@ -145,6 +145,7 @@ $config->{datasetResources} = $datasetsResourcesPath;
 $config->{diskReadAccess} = (defined($strategyDiskAccess) && (($strategyDiskAccess eq "r") || ($strategyDiskAccess eq "rw"))) ? 1 : 0;
 $config->{diskWriteAccess} = (defined($strategyDiskAccess) && (($strategyDiskAccess eq "w") || ($strategyDiskAccess eq "rw"))) ? 1 : 0;
 
+$logger->trace("config content = \n".Dumper($config)) if (defined($logger));
 my $strategy = newVerifStrategyFromId($config->{strategy}, $config, 1);
 $strategy->{obsTypesList} = readObsTypesFromConfigHash($config); # for verif strategy (DocProvder reads obs types separately)
 

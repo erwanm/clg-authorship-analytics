@@ -6367,7 +6367,7 @@ The task of author verification consists primarily in answering the following qu
 This documentation is a work in progress...
 @@</pre>
 </div>
-<div created="20160520172212606" modified="20160525160011545" title="Requirements">
+<div created="20160520172212606" modified="20160525172800039" title="Requirements">
 <pre>! Installation
 
 The package itself is coded in Bash and Perl. No compilation is required. 
@@ -6378,12 +6378,16 @@ The software has been tested only in a Linux environment, but it should be usabl
 
 [[clg-authorship-analytics]] requires the following dependencies to be installed. 
 
+The different dependencies can be installed using an in-house basic package manager called ''erw-pm''; see the ``erw-bash-commons`` documentation (part ''erw-pm'') to use it. Otherwise packages can be installed by setting up PATH and other environment variables manually (standard way).
 
 !! Third-party
 
 * Bash
 * Perl
-** libraries TODO
+** Log::Log4perl
+** File::BOM
+** Data::Dumper
+** Data::Dumper::Simple
 * Java
 ** Weka
 

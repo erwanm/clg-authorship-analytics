@@ -37,7 +37,7 @@ our $decimalDigits = 10;
 # * impostors = { dataset1 => DocCollection1,  dataset2 => DocCollection2 } ; impostors will be picked from the various datasets A, B,... with equal probability (i.e. independently from the number of docs in each dataset).
 # ** if a DocCollection dataset has a min doc freq threshold > 1, this threshold will be applied to the probe docs (using the doc freq table from the same dataset).  As a consequence, observations which appear in a probe document but not in the impostors  dataset are removed.
 # ** Alternatively, $impostors can be a string with format 'datasetid1;datasetId2;...'; the fact that it is not a hash ref is used as marker for this option. In this case parameter 'datasetResources'  must be set.
-# * datasetResources = { datasetId1 => path1, datasetId2 => path2, ...}. Used only if impostors is not provided as a list of DocCollection (see above).  'pathX' is a path where the files included in the dataset are located. datasetResources can only be a single string corresponding to the path where all datasets are located under their ids, i.e. <datasetResources>/<datasetId>/
+# * datasetResources = { datasetId1 => path1, datasetId2 => path2, ...}. Used only if impostors is not provided as a list of DocCollection (see above).  'pathX' is a path where the files included in the dataset are located. datasetResources can only be a single string corresponding to the path where all datasets are located under their ids as a subdir of the subdir impostors, i.e. <datasetResources>/impostors/<datasetId>/
 # * minDocFreq: optional (default 1); used only if impostors not provided as a list of DocCollection objects
 # * filePattern: optional (default "*.txt"); used only if impostors not provided as a list of DocCollection objects (describes the files used as impostor docs in the directory).
 
@@ -307,7 +307,7 @@ sub preselectMostSimilarImpostorsDataset {
 	foreach my $impDataset (@impostorsDatasets) {
 	    my $nbToSelect = $nbByDataset;
 	    my $impostors = $self->{impostors}->{$impDataset}->getDocsAsList();
-	    confessLog($self->{logger}, "Error: 0 impostors in dataset 'impDataset'") if (scalar(@$impostors) == 0);
+	    confessLog($self->{logger}, "Error: 0 impostors in dataset '$impDataset'") if (scalar(@$impostors) == 0);
 	    $self->{logger}->debug("dataset '$impDataset': ".scalar(@$impostors)." impostors available, we need $nbToSelect.") if ($self->{logger});
 	    my @mostSimilarDocs=();
 	    while (scalar(@mostSimilarDocs) <= $nbToSelect - scalar(@$impostors)) { # in case not enough impostors
