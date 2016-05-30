@@ -9,7 +9,7 @@ use strict;
 use warnings;
 use Carp;
 use Log::Log4perl;
-use CLGTextTools::Stats qw/pickInList pickNSloppy aggregateVector pickDocSubset pickIndex getDocSize scaleUpMaxDocSize/;
+use CLGTextTools::Stats qw/pickInList pickNSloppy aggregateVector pickDocSubset pickIndex/;
 use CLGAuthorshipAnalytics::Verification::VerifStrategy;
 use CLGTextTools::Logging qw/confessLog cluckLog warnLog/;
 use CLGTextTools::DocCollection qw/createDatasetsFromParams filterMinDocFreq/;
@@ -256,22 +256,14 @@ sub computeGI {
 	    @impDocRound = map { [ pickDocSubset($_->[0]->getObservations($obsType), $propObsRound, $self->{logger}) , $_->[1] ] } @$impostors;
 	}
 	my $datasetRnd = pickInList(\@impostorsDatasets); # it makes sense to compare with the same minDocFreq as the impostors, but against which ref dataset doesn't matter so much
-	my @probeDocsRoundSize;
 	$self->{logger}->trace("computing similarity between selected probe docs (using dataset '$datasetRnd')") if ($self->{logger});
-	for (my $probeDocNo=0; $probeDocNo<=1; $probeDocNo++) {
-	    $probeDocsRoundSize[$probeDocNo]->{$datasetRnd} = getDocSize($probeDocsRound[$probeDocNo]->{$datasetRnd}); # size of probe doc computed on the fly and reused later if needed
-	}
-	my $scaledDocs = scaleUpMaxDocSize([$probeDocsRound[0]->{$datasetRnd}, $probeDocsRound[1]->{$datasetRnd}], [ $probeDocsRoundSize[0]->{$datasetRnd}, $probeDocsRoundSize[1]->{$datasetRnd}], $self->{logger});
-	my $probeDocsSim = $self->{simMeasure}->compute($scaledDocs->[0], $scaledDocs->[1]);
+	my $probeDocsSim = $self->{simMeasure}->compute($probeDocsRound[0]->{$datasetRnd}, $probeDocsRound[1]->{$datasetRnd});
 	my @simRound;
-	for (my $impNo=0; $impNo<scalar(@$impostors); $impNo++) {
-	    my ($impDoc, $dataset) = ( $impDocRound[$impNo]->[0], $impDocRound[$impNo]->[1] );
-	    my $impSize = getDocSize($impDoc);
-	    for (my $probeDocNo=0; $probeDocNo<=1; $probeDocNo++) {
+	for (my $probeDocNo=0; $probeDocNo<=1; $probeDocNo++) {
+	    for (my $impNo=0; $impNo<scalar(@$impostors); $impNo++) {
+		my ($impDoc, $dataset) = ( $impDocRound[$impNo]->[0], $impDocRound[$impNo]->[1] );
 		$self->{logger}->trace("computing similarity between probe doc side $probeDocNo and impostor $impNo from dataset '$dataset'") if ($self->{logger});
-		$probeDocsRoundSize[$probeDocNo]->{$dataset} = getDocSize($probeDocsRound[$probeDocNo]->{$dataset}) if (!defined($probeDocsRoundSize[$probeDocNo]->{$dataset})); # size of probe doc computed on the fly and reused later if needed
-		$scaledDocs = scaleUpMaxDocSize([$probeDocsRound[$probeDocNo]->{$dataset}, $impDoc], [ $probeDocsRoundSize[$probeDocNo]->{$dataset}, $impSize], $self->{logger});
-		$simRound[$probeDocNo]->[$impNo] = $self->{simMeasure}->compute($scaledDocs->[0], $scaledDocs->[1]);
+		$simRound[$probeDocNo]->[$impNo] = $self->{simMeasure}->compute($probeDocsRound[$probeDocNo]->{$dataset}, $impDoc);
 	    }
 	}
 	push(@res, [ \@probeDocNo,  $probeDocsSim, \@simRound ]);
