@@ -261,7 +261,7 @@ sub computeGI {
 	for (my $probeDocNo=0; $probeDocNo<=1; $probeDocNo++) {
 	    $probeDocsRoundSize[$probeDocNo]->{$datasetRnd} = getDocSize($probeDocsRound[$probeDocNo]->{$datasetRnd}); # size of probe doc computed on the fly and reused later if needed
 	}
-	my $probeDocsSim = $self->{simMeasure}->normalizedCompute($probeDocsRound[0]->{$datasetRnd}, $probeDocsRound[1]->{$datasetRnd}, $probeDocsRoundSize[0]->{$datasetRnd}, $probeDocsRoundSize[1]->{$datasetRnd}, $self->{logger});
+	my $probeDocsSim = $self->{simMeasure}->normalizeCompute($probeDocsRound[0]->{$datasetRnd}, $probeDocsRound[1]->{$datasetRnd}, $probeDocsRoundSize[0]->{$datasetRnd}, $probeDocsRoundSize[1]->{$datasetRnd}, $self->{logger});
 	my @simRound;
 	for (my $impNo=0; $impNo<scalar(@$impostors); $impNo++) {
 	    my ($impDoc, $dataset) = ( $impDocRound[$impNo]->[0], $impDocRound[$impNo]->[1] );
