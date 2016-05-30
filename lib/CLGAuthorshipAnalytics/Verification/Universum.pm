@@ -9,7 +9,7 @@ use strict;
 use warnings;
 use Carp;
 use Log::Log4perl;
-use CLGTextTools::Stats qw/pickInList pickNSloppy pickNIndexesAmongMExactly aggregateVector pickDocSubset splitDocRandomAvoidEmpty/;
+use CLGTextTools::Stats qw/pickInList pickNSloppy pickNIndexesAmongMExactly aggregateVector pickDocSubset splitDocRandomAvoidEmpty scaleUpMaxDocSize/;
 use CLGTextTools::Commons qw/getArrayValuesFromIndexes containsUndef mergeDocs assignDefaultAndWarnIfUndef/;
 use CLGAuthorshipAnalytics::Verification::VerifStrategy;
 use CLGTextTools::Logging qw/confessLog cluckLog warnLog/;
@@ -105,6 +105,7 @@ sub computeUniversum {
 	# after preparing everything we will have:
 	#  thirds[0] = [P0a, P0b] ; thirds[1] = [P1a, P1b] ; thirds[2] = [Ma, Mb]
 	#
+
 	# 1; splitting the 2 docs in thirds; if serveral docs on one side, pick a third at random
 	for my $probeSide (0,1) {
 	    $self->{logger}->trace("round $roundNo, splitting probe doc side $probeSide ") if ($self->{logger});
@@ -131,16 +132,26 @@ sub computeUniversum {
 		$thirds[$probeSide] = getArrayValuesFromIndexes(\@allPossibleThirds, $selectedThirdsIndexes);
 	    }
 	}
-	# 2.  mixing one third of each with the other:
+
+	# 2. scale up thirds to the max size
+	# put all thirds in a single list
+	$self->{logger}->trace("round $roundNo: uniformizing thirds docs sizes") if ($self->{logger});
+	push(@{$thirds[0]}, @{$thirds[1]});
+	my $scaledUpDocs = scaleUpMaxDocSize($thirds[0]);
+	# reassign thirds to their respective probe side
+	$thirds[0] = [ $scaledUpDocs->[0], $scaledUpDocs->[1], $scaledUpDocs->[2] ] ;
+	$thirds[1] = [ $scaledUpDocs->[3], $scaledUpDocs->[4], $scaledUpDocs->[5] ] ;
+
+	# 3.  mixing one third of each with the other:
 	my $prop = ($self->{propObsSubset} == 0) ? rand() : $self->{propObsSubset};
-	# 2.a generating two thirds obtained from merging the two sides
+	# 3.a generating two thirds obtained from merging the two sides
 	my $mergedMixed = mergeDocs($thirds[0]->[2], $thirds[1]->[2], 1);
 	undef $thirds[0]->[2];
 	undef $thirds[1]->[2];
-	# 2.b split again into two mixed subsets
+	# 3.b split again into two mixed subsets
 	$thirds[2] = splitDocRandomAvoidEmpty($self->{splitWithoutReplacementMaxNbAttempts}, $mergedMixed, 2, { 0 => $prop  , 1 => 1-$prop} , $self->{logger});
 
-	# 3. compute sims between P0a-P0b, P1a-P1b, Ma-Mb, P0?-P1?, P0?-M?, P1?-M?
+	# 4. compute sims between P0a-P0b, P1a-P1b, Ma-Mb, P0?-P1?, P0?-M?, P1?-M?
 	my @sim;
 	for my $i (0..2) {
 	    for my $j (0..$i) {
