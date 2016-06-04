@@ -32,7 +32,9 @@ function usage {
   echo "       default: error and exit (to avoid deleting stuff accidentally)."
   echo "    -i <id:path[;id2:path2...]> specify where to find additional impostors"
   echo "       documents; these will be used if the config parameter 'impostors'"
-  echo "       contains the corresponding id(s)." 
+  echo "       contains the corresponding id(s). see also below." 
+  echo "    -i <impostors path> same as above but assuming all impostors datasets"
+  echo "       are located as subdirs of <impostors path>."
   echo "    -o <train-cv options> options to transmit to train-cv.sh, e.g. '-c -s'."
   echo "    -P <parallel prefix> TODO"
   echo
@@ -45,8 +47,7 @@ while getopts 'hfai:o:P:' option ; do
     case $option in
         "f" ) force=1;;
         "a" ) addToExisting=1;;
-        "i" ) impostorsData=$(echo "$OPTARG" | tr ';' ' ')
-	      prepareParams="$prepareParams -i \"$impostorsData\"";;
+        "i" ) prepareParams="$prepareParams -i \"$OPTARG\"";;
         "P" ) parallelPrefix="$OPTARG"
 	      trainingParams="$trainingParams -P \"$parallelPrefix\"";;
         "o" ) constantParams="$trainingParams -o \"$OPTARG\"";;
@@ -72,6 +73,7 @@ workDir="$2"
 
 dieIfNoSuchDir "$sourceDir" "$progName,$LINENO: "
 dieIfNoSuchFile "$sourceDir/contents.json" "$progName,$LINENO: "
+
 
 if [ $force -ne 0 ]; then
     rm -rf "$workDir"

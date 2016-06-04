@@ -85,7 +85,9 @@ function usage {
   echo "       documents; these will be used if the config parameter 'impostors'"
   echo "       contains the corresponding id(s)." #special id 'web' is reserved."
   echo "       This option is ignored if '-r' is supplied."
-#  echo "    -s <stop words directory> provide path to stop words directory:"
+  echo "    -i <impostors path> same as above but assuming all impostors datasets"
+  echo "       are located as subdirs of <impostors path>."
+  e#  echo "    -s <stop words directory> provide path to stop words directory:"
   echo "       "
   echo
 }
@@ -200,6 +202,8 @@ fi
 dieIfNoSuchDir "$sourceDir" "$progName:$LINENO: "
 dieIfNoSuchFile "$sourceDir/contents.json"  "$progName:$LINENO: " # extract language
 
+
+
 if [ ! -z "$resourcesDir" ]; then
     dieIfNoSuchDir "$resourcesDir" "$progName:$LINENO: " 
 fi
@@ -298,10 +302,24 @@ usedImpostorsIds=$(ls "$destDir"/multi-conf-files/*.multi-conf | readParamFromMu
 #echo "$progName DEBUG: usedImpostorsIds='$usedImpostorsIds'" 1>&2
 mkdirSafe "$destDir/resources/impostors/" "$progName,$LINENO: "
 
+if [ ! -z "$impostorsData" ]; then
+    left=${impostorsData%:*}
+    if [ "$left" == "$impostorsData" ]; then # doesn't contain ':'
+	uniqueImpPath="$impostorsData"
+    else
+	impostorsDataSpace=$(echo "$impostorsData" | tr ';' ' ')
+    fi
+fi
+
+
 for impId in $usedImpostorsIds; do
 
     if [ -z "$resourcesDir" ]; then
-	impPath=$(getImpostorsDir "$impId" $impostorsData)
+	if [ -z "$uniqueImpPath" ]; then
+	    impPath=$(getImpostorsDir "$impId" $impostorsDataSpace)
+	else
+	    impPath="$uniqueImpPath/$impId"
+	fi
 #	echo "$progName DEBUG: imp path='$impPath'" 1>&2
 
 	echo "$progName, impostors dataset '$impId' copying impostors file"
