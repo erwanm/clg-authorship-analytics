@@ -3,7 +3,7 @@
 strategy=GI
 
 
-GI.impostors=english
+GI.impostors=pan14 pan15 web.wbq4 web.wbq6 pan14;pan15 pan14;web.wbq4 pan14;web.wbq6 pan15;web.wbq4 pan15;web.wbq6 web.wbq4;web.wbq6
 GI.nbImpostorsUsed=10 20 50
 GI.nbRounds=10 25 50
 GI.selectNTimesMostSimilarFirst=1 3 5 10
