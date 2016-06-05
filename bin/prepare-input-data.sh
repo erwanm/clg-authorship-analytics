@@ -119,16 +119,15 @@ function readParamFromMultipleConfigFilesFailOnDiff {
 #
 # reads config files from STDIN
 #
-function readParamFromMultipleConfigFilesListUnion {
+function readImpostorsIdsFromMultipleConfigFiles {
     local paramName="$1"
-    local sepa="$2"
 
     local res=""
     while read mcFile; do
 	readFromParamFile  "$mcFile" "$paramName" "$progName,$LINENO: " "" 0 NA "tmpVar"
 #	echo "DEBUG: mcFile=$mcFile; tmpVar=$tmpVar" 1>&2
 	if [ "$tmpVar" != "NA" ]; then
-	    echo "$tmpVar" | sed "s/$sepa/\n/g"
+	    echo "$tmpVar" | sed "s/[ ;]/\n/g"
 	fi
     done | sort -u
 }
@@ -298,7 +297,7 @@ evalSafe "count-obs-dataset.sh -i \"$destDir/input/all-data.files\" -o \"$params
 
 
 echo "$progName: input data, preparing impostors data"
-usedImpostorsIds=$(ls "$destDir"/multi-conf-files/*.multi-conf | readParamFromMultipleConfigFilesListUnion "$impostorsParam" ";")
+usedImpostorsIds=$(ls "$destDir"/multi-conf-files/*.multi-conf | readImpostorsIdsFromMultipleConfigFiles "$impostorsParam")
 #echo "$progName DEBUG: usedImpostorsIds='$usedImpostorsIds'" 1>&2
 mkdirSafe "$destDir/resources/impostors/" "$progName,$LINENO: "
 
