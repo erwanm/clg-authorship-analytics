@@ -124,6 +124,8 @@ evalSafe "ls $workDir/*.multi-conf | prepare-input-data.sh $prepareParams '$sour
 if [ $addToExisting -ne 0 ] && [ -d "$workDir/outerCV-folds" ] ; then
     trainingParams="$trainingParams -r"
 fi
+echo "train-top-level.sh -r $trainingParams '$workDir'" >"$workDir/restart-top-level.sh"
+chmod a+x "$workDir/restart-top-level.sh"
 evalSafe "train-top-level.sh $trainingParams '$workDir'" "$progName, $LINENO: "
 
 
