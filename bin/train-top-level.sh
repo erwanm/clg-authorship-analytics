@@ -124,7 +124,7 @@ for foldIndexesFile in "$outputDir/outerCV-folds"/*.train.indexes; do
     fi
     evalSafe "echo \"$outputDir/$foldId/best-meta-configs.list\" >>\"$waitFile\"" "$progName,$LINENO: "
 done
-waitFilesList "$progName: main process in progress for '$outputDir'..." "$waitFile" $sleepTime
+waitFilesList "$progName: main process in progress for '$outputDir'... (parallelPrefix='$parallelPrefix')" "$waitFile" $sleepTime
 rm -f  "$waitFile"
 
 

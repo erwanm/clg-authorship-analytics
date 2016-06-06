@@ -139,7 +139,7 @@ if [ $status -ne 0 ]; then
     echo "$progName: an error occured in the main loop, exit code=$status... " 1>&2
     exit 1
 fi
-waitFilesList "$progName: processing configs." "$waitFile" $sleepTime
+waitFilesList "$progName: processing configs. (parallelPrefix='$parallelPrefix')" "$waitFile" $sleepTime
 rm -f  "$waitFile"
 
 # extract results

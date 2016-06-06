@@ -117,21 +117,24 @@ $config->{logging} = $opt{l} || $opt{L};
 # word vocab resources
 if ($vocabResourcesStr) {
     $config->{wordVocab} = {} if (!defined($config->{wordVocab})); # this way it is possible to define some resources in the config file and some other on the command line
-    parseParamsFromString($vocabResourcesStr, $config->{wordVocab}, $logger);
+    parseParamsFromString($vocabResourcesStr, $config->{wordVocab}, $logger, ":");
 }
 
 # extract input sets of documents
 my @docsPairs;
-if (defined($docsA) & defined($docsB)) {
+if (defined($docsA) && defined($docsB)) {
     my @setA = split(":", $docsA);
     my @setB = split(":", $docsB);
     push(@docsPairs, [ \@setA, \@setB ]);
 } else {
     while (my $line = <STDIN>) {
 	chomp($line);
+#	print STDERR "DEBUG: line='$line'\n";
 	my @pair = split(/\s+/, $line);
 	my @setA = split(":", $pair[0]);
 	my @setB = split(":", $pair[1]);
+#	print STDERR "DEBUG: setA = ".join(" * ", @setA)."\n";
+#	print STDERR "DEBUG: setB = ".join(" * ", @setB)."\n";
 	push(@docsPairs, [ \@setA, \@setB ]);
     }
 }

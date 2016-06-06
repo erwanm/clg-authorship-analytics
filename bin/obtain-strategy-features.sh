@@ -81,8 +81,8 @@ else
     fi
     tmpCasesFile=$(mktemp  --tmpdir  "$progName.main.XXXXXXXXX")
     cut -f 1 "$casesFile" | while read caseId; do
-	knownDocsList=$(ls "$inputDataDir/$caseId"/known*.txt)
-	knownDocsList=$(echo "$knownDocsList" | tr ' ' ':')
+	knownDocsList=$(find "$inputDataDir/$caseId" -name "known*.txt" | tr '\n' ':')
+#	echo "DEBUG caseId='$caseId'; knownDocsList='$knownDocsList'" 1>&2
 	echo "$knownDocsList $inputDataDir/$caseId/unknown.txt"
     done >"$tmpCasesFile"
 #    echo "DEBUG cases for verif-author = $tmpCasesFile" 1>&2
