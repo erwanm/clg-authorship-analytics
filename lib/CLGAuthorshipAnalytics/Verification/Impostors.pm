@@ -517,14 +517,17 @@ sub countMostSimFeature {
 	}
     }
     $self->{logger}->debug("Counting most similar between probe values and impostor values, method '".$self->{GI_useCountMostSimFeature}."': sum = $sum; nb rounds counted = $nbCounted; 'normalized' score = ".($sum / $nbCounted))  if ($self->{logger});
-    confessLog($self->{logger}, "Error: no round counted at all in 'countMostSimFeature'") if ($nbCounted == 0);
-
-    # IMPORTANT: the normalisation makes sense only for the original version
-    # I don't think we can normalise the two others since we can't be sure
-    # that B>=A in A/B (i.e. sim(Pi,Ii)>sim(P1,P2))
-    # However dividing every score by the same value doesn't hurt, it's just
-    # that the result shouldn't be interpreted as necessarily in [0,1]
-    return $sum / $nbCounted;
+    if ($nbCounted == 0) {
+	warnLog($self->{logger}, "Error: no round counted at all in 'countMostSimFeature'");
+	return $nanStr;
+    } else {
+	# IMPORTANT: the normalisation makes sense only for the original version
+	# I don't think we can normalise the two others since we can't be sure
+	# that B>=A in A/B (i.e. sim(Pi,Ii)>sim(P1,P2))
+	# However dividing every score by the same value doesn't hurt, it's just
+	# that the result shouldn't be interpreted as necessarily in [0,1]
+	return $sum / $nbCounted;
+    }
 }
 
 

@@ -122,9 +122,6 @@ sub computeUniversum {
 		    my $docObsHash = $doc->getObservations($obsType);
 		    my $thirdsDoc = splitDocRandomAvoidEmpty($self->{splitWithoutReplacementMaxNbAttempts}, $docObsHash, 3, undef, $self->{logger});
 		    $self->{logger}->trace("thirdsDoc = ".Dumper($thirdsDoc)) if ($self->{logger});
-		    $nbEmpty++ if (containsUndef($thirdsDoc));
-		    $self->{logger}->trace("nb observations for obs type '$obsType' = ".scalar(keys %$docObsHash)." nb empty subsets = $nbEmpty") if ($self->{logger});
-
 		    push(@allPossibleThirds, @$thirdsDoc);
 		}
 		$self->{logger}->trace("picking 3 thirds among all possible thirds (".scalar(@allPossibleThirds).")") if ($self->{logger});
@@ -137,7 +134,8 @@ sub computeUniversum {
 	# put all thirds in a single list
 	$self->{logger}->trace("round $roundNo: uniformizing thirds docs sizes") if ($self->{logger});
 	push(@{$thirds[0]}, @{$thirds[1]});
-	my $scaledUpDocs = scaleUpMaxDocSize($thirds[0]);
+	$nbEmpty++ if (containsUndef($thirds[0]));
+	my $scaledUpDocs = scaleUpMaxDocSize($thirds[0], undef, $self->{logger}, 1);
 	# reassign thirds to their respective probe side
 	$thirds[0] = [ $scaledUpDocs->[0], $scaledUpDocs->[1], $scaledUpDocs->[2] ] ;
 	$thirds[1] = [ $scaledUpDocs->[3], $scaledUpDocs->[4], $scaledUpDocs->[5] ] ;
@@ -169,7 +167,7 @@ sub computeUniversum {
 	}
 	push(@simRounds, \@sim);
     }
-    warnLog($self->{logger}, "doc(s) too small => impossible to find enough partitions => used possibly empty doc(s) $nbEmpty times.") if ($nbEmpty>0);
+    warnLog($self->{logger}, "doc(s) too small => impossible to find enough partitions => used empty doc(s) $nbEmpty times (out of ".$self->{nbRounds}." rounds).") if ($nbEmpty>0);
     return \@simRounds;
 }
 
