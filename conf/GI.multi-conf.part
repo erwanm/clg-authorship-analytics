@@ -10,7 +10,9 @@ GI.selectNTimesMostSimilarFirst=1 3 5 10
 GI.preSimObsType=WORD.T.lc1.sl1.mf3
 GI.propObsSubset=0.5 0.2 
 GI.docSubsetMethod=byObservation byOccurrence
-GI.minDocFreq=2 5 10
+# PROBLEM: currently mindocfreq>1 requires loading all impostors docs in order to apply the min doc freq; this takes a prohibitive time and i'm not sure how useful this option is; so as long as i don't have a better way to deal with this we will not use this parameter
+#GI.minDocFreq=2 5 10
+GI.minDocFreq=1
 GI.simMeasure=minmax cosine
 GI.useCountMostSimFeature=0 original ASGALF ASGALFavg
 GI.kNearestNeighbors=2 5 10
