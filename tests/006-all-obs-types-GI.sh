@@ -1,6 +1,6 @@
 #!/bin/bash
 
-vocabResources="stop-eng50=tests/data/stop-words/english/50.list;stop-eng200=tests/data/stop-words/english/200.list"
+vocabResources="stop-eng50:tests/data/stop-words/english/50.list;stop-eng200:tests/data/stop-words/english/200.list"
 scoresDir="/tmp/scores-tables"
 if [ $# -eq 1 ]; then
     if [ -f "$1" ]; then
