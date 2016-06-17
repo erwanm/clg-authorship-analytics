@@ -293,7 +293,7 @@ vocabResources=${vocabResources:1}
 
 echo "$progName: input data, generating count files for all obs types"
 paramsDataset="$paramsDataset -r '$vocabResources'"
-evalSafe "count-obs-dataset.sh -i \"$destDir/input/all-data.files\" -o \"$paramsDataset\" $language $basicTokensObsType:$obsTypesColonSep" "$progName:$LINENO: "
+evalSafe "count-obs-dataset.sh -i \"$destDir/input/all-data.files\" -o \"-g $paramsDataset\" $language $basicTokensObsType:$obsTypesColonSep" "$progName:$LINENO: "
 
 
 echo "$progName: input data, preparing impostors data"
@@ -327,7 +327,7 @@ for impId in $usedImpostorsIds; do
 	listDocFiles "$destDir/resources/impostors/$impId" >"$destDir/resources/impostors/$impId/all-data.files" 
 
 	echo "$progName, impostors dataset '$impId': generating count files for all obs types"
-	evalSafe "count-obs-dataset.sh -i \"$destDir/resources/impostors/$impId/all-data.files\" -o \"$paramsDataset\" $language $basicTokensObsType:$obsTypesColonSep" "$progName:$LINENO: "
+	evalSafe "count-obs-dataset.sh -i \"$destDir/resources/impostors/$impId/all-data.files\" -o \"-g $paramsDataset\" $language $basicTokensObsType:$obsTypesColonSep" "$progName:$LINENO: "
     else
 	dieIfNoSuchDir "$resourcesDir/impostors/$impId" "$progName,$LINENO: "
         rm -f "$destDir/resources/impostors/$impId"
