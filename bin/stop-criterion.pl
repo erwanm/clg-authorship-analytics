@@ -13,10 +13,9 @@ my $colNo=1;
 sub usage {
 	my $fh = shift;
 	$fh = *STDOUT if (!defined $fh);
-	print $fh "Usage: stop-criterion.pl [options] <nb res by file> <nb windows> <window size>\n";
+	print $fh "Usage: stop-criterion.pl [options] <nb windows> <window size>\n";
 	print $fh "\n";
-	print $fh "   Reads a list of files from STDIN; each file contains a column with exactly\n";
-	print $fh "   <nb res> numerical values (this is checked).\n";
+	print $fh "   Reads a list of files from STDIN;\n";
 	print $fh "   Prints '1' if and only if the <nb windows> last consecutive sets of <window size>\n";
 	print $fh "   files do not show any increase in their average values by window. Prints\n";
 	print $fh "   '0' otherwise.\n";
@@ -34,10 +33,9 @@ sub usage {
 my %opt;
 getopts('hc:l:', \%opt ) or  ( print STDERR "Error in options" &&  usage(*STDERR) && exit 1);
 usage($STDOUT) && exit 0 if $opt{h};
-print STDERR "3 argument expected but ".scalar(@ARGV)." found: ".join(" ; ", @ARGV)  && usage(*STDERR) && exit 1 if (scalar(@ARGV) != 3);
-my $nbResByFile=$ARGV[0];
-my $nbWindows=$ARGV[1];
-my $windowSize=$ARGV[2];
+print STDERR "2 argument expected but ".scalar(@ARGV)." found: ".join(" ; ", @ARGV)  && usage(*STDERR) && exit 1 if (scalar(@ARGV) != 2);
+my $nbWindows=$ARGV[0];
+my $windowSize=$ARGV[1];
 
 $colNo=$opt{c} if (defined($opt{c}));
 my $detailFile=$opt{l};
@@ -64,8 +62,9 @@ if (scalar(@files) < $nbWindows * $windowSize) {
     }
     my $index=scalar(@files)-1;
     for (my $windowNo=$nbWindows; $windowNo>0; $windowNo--) {
-	my $sum=0;
+	my $sumAll=0;
 	for (my $i=0; $i<$windowSize;$i++) {
+	    my $sumThis = 0;
 	    my $f = $files[$index];
 	    my $nbValues=0;
 	    open(FH, "<", $f) or die "$progName: cannot open res file '$f'";
@@ -73,14 +72,14 @@ if (scalar(@files) < $nbWindows * $windowSize) {
 		chomp;
 		my @cols = split;
 		my $v = $cols[$colNo];
-		$sum += $v;
+		$sumThis += $v;
 		$nbValues++;
 	    }
 	    close(FH);
-	    die "$progName: expected $nbResByFile values but found $nbValues in '$f'" if ($nbValues != $nbResByFile);
+	    $sumAll += $sumThis / $nbValues ;
 	    $index--;
 	}
-	$avgByWindow[$windowNo]  = $sum / ($nbResByFile * $windowSize);
+	$avgByWindow[$windowNo]  = $sumAll / $windowSize;
 	print LOG "$files[$index+1]\t$windowNo\t$avgByWindow[$windowNo]\n" if (defined($detailFile));
     }
     close(LOG) if (defined($detailFile));

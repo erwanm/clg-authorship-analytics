@@ -183,7 +183,7 @@ else
     mkdirSafe "$outputDir/generations" "$progName,$LINENO: "
     # stop criterion evaluated in case nothing to do
 #    echo "DEBUG: 'ls \"$outputDir/generations\"/*/train/configs.results 2>/dev/null | stop-criterion.pl -c 2 \"$population\" \"$stopCriterionNbWindows\" \"$stopCriterionNbGenerationsByWindow\"'" 1>&2
-    stopLoop=$(evalSafe "ls \"$outputDir/generations\"/*/train/configs.results 2>/dev/null | stop-criterion.pl -c 2 \"$population\" \"$stopCriterionNbWindows\" \"$stopCriterionNbGenerationsByWindow\"" "$progName,$LINENO: ")
+    stopLoop=$(evalSafe "ls \"$outputDir/generations\"/*/train/configs.results 2>/dev/null | stop-criterion.pl -c 2 \"$stopCriterionNbWindows\" \"$stopCriterionNbGenerationsByWindow\"" "$progName,$LINENO: ")
 #    echo $stopLoop
     if [ $stopLoop -ne 0 ]; then
 	echo "$progName: stop criterion already met, not entering genetic loop."
