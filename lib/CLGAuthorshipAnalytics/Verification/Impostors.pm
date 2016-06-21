@@ -67,8 +67,12 @@ sub new {
 	my @impDatasetsIds = split(/;/, $impostors);
 	my %impParams = %$params;
 	$impParams{useCountFiles} = 1; # TODO possible problem if the disk is not writable and some count files are generated.
-	$self->{impostors} = createDatasetsFromParams(\%impParams, \@impDatasetsIds, $params->{datasetResources}."/impostors", $params->{minDocFreq}, $params->{filePattern}, $self->{logger});
+        # minDocFreq is not applied to all the impostors dataset, because this requires loading all observations from all docs
+        # instead, it will be applied only to the selected impostors in pickImpostors.
+#	$self->{impostors} = createDatasetsFromParams(\%impParams, \@impDatasetsIds, $params->{datasetResources}."/impostors", $params->{minDocFreq}, $params->{filePattern}, $self->{logger});
+	$self->{impostors} = createDatasetsFromParams(\%impParams, \@impDatasetsIds, $params->{datasetResources}."/impostors", 0, $params->{filePattern}, $self->{logger});
     }
+    $self->{minDocFreq} = defined($params->{minDocFreq}) ?  $params->{minDocFreq} : 1;
     $self->{nbImpostorsUsed} = assignDefaultAndWarnIfUndef("nbImpostorsUsed", $params->{nbImpostorsUsed}, 25, $self->{logger});
     $self->{selectNTimesMostSimilarFirst} = assignDefaultAndWarnIfUndef("selectNTimesMostSimilarFirst", $params->{selectNTimesMostSimilarFirst}, 0, $self->{logger});
     $self->{nbRounds} = assignDefaultAndWarnIfUndef("nbRounds", $params->{nbRounds}, 100, $self->{logger});
@@ -133,6 +137,13 @@ sub pickImpostors {
 	my $dataset = pickInList(\@impostorsDatasets);
 	my $impostor =  pickInList($allImpostorsDatasets->{$dataset});
 	$self->{logger}->trace("$i th impostor: picked '".$impostor->getFilename()."' in dataset '$dataset'") if ($self->{logger});
+	# apply min doc freq if needed
+	my $minDocFreqColl = $self->{impostors}->{$dataset}->getMinDocFreq();
+	my $minDocFreq = ($self->{minDocFreq} > $minDocFreqColl) ? $self->{minDocFreq} : $minDocFreqColl ;
+	if ($minDocFreq > 1) {
+	    $self->logger->trace("Applying min doc freq to doc $i '".$impostor->getFilename()."' minDocFreq = $minDocFreq") if ($self->{logger});
+	    filterMinDocFreq($impostor->getObservations(), $minDocFreq, $self->{impostors}->{$dataset}->getDocFreqTable(), 1);
+	}
 	$countDataset{$dataset}++ if ($self->{logger});
 	push(@resImpostors, [$impostor, $dataset]);
     }
@@ -172,7 +183,8 @@ sub computeGI {
     my @probeDocsListsByDataset;
     foreach my $impDataset (@impostorsDatasets) {
 	$self->{logger}->debug("Preparing probe docs w.r.t impostor sets: dataset '$impDataset'") if ($self->{logger});
-	my $minDocFreq = $self->{impostors}->{$impDataset}->getMinDocFreq();
+	my $minDocFreqColl = $self->{impostors}->{$impDataset}->getMinDocFreq();
+	my $minDocFreq = ($self->{minDocFreq} > $minDocFreqColl) ? $self->{minDocFreq} : $minDocFreqColl ;
 	if ($minDocFreq > 1) {
 	    $self->{logger}->trace("Applying minDocFreq=$minDocFreq for '$impDataset'") if ($self->{logger});
 	    my $docFreqTable = $self->{impostors}->{$impDataset}->getDocFreqTable();
