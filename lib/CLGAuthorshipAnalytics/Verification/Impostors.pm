@@ -141,7 +141,7 @@ sub pickImpostors {
 	my $minDocFreqColl = $self->{impostors}->{$dataset}->getMinDocFreq();
 	my $minDocFreq = ($self->{minDocFreq} > $minDocFreqColl) ? $self->{minDocFreq} : $minDocFreqColl ;
 	if ($minDocFreq > 1) {
-	    $self->logger->trace("Applying min doc freq to doc $i '".$impostor->getFilename()."' minDocFreq = $minDocFreq") if ($self->{logger});
+	    $self->{logger}->trace("Applying min doc freq to doc $i '".$impostor->getFilename()."' minDocFreq = $minDocFreq") if ($self->{logger});
 	    filterMinDocFreq($impostor->getObservations(), $minDocFreq, $self->{impostors}->{$dataset}->getDocFreqTable(), 1);
 	}
 	$countDataset{$dataset}++ if ($self->{logger});
