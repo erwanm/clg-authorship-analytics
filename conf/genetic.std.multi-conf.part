@@ -3,16 +3,16 @@
 # ***************************************************************
 
 indivGenetic_1_population=100
-indivGenetic_1_stopCriterionNbWindows=3
-indivGenetic_1_stopCriterionNbGenerationsByWindow=5
+indivGenetic_1_stopCriterionNbWindows=4
+indivGenetic_1_stopCriterionNbGenerationsByWindow=8
 indivGenetic_1_geneticParams=0.1:0.02:0.1:0.05
 indivGenetic_1_perfCriterion=final
 indivGenetic_1_nbFoldsOrProp=2
 indivGenetic_1_returnNbBest=100
 
 indivGenetic_2_population=50
-indivGenetic_2_stopCriterionNbWindows=4
-indivGenetic_2_stopCriterionNbGenerationsByWindow=5
+indivGenetic_2_stopCriterionNbWindows=3
+indivGenetic_2_stopCriterionNbGenerationsByWindow=6
 indivGenetic_2_geneticParams=0.1:0.02:0.1:0.05
 indivGenetic_2_perfCriterion=final
 indivGenetic_2_nbFoldsOrProp=4
