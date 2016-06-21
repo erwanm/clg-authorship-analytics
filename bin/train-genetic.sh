@@ -257,7 +257,7 @@ while [ $stopLoop -eq 0 ]; do
     # TODO: sleep time set to 20s for meta-training, should be much longer for strategy training
     evalSafe "train-generation.sh -s 20s -o  \"$trainCVParams\" $params -p $perfCriterion -f $nbFoldsOrProp \"$genDir/configs.list\" \"$outputDir\" \"$genDir/train\"" "$progName,$LINENO: "
     dieIfNoSuchFile "$genDir/train/configs.results" "$progName,$LINENO: "
-    stopLoop=$(evalSafe "ls \"$outputDir/generations\"/*/train/configs.results | stop-criterion.pl -c 2 -l \"$genDir/stop-criterion.log\"  \"$population\" \"$stopCriterionNbWindows\" \"$stopCriterionNbGenerationsByWindow\"" "$progName,$LINENO: ")
+    stopLoop=$(evalSafe "ls \"$outputDir/generations\"/*/train/configs.results | stop-criterion.pl -c 2 -l \"$genDir/stop-criterion.log\"  \"$stopCriterionNbWindows\" \"$stopCriterionNbGenerationsByWindow\"" "$progName,$LINENO: ")
     echo "INFO $progName: average perf for the last $stopCriterionNbWindows ${stopCriterionNbGenerationsByWindow}-long windows: "
     evalSafe "cat \"$genDir/stop-criterion.log\"" "$progName,$LINENO: "
     genNo=$(( $genNo + 1 ))
