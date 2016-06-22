@@ -87,7 +87,7 @@ function usage {
   echo "       This option is ignored if '-r' is supplied."
   echo "    -i <impostors path> same as above but assuming all impostors datasets"
   echo "       are located as subdirs of <impostors path>."
-  e#  echo "    -s <stop words directory> provide path to stop words directory:"
+  #  echo "    -s <stop words directory> provide path to stop words directory:"
   echo "       "
   echo
 }

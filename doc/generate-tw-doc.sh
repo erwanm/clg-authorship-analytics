@@ -52,9 +52,10 @@ htmlWikiFile="$1"
 workDir=$(mktemp -d)
 echo "DEBUG: workDir = $workDir"  1>&2
 
+cp "$htmlWikiFile" "$workDir"
 pushd "$workDir" >/dev/null
 tiddlywiki "$wikiName" --init server >/dev/null # create temporary node.js wiki 
-tiddlywiki "$wikiName" --load "$htmlWikiFile" >/dev/null # convert standalone to tid files
+tiddlywiki "$wikiName" --load $(basename "$htmlWikiFile") >/dev/null # convert standalone to tid files
 popd >/dev/null
 
 while read executableFile; do
