@@ -11,7 +11,11 @@ function usage {
   echo
   echo "Usage: $progName [options] <html wiki file> "
   echo
-  echo "  executable files read from STDIN"
+  echo "  Generates the 'tiddlers' containing some executable scripts help"
+  echo "  messages and adds/updates this content in the documentation wiki"
+  echo "  supplied as parameter."
+  echo "  The list of executable files for which the help message should"
+  echo "  be printed is read from STDIN."
   echo
   echo
   echo "  Options:"
@@ -80,4 +84,4 @@ else
     echo "An error happened, no result wiki file '$resHtmlFile' found." 1>&2
     exit 2
 fi
-# rm -rf "$workDir"
+rm -rf "$workDir"
