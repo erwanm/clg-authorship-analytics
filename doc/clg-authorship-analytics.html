@@ -129,13 +129,9 @@ Error message and password prompt
 
 <li>$:/SiteTitle</li>
 
-<li>$:/state/showeditpreview</li>
-
-<li>$:/state/sidebar</li>
+<li>$:/state/tab/moresidebar-401116514</li>
 
 <li>$:/state/tab/sidebar--1835078512</li>
-
-<li>$:/state/toc/Table of Contents-Verification Strategies-1680752989</li>
 
 <li>$:/StoryList</li>
 
@@ -179,11 +175,11 @@ Error message and password prompt
 
 <li>Scripts</li>
 
+<li>setup.erw-pm.sh</li>
+
 <li>stop-criterion.pl</li>
 
 <li>Table of Contents</li>
-
-<li>TODO</li>
 
 <li>train-cv.sh</li>
 
@@ -6325,19 +6321,13 @@ Error message and password prompt
 <div bag="default" created="20160520172007785" modified="20160520172022716" revision="0" title="$:/SiteTitle">
 <pre>CLG Authorship analytics</pre>
 </div>
-<div created="20160623141641944" modified="20160623141641944" title="$:/state/showeditpreview">
-<pre>yes</pre>
+<div created="20160623180554923" modified="20160623180554923" title="$:/state/tab/moresidebar-401116514">
+<pre>$:/core/ui/MoreSideBar/All</pre>
 </div>
-<div created="20160623141643606" modified="20160623144607532" title="$:/state/sidebar">
-<pre>yes</pre>
+<div created="20160623180553920" modified="20160623180553920" title="$:/state/tab/sidebar--1835078512">
+<pre>$:/core/ui/SideBar/More</pre>
 </div>
-<div created="20160623140600083" modified="20160623140600083" title="$:/state/tab/sidebar--1835078512">
-<pre>Table of Contents</pre>
-</div>
-<div created="20160623144924199" modified="20160623144925110" title="$:/state/toc/Table of Contents-Verification Strategies-1680752989">
-<pre>close</pre>
-</div>
-<div list="Scripts [[User Guide]] [[Verification Strategies]] [[Impostors Strategy]] [[Universum Strategy]] [[Basic Strategy]] Usage clg-authorship-analytics [[Table of Contents]]" title="$:/StoryList">
+<div list="clg-authorship-analytics [[Table of Contents]]" title="$:/StoryList">
 <pre></pre>
 </div>
 <div plugin-type="info" title="$:/temp/info-plugin" type="application/json">
@@ -6462,7 +6452,7 @@ Error message and password prompt
 <div bag="default" created="20160623135147967" modified="20160623135327364" revision="0" tags="TODO [[Table of Contents]]" title="About">
 <pre></pre>
 </div>
-<div bag="default" created="20160623150000000" revision="0" title="apply-bagging.sh" type="text/plain">
+<div bag="default" created="20160623190537000" revision="0" tags="Scripts" title="apply-bagging.sh" type="text/plain">
 <pre>Usage: apply-bagging.sh [options] &lt;N&gt; &lt;config prefixes list&gt; &lt;cases file&gt; &lt;dest dir&gt;
 
   apply the set of configs N times to a (different) 50% random subset of cases
@@ -6484,7 +6474,7 @@ Error message and password prompt
 
 </pre>
 </div>
-<div bag="default" created="20160623150000000" revision="0" title="apply-config.sh" type="text/plain">
+<div bag="default" created="20160623190537000" revision="0" tags="Scripts" title="apply-config.sh" type="text/plain">
 <pre>Usage: apply-config.sh [options] &lt;config prefix&gt; &lt;cases file&gt; &lt;main dir&gt; &lt;dest dir&gt;
 
  applies a config (can be an indiv strategy config or a meta config)
@@ -6503,7 +6493,7 @@ Error message and password prompt
 
 </pre>
 </div>
-<div bag="default" created="20160623150000000" revision="0" title="apply-multi-configs.sh" type="text/plain">
+<div bag="default" created="20160623190537000" revision="0" tags="Scripts" title="apply-multi-configs.sh" type="text/plain">
 <pre>Usage: apply-multi-configs.sh [options] &lt;config prefixes list&gt; &lt;cases file&gt; &lt;dest dir&gt;
 
   applies a set of configs/models to a set of cases. the configs can be
@@ -6535,7 +6525,7 @@ Error message and password prompt
 
 </pre>
 </div>
-<div created="20160623144609221" modified="20160623144651825" tags="[[Verification Strategies]] TODO" title="Basic Strategy">
+<div bag="default" created="20160623144609221" modified="20160623144651825" revision="0" tags="[[Verification Strategies]] TODO" title="Basic Strategy">
 <pre></pre>
 </div>
 <div bag="default" caption="Introduction" created="20160520172058387" modified="20160623144836406" revision="0" tags="[[Table of Contents]] TODO" title="clg-authorship-analytics">
@@ -6572,7 +6562,7 @@ See [[Genetic process]], [[Meta-classifier]]
 This documentation is a work in progress...
 @@</pre>
 </div>
-<div bag="default" created="20160623150000000" revision="0" title="generate-multi-conf.sh" type="text/plain">
+<div bag="default" created="20160623190537000" revision="0" tags="Scripts" title="generate-multi-conf.sh" type="text/plain">
 <pre>Usage: generate-multi-conf.sh [options] &lt;with POS?&gt; &lt;output dir&gt;
 
   assembles the multi-config files and write them to
@@ -6593,10 +6583,10 @@ This documentation is a work in progress...
 
 </pre>
 </div>
-<div created="20160623144709729" modified="20160623144716669" tags="[[Verification Strategies]] TODO" title="Impostors Strategy">
+<div bag="default" created="20160623144709729" modified="20160623144716669" revision="0" tags="[[Verification Strategies]] TODO" title="Impostors Strategy">
 <pre></pre>
 </div>
-<div bag="default" created="20160623150000000" revision="0" title="meta-training-extract-scores.pl" type="text/plain">
+<div bag="default" created="20160623190537000" revision="0" tags="Scripts" title="meta-training-extract-scores.pl" type="text/plain">
 <pre>Usage: meta-training-extract-scores.pl [options] &lt;cases file&gt; &lt;input dir&gt; &lt;config file&gt;
 
   &lt;input dir&gt; contains subdir 'apply-strategy-configs' properly initialized
@@ -6607,7 +6597,7 @@ This documentation is a work in progress...
 
 </pre>
 </div>
-<div bag="default" created="20160623150000000" revision="0" title="obtain-strategy-features.sh" type="text/plain">
+<div bag="default" created="20160623190537000" revision="0" tags="Scripts" title="obtain-strategy-features.sh" type="text/plain">
 <pre>Usage: obtain-strategy-features.sh [options] &lt;cases file&gt; &lt;input data dir&gt; &lt;config file&gt; &lt;resourcesOptionsFile&gt;
 
   Computes the verif strategy features, as specified in the config file,
@@ -6621,10 +6611,10 @@ This documentation is a work in progress...
 
 </pre>
 </div>
-<div bag="default" created="20160623150000000" revision="0" title="pan-utils.sh" type="text/plain">
+<div bag="default" created="20160623190537000" revision="0" tags="Scripts" title="pan-utils.sh" type="text/plain">
 <pre></pre>
 </div>
-<div bag="default" created="20160623150000000" revision="0" title="prepare-input-data.sh" type="text/plain">
+<div bag="default" created="20160623190537000" revision="0" tags="Scripts" title="prepare-input-data.sh" type="text/plain">
 <pre>TODO recheck everything
 
 Usage: prepare-input-data.sh [options] &lt;original input dir&gt; &lt;dest dir&gt;
@@ -6711,7 +6701,7 @@ The different dependencies can be installed using an in-house basic package mana
 
 </pre>
 </div>
-<div bag="default" created="20160623150000000" revision="0" title="run-std-training.sh" type="text/plain">
+<div bag="default" created="20160623190537000" revision="0" tags="Scripts" title="run-std-training.sh" type="text/plain">
 <pre>Usage: run-std-training.sh [options] &lt;input data dir&gt; &lt;work dir&gt;
 
   Starts the whole training process in a 'standard' way (simplified parameters).
@@ -6735,7 +6725,7 @@ The different dependencies can be installed using an in-house basic package mana
 
 </pre>
 </div>
-<div bag="default" created="20160623150000000" revision="0" title="score-to-confidence-label.pl" type="text/plain">
+<div bag="default" created="20160623190537000" revision="0" tags="Scripts" title="score-to-confidence-label.pl" type="text/plain">
 <pre>Usage: score-to-confidence-label.pl [options] &lt;truth file [0,1]&gt; &lt;prediction file [0,1]&gt;
 
 
@@ -6749,7 +6739,10 @@ The different dependencies can be installed using an in-house basic package mana
 <pre>Every executable script has a ``-h`` option which prints a short description (inline help message). This section provides the content printed by every script in the package for convenience.
 </pre>
 </div>
-<div bag="default" created="20160623150000000" revision="0" title="stop-criterion.pl" type="text/plain">
+<div bag="default" created="20160623174439000" revision="0" tags="Scripts" title="setup.erw-pm.sh" type="text/plain">
+<pre></pre>
+</div>
+<div bag="default" created="20160623190537000" revision="0" tags="Scripts" title="stop-criterion.pl" type="text/plain">
 <pre>Usage: stop-criterion.pl [options] &lt;nb windows&gt; &lt;window size&gt;
 
    Reads a list of files from STDIN;
@@ -6774,10 +6767,7 @@ OPTIONS:
 &lt;/div&gt;
 </pre>
 </div>
-<div bag="default" color="#f30b0b" created="20160623135213506" modified="20160623135215865" revision="0" title="TODO">
-<pre></pre>
-</div>
-<div bag="default" created="20160623150000000" revision="0" title="train-cv.sh" type="text/plain">
+<div bag="default" created="20160623190537000" revision="0" tags="Scripts" title="train-cv.sh" type="text/plain">
 <pre>Usage: train-cv.sh [options] &lt;config file&gt; &lt;input dir&gt; &lt;output eval dir&gt;
 
   High level script which takes as input an &lt;input dir&gt; and a config
@@ -6796,7 +6786,7 @@ OPTIONS:
 
 </pre>
 </div>
-<div bag="default" created="20160623150000000" revision="0" title="train-generation.sh" type="text/plain">
+<div bag="default" created="20160623190537000" revision="0" tags="Scripts" title="train-generation.sh" type="text/plain">
 <pre>Usage: train-generation.sh [options] &lt;configs list file&gt; &lt;input data dir&gt; &lt;output eval dir&gt;
 
   Takes as input an &lt;input data dir&gt; and a set of
@@ -6825,7 +6815,7 @@ OPTIONS:
 
 </pre>
 </div>
-<div bag="default" created="20160623150000000" revision="0" title="train-genetic.sh" type="text/plain">
+<div bag="default" created="20160623190537000" revision="0" tags="Scripts" title="train-genetic.sh" type="text/plain">
 <pre>Usage: train-genetic.sh [options] &lt;input/output dir&gt; &lt;cases file&gt; &lt;prefix genetic params&gt;
 
   Reads multi-conf files from STDIN. 
@@ -6857,7 +6847,7 @@ OPTIONS:
 
 </pre>
 </div>
-<div bag="default" created="20160623150000000" revision="0" title="train-multi-runs.sh" type="text/plain">
+<div bag="default" created="20160623190537000" revision="0" tags="Scripts" title="train-multi-runs.sh" type="text/plain">
 <pre>Usage: train-multi-runs.sh [options] &lt;input/output dir&gt; &lt;cases file&gt; &lt;configs file&gt;
 
 
@@ -6893,7 +6883,7 @@ TODO, DEPRECATED!
 
 </pre>
 </div>
-<div bag="default" created="20160623150000000" revision="0" title="train-multi-stages.sh" type="text/plain">
+<div bag="default" created="20160623190537000" revision="0" tags="Scripts" title="train-multi-stages.sh" type="text/plain">
 <pre>Usage: train-multi-stages.sh [options] &lt;input/output dir&gt; &lt;cases file&gt; &lt;(multi-)config file&gt; &lt;prefix params&gt;
 
 TODO
@@ -6908,7 +6898,7 @@ TODO
 
 </pre>
 </div>
-<div bag="default" created="20160623150000000" revision="0" title="train-outerCV-1fold.sh" type="text/plain">
+<div bag="default" created="20160623190537000" revision="0" tags="Scripts" title="train-outerCV-1fold.sh" type="text/plain">
 <pre>Usage: train-outerCV-1fold.sh [options] &lt;input/output dir&gt; &lt;train cases file&gt; &lt;test cases file&gt; &lt;multi-conf dir&gt;
 
   Reads the multi-config files in &lt;multi-conf dir&gt;/*.multi-conf
@@ -6923,7 +6913,7 @@ TODO
 
 </pre>
 </div>
-<div bag="default" created="20160623150000000" revision="0" title="train-test.sh" type="text/plain">
+<div bag="default" created="20160623190537000" revision="0" tags="Scripts" title="train-test.sh" type="text/plain">
 <pre>Usage: train-test.sh [options] &lt;input data dir&gt; &lt;config file&gt; &lt;output dir&gt;
 
   Trains or applies a model as specified by the parameters in
@@ -6931,7 +6921,7 @@ TODO
   Currently exactly one of the options -l or -a must be specified, and
   -m must be supplied.
 
- 15:00:00 up 2 days, 19:52,  5 users,  load average: 0.18, 0.22, 0.23
+ 19:05:37 up 2 days, 23:58,  5 users,  load average: 0.37, 0.30, 0.27
 USER     TTY      FROM             LOGIN@   IDLE   JCPU   PCPU WHAT
   Options:
     -h this help
@@ -6945,7 +6935,7 @@ USER     TTY      FROM             LOGIN@   IDLE   JCPU   PCPU WHAT
 
 </pre>
 </div>
-<div bag="default" created="20160623150000000" revision="0" title="train-top-level.sh" type="text/plain">
+<div bag="default" created="20160623190537000" revision="0" tags="Scripts" title="train-top-level.sh" type="text/plain">
 <pre>Usage: train-top-level.sh [options] &lt;input/output dir&gt;
 
   Reads the multi-config files in &lt;input/output dir&gt;/multi-conf-files/*.multi-conf
@@ -6962,16 +6952,16 @@ TODO
 
 </pre>
 </div>
-<div created="20160623144657052" modified="20160623144706830" tags="[[Verification Strategies]] TODO" title="Universum Strategy">
+<div bag="default" created="20160623144657052" modified="20160623144706830" revision="0" tags="[[Verification Strategies]] TODO" title="Universum Strategy">
 <pre></pre>
 </div>
-<div created="20160623140437077" modified="20160623144040561" tags="[[Table of Contents]] TODO" title="Usage" type="">
+<div bag="default" created="20160623140437077" modified="20160623144040561" revision="0" tags="[[Table of Contents]] TODO" title="Usage" type="">
 <pre>The programs in this package can be used in many differents ways, although not all of them are properly tested and documented.</pre>
 </div>
-<div created="20160623145317748" modified="20160623145606751" tags="[[Table of Contents]]" title="User Guide">
+<div bag="default" created="20160623145317748" modified="20160623145606751" revision="0" tags="[[Table of Contents]]" title="User Guide">
 <pre>{{{[tag[UserGuide]]}}}</pre>
 </div>
-<div bag="default" created="20160623150000000" revision="0" title="verif-author.pl" type="text/plain">
+<div bag="default" created="20160623190537000" revision="0" tags="Scripts" title="verif-author.pl" type="text/plain">
 <pre>Usage: verif-author.pl [options] &lt;config file&gt; [&lt;fileA1:..:fileAn&gt; &lt;fileB1:..:fileBm&gt;]
 
   Applies an author verification algorithm to:
@@ -7010,7 +7000,7 @@ TODO
 
 </pre>
 </div>
-<div created="20160623144844641" modified="20160623145436506" tags="TODO [[User Guide]]" title="Verification Strategies">
+<div bag="default" created="20160623144844641" modified="20160623145436506" revision="0" tags="TODO [[User Guide]]" title="Verification Strategies">
 <pre>{{{[tag[Verification Strategies]]}}}</pre>
 </div>
 
