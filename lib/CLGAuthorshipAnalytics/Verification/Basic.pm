@@ -65,7 +65,7 @@ sub compute {
 	    my @values;
 	    foreach my $doc1 (@{$probeDocsLists->[0]}) {
 		foreach my $doc2 (@{$probeDocsLists->[1]}) {
-		    my $res = $self->{simMeasure}->normalizeCompute($doc1->getObservations($obsType), $doc2->getObservations($obsType));
+		    my $res = $self->{simMeasure}->normalizeCompute($doc1, $doc2, $obsType);
 		    push(@values, $res);
 		}
 	    }
