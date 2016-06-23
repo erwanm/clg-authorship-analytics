@@ -3,9 +3,10 @@
 #source common-lib.sh
 #source file-lib.sh
 
-progName="generate-tw-doc.sh"
+progName="generate-tw-doc-executables-h.sh"
 
 wikiName="tw-doc-tmp-node-wiki"
+tags=""
 
 function usage {
   echo
@@ -20,6 +21,7 @@ function usage {
   echo
   echo "  Options:"
   echo "    -h this help"
+  echo "    -t <tags> tags to add to every generated tiddler (TW syntax)"
   echo
 }
 
@@ -34,6 +36,7 @@ function writeCreatedTodayField {
 OPTIND=1
 while getopts 'h' option ; do
     case $option in
+	"t" ) tags="$OPTARG";;
         "h" ) usage
               exit 0;;
         "?" )
@@ -54,7 +57,7 @@ fi
 htmlWikiFile="$1"
 
 workDir=$(mktemp -d)
-echo "DEBUG: workDir = $workDir"  1>&2
+#echo "DEBUG: workDir = $workDir"  1>&2
 
 cp "$htmlWikiFile" "$workDir"
 pushd "$workDir" >/dev/null
@@ -67,6 +70,7 @@ while read executableFile; do
     targetTiddler="$workDir/$wikiName/tiddlers/$tiddlerName.tid"
     writeCreatedTodayField >"$targetTiddler"
     echo "title: $tiddlerName" >>"$targetTiddler"
+    echo "tags: $tags"
     echo "type: text/plain" >>"$targetTiddler"
     echo ""  >>"$targetTiddler"
     eval "$executableFile -h" >> "$targetTiddler"

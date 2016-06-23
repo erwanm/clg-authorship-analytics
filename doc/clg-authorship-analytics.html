@@ -129,6 +129,14 @@ Error message and password prompt
 
 <li>$:/SiteTitle</li>
 
+<li>$:/state/showeditpreview</li>
+
+<li>$:/state/sidebar</li>
+
+<li>$:/state/tab/sidebar--1835078512</li>
+
+<li>$:/state/toc/Table of Contents-Verification Strategies-1680752989</li>
+
 <li>$:/StoryList</li>
 
 <li>$:/temp/info-plugin</li>
@@ -145,11 +153,15 @@ Error message and password prompt
 
 <li>apply-multi-configs.sh</li>
 
+<li>Basic Strategy</li>
+
 <li>clg-authorship-analytics</li>
 
 <li>Documentation in progress...</li>
 
 <li>generate-multi-conf.sh</li>
+
+<li>Impostors Strategy</li>
 
 <li>meta-training-extract-scores.pl</li>
 
@@ -189,7 +201,15 @@ Error message and password prompt
 
 <li>train-top-level.sh</li>
 
+<li>Universum Strategy</li>
+
+<li>Usage</li>
+
+<li>User Guide</li>
+
 <li>verif-author.pl</li>
+
+<li>Verification Strategies</li>
 
 </ul>
 </p>
@@ -6305,7 +6325,19 @@ Error message and password prompt
 <div bag="default" created="20160520172007785" modified="20160520172022716" revision="0" title="$:/SiteTitle">
 <pre>CLG Authorship analytics</pre>
 </div>
-<div list="clg-authorship-analytics [[Table of Contents]]" title="$:/StoryList">
+<div created="20160623141641944" modified="20160623141641944" title="$:/state/showeditpreview">
+<pre>yes</pre>
+</div>
+<div created="20160623141643606" modified="20160623144607532" title="$:/state/sidebar">
+<pre>yes</pre>
+</div>
+<div created="20160623140600083" modified="20160623140600083" title="$:/state/tab/sidebar--1835078512">
+<pre>Table of Contents</pre>
+</div>
+<div created="20160623144924199" modified="20160623144925110" title="$:/state/toc/Table of Contents-Verification Strategies-1680752989">
+<pre>close</pre>
+</div>
+<div list="Scripts [[User Guide]] [[Verification Strategies]] [[Impostors Strategy]] [[Universum Strategy]] [[Basic Strategy]] Usage clg-authorship-analytics [[Table of Contents]]" title="$:/StoryList">
 <pre></pre>
 </div>
 <div plugin-type="info" title="$:/temp/info-plugin" type="application/json">
@@ -6503,7 +6535,10 @@ Error message and password prompt
 
 </pre>
 </div>
-<div bag="default" caption="Introduction" created="20160520172058387" modified="20160623140029821" revision="0" tags="[[Table of Contents]]" title="clg-authorship-analytics">
+<div created="20160623144609221" modified="20160623144651825" tags="[[Verification Strategies]] TODO" title="Basic Strategy">
+<pre></pre>
+</div>
+<div bag="default" caption="Introduction" created="20160520172058387" modified="20160623144836406" revision="0" tags="[[Table of Contents]] TODO" title="clg-authorship-analytics">
 <pre>! Overview
 
 The package contains a set of scripts and libraries to perform author-identification related tasks. 
@@ -6516,6 +6551,19 @@ The task of author verification consists primarily in answering the following qu
 
 * Variant PAN: given a set of 1 to 5 texts written by author A and a &quot;questioned&quot; text, was the latter written by author A?
 * General case: given two sets of texts {A1,..,An} and {B1,..,Bm}, where all Ai were authored by A and all Bj authored by B, are A and B the same person?
+
+!! Implementation
+
+The current version provides three author verification strategies (see below), as well as a system which applies a genetic process in order to:
+
+* find the best verification systems (in short, classifiers based on variants of one of the strategies),
+* and combine a selection of these into a meta-classifier (stacked generalization has proved to be reliable approach at the PAN 2015 competition).
+
+See [[Genetic process]], [[Meta-classifier]]
+
+!!! Author verification strategies
+
+{{{[tag[Verification Strategies]]}}}
 
 </pre>
 </div>
@@ -6544,6 +6592,9 @@ This documentation is a work in progress...
     -c &lt;common part file&gt; common parameters file; default='common.std.multi-conf.part'
 
 </pre>
+</div>
+<div created="20160623144709729" modified="20160623144716669" tags="[[Verification Strategies]] TODO" title="Impostors Strategy">
+<pre></pre>
 </div>
 <div bag="default" created="20160623150000000" revision="0" title="meta-training-extract-scores.pl" type="text/plain">
 <pre>Usage: meta-training-extract-scores.pl [options] &lt;cases file&gt; &lt;input dir&gt; &lt;config file&gt;
@@ -6694,7 +6745,7 @@ The different dependencies can be installed using an in-house basic package mana
 
 </pre>
 </div>
-<div bag="default" created="20160623135401691" modified="20160623135615357" revision="0" tags="[[Table of Contents]]" title="Scripts">
+<div bag="default" created="20160623135401691" modified="20160623145928642" revision="0" tags="[[User Guide]]" title="Scripts">
 <pre>Every executable script has a ``-h`` option which prints a short description (inline help message). This section provides the content printed by every script in the package for convenience.
 </pre>
 </div>
@@ -6715,7 +6766,7 @@ OPTIONS:
 
 </pre>
 </div>
-<div bag="default" color="#3ba2ea" created="20160623134748850" list="clg-authorship-analytics Requirements Scripts About" modified="20160623135709787" revision="0" tags="$:/tags/SideBar" title="Table of Contents">
+<div bag="default" color="#3ba2ea" created="20160623134748850" list="clg-authorship-analytics Requirements Usage [[User Guide]] About" modified="20160623145655881" revision="0" tags="$:/tags/SideBar" title="Table of Contents">
 <pre>&lt;div class=&quot;tc-table-of-contents&quot;&gt;
 
 &lt;&lt;toc-selective-expandable 'Table of Contents'&gt;&gt;
@@ -6911,6 +6962,15 @@ TODO
 
 </pre>
 </div>
+<div created="20160623144657052" modified="20160623144706830" tags="[[Verification Strategies]] TODO" title="Universum Strategy">
+<pre></pre>
+</div>
+<div created="20160623140437077" modified="20160623144040561" tags="[[Table of Contents]] TODO" title="Usage" type="">
+<pre>The programs in this package can be used in many differents ways, although not all of them are properly tested and documented.</pre>
+</div>
+<div created="20160623145317748" modified="20160623145606751" tags="[[Table of Contents]]" title="User Guide">
+<pre>{{{[tag[UserGuide]]}}}</pre>
+</div>
 <div bag="default" created="20160623150000000" revision="0" title="verif-author.pl" type="text/plain">
 <pre>Usage: verif-author.pl [options] &lt;config file&gt; [&lt;fileA1:..:fileAn&gt; &lt;fileB1:..:fileBm&gt;]
 
@@ -6949,6 +7009,9 @@ TODO
         this is currently only used by the impostors strategy for pre-sim values.
 
 </pre>
+</div>
+<div created="20160623144844641" modified="20160623145436506" tags="TODO [[User Guide]]" title="Verification Strategies">
+<pre>{{{[tag[Verification Strategies]]}}}</pre>
 </div>
 
 </div>
