@@ -5,7 +5,7 @@
 
 progName="generate-tw-doc.sh"
 
-wikiName="dummy-name"
+wikiName="tw-doc-tmp-node-wiki"
 
 function usage {
   echo
@@ -72,4 +72,12 @@ pushd "$workDir" >/dev/null
 tiddlywiki "$wikiName" --rendertiddler "$:/plugins/tiddlywiki/tiddlyweb/save/offline" "output.html" text/plain >/dev/null
 popd >/dev/null
 
+resHtmlFile="$workDir/$wikiName/output/output.html"
+if [ -s "$resHtmlFile" ]; then
+    rm -f "htmlWikiFile"
+    mv "$resHtmlFile" "$htmlWikiFile"
+else
+    echo "An error happened, no result wiki file '$resHtmlFile' found." 1>&2
+    exit 2
+fi
 # rm -rf "$workDir"
