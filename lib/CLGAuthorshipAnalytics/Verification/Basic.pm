@@ -60,7 +60,7 @@ sub compute {
 	my $simValue;
 	if ($self->{multipleProbeAggregate} eq "random") {
 	    my @probeDocPair = map { pickInList($_) } @$probeDocsLists;
-	    $simValue = $self->{simMeasure}->normalizeCompute($probeDocPair[0]->getObservations($obsType), $probeDocPair[1]->getObservations($obsType));
+	    $simValue = $self->{simMeasure}->normalizeCompute($probeDocPair[0], $probeDocPair[1], $obsType);
 	} else {
 	    my @values;
 	    foreach my $doc1 (@{$probeDocsLists->[0]}) {
