@@ -1,8 +1,16 @@
 package CLGAuthorshipAnalytics::Verification::VerifStrategy;
 
+
+#twdoc
+#
+# Parent class for an authorship verification strategy.
+#
+# Once initialized, the object can be used to compute the strategy features in the ``compute`` method for a pair of sets of probe documents.
+#
+#
 # EM Oct 2015
 # 
-#
+#/twdoc
 
 
 use strict;
