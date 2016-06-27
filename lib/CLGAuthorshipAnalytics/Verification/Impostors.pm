@@ -36,23 +36,24 @@ our $decimalDigits = 10;
 
 #twdoc new($class, $params)
 #
-# $params:
+# $params is a hash with (possibly) the following elements:
+#
 # * logging
 # * obsTypesList 
-# * impostors = { dataset1 => DocCollection1,  dataset2 => DocCollection2 } ; impostors will be picked from the various datasets A, B,... with equal probability (i.e. independently from the number of docs in each dataset).
-# ** if a DocCollection dataset has a min doc freq threshold > 1, this threshold will be applied to the probe docs (using the doc freq table from the same dataset).  As a consequence, observations which appear in a probe document but not in the impostors  dataset are removed.
-# ** Alternatively, $impostors can be a string with format 'datasetid1;datasetId2;...'; the fact that it is not a hash ref is used as marker for this option. In this case parameter 'datasetResources'  must be set.
-# * datasetResources = { datasetId1 => path1, datasetId2 => path2, ...}. Used only if impostors is not provided as a list of DocCollection (see above).  'pathX' is a path where the files included in the dataset are located. datasetResources can only be a single string corresponding to the path where all datasets are located under their ids as a subdir of the subdir impostors, i.e. <datasetResources>/impostors/<datasetId>/
+# * impostors = ``{ dataset1 => DocCollection1,  dataset2 => DocCollection2 }`` ; impostors will be picked from the various datasets A, B,... with equal probability (i.e. independently from the number of docs in each dataset).
+# ** if a ``DocCollection`` dataset has a min doc freq threshold > 1, this threshold will be applied to the probe docs (using the doc freq table from the same dataset).  As a consequence, observations which appear in a probe document but not in the impostors  dataset are removed.
+# ** Alternatively, $impostors can be a string with format ``'datasetid1;datasetId2;...'``; the fact that it is not a hash ref is used as marker for this option. In this case parameter 'datasetResources'  must be set.
+# * datasetResources = ``{ datasetId1 => path1, datasetId2 => path2, ...}``. Used only if impostors is not provided as a list of DocCollection (see above).  ``pathX`` is a path where the files included in the dataset are located. datasetResources can only be a single string corresponding to the path where all datasets are located under their ids as a subdir of the subdir impostors, i.e. ``<datasetResources>/impostors/<datasetId>/``
 # * minDocFreq: optional (default 1); used only if impostors not provided as a list of DocCollection objects
-# * filePattern: optional (default "*.txt"); used only if impostors not provided as a list of DocCollection objects (describes the files used as impostor docs in the directory).
+# * filePattern: optional (default ``*.txt``); used only if impostors not provided as a list of ``DocCollection`` objects (describes the files used as impostor docs in the directory).
 
 # * selectNTimesMostSimilarFirst: if not zero, instead  of picking impostors documents randomly, an initial filtering stage is applied which retrieves the N most similar documents to the probe documents (but with an equal proportion of documents from each impostor dataset), with N = selectNTimesMostSimilarFirst * nbImpostors. This ensures that the most dissimilar impostors are not used, while maintaining a degree of randomness depending on the value of selectNTimesMostSimilarFirst.
 # * nbImpostorsUsed: number of impostors documents to select from the impostors dataset (done only once for all rounds) (default 25)
 # * nbRounds: number of rounds (higher number -> more randomization, hence less variance in the result) (default 100)
 # * propObsSubset: (0<=p<1) the proportion of observations/occurrences to keep in every document at each round; if zero, the proportion is picked randomly at every round (default 0.5)
 # * docSubsetMethod: "byOccurrence" -> the proportion is applied to the set of all occurrences; "byObservation" -> applied only to distinct observations (default ByObservation)
-# * simMeasure: a CLGTextTools::Measure object (initialized) (default minMax)
-# * preSimValues: used only if selectNTimesMostSimilarFirst>0. preSimValues = [ datasetA => preSimDatasetA, dataset2 => preSimDataset2, ...] which contains at least the datasets provided in <impostors>. each preSimDataset = { probeFilename => { impostorFileName => simValue } }, i.e preSimValues->{dataset}->{probeFilename}->{impostorFilename} = simValue.  This parameter is used (1) to provide similiarity values computed in a meaningful way and (2) avoid repeating the process as many times as the method is called, which might be prohibitive in computing time. If selectNTimesMostSimilarFirst>0 but preSimValues is undef or the specific similarity between a probe file and n impostors is not defined, then pre-similarity are loaded from '<probeFile>.simdir/<impDataset>.similarities'. 
+# * simMeasure: a ``CLGTextTools::Measure`` object (initialized) (default minMax)
+# * preSimValues: used only if selectNTimesMostSimilarFirst>0. preSimValues = ``[ datasetA => preSimDatasetA, dataset2 => preSimDataset2, ...]`` which contains at least the datasets provided in <impostors>. each preSimDataset = ``{ probeFilename => { impostorFileName => simValue } }``, i.e ``preSimValues->{dataset}->{probeFilename}->{impostorFilename} = simValue``.  This parameter is used (1) to provide similiarity values computed in a meaningful way and (2) avoid repeating the process as many times as the method is called, which might be prohibitive in computing time. If selectNTimesMostSimilarFirst>0 but preSimValues is undef or the specific similarity between a probe file and n impostors is not defined, then pre-similarity are loaded from ``<probeFile>.simdir/<impDataset>.similarities``. 
 # * useCountMostSimFeature: 0, original, ASGALF, ASGALFavg. if not "0", the "count most similar" feature is computed with the specified variant; default: "original".
 # * kNearestNeighbors: uses only the K (value) most similar impostors when calculating result features. default: 0 (use all impostors).
 # * mostSimilarFirst: doc or run: specifies whether the K most similar impostors are selected globally (doc) or for each run (run); unused if GI_kNearestNeighbors=0. Default: doc.
@@ -174,8 +175,7 @@ sub pickImpostors {
 # * $probeDocsLists: [ [docA1, docA2, ...] ,  [docB1, docB2,...] ]
 # ** where docX = ``DocProvider``
 # * $impostors : [ [impostorDocProvider1, datasetId1], ... ]
-# * output: $scores->[roundNo] = [  [ probeDocNoA, probeDocNoB ], simProbeAvsB, $simRound ], with 
-#         $simRound->[probe0Or1]->[impostorNo]
+# * output: $scores->[roundNo] = [  [ probeDocNoA, probeDocNoB ], simProbeAvsB, $simRound ], with $simRound->[probe0Or1]->[impostorNo]
 #
 #/twdoc
 #

@@ -3,7 +3,9 @@ package CLGAuthorshipAnalytics::Verification::Basic;
 #twdoc
 #
 # "Basic" verification strategy: simply computes the similarity between two documents according to a sim measure, for a set of observation types.
+#
 # ---
+#
 # EM December 2015
 # 
 #/twdoc

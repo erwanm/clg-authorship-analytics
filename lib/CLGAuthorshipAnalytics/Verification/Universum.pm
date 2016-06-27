@@ -73,7 +73,7 @@ sub new {
 #
 # * $probeDocsLists: [ [docA1, docA2, ...] ,  [docB1, docB2,...] ]
 #    ** where docX = ~DocProvider
-#
+#/twdoc
 sub compute {
     my $self = shift;
     my $probeDocsLists = shift;
