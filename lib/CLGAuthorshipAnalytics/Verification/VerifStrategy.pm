@@ -5,9 +5,9 @@ package CLGAuthorshipAnalytics::Verification::VerifStrategy;
 #
 # Parent class for an authorship verification strategy.
 #
-# Once initialized, the object can be used to compute the strategy features in the ``compute`` method for a pair of sets of probe documents.
+# Once initialized, the object can be used to compute the strategy features in the ``compute`` method for a pair of sets of probe documents; can be called as many times as required with different pairs of sets of probe docs.
 #
-#
+# ---
 # EM Oct 2015
 # 
 #/twdoc
@@ -26,10 +26,12 @@ use base 'Exporter';
 our @EXPORT_OK = qw/newVerifStrategyFromId/;
 
 
-
+#twdoc new($class, $params, $subclass)
 #
-# $params:
-# * logging
+# * $params:
+# ** logging
+# * subclass: used only to initialize the logger object with the right package id
+#/twdoc
 #
 sub new {
     my ($class, $params, $subclass) = @_;
@@ -40,11 +42,14 @@ sub new {
 }
 
 
-
+#twdoc compute($self, $probeDocsList)
 #
 # * $probeDocsLists: [ [docA1, docA2, ...] ,  [docB1, docB2,...] ]
-#    ** where docX = DocProvider
+# ** where docX = ~DocProvider
 # * output: array of features values
+#
+#/twdoc
+#
 sub compute {
     my $self = shift;
     my $probeDocsLists = shift;
@@ -53,9 +58,12 @@ sub compute {
 }
 
 
+#twdoc newVerifStrategyFromId($strategyId, $params, ?$removeStrategyIdPrefix)
 #
 # static 'new' method which instantiates one of the non-abstract strategy classes. 
 # The class is specified by a string id.
+#
+#/twdoc
 #
 sub newVerifStrategyFromId {
     my $strategyId = shift;

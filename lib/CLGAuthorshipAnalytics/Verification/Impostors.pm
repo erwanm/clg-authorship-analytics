@@ -1,8 +1,14 @@
 package CLGAuthorshipAnalytics::Verification::Impostors;
 
+#twdoc
+#
+# "Impostors" verification strategy (see "Determining if Two Documents are by the Same Author" by Koppel and Winter, 2014):
+#  Portions of the tested documents are repeatedly compared to each other and to other external (portions of) external documents (impostors). If the similarity between the tested documents is significantly higher than the similarity obtained between a tested document and an impostor, then the tested documents are likely to be by the same author.
+#
+# ---
 # EM Oct 2015
 # 
-#
+#/twdoc
 
 
 use strict;
@@ -28,7 +34,7 @@ our $decimalDigits = 10;
 
 
 
-
+#twdoc new($class, $params)
 #
 # $params:
 # * logging
@@ -53,7 +59,8 @@ our $decimalDigits = 10;
 # * aggregRelRank: 0, median, arithm, geom, harmo. if not 0, computes the relative rank of the sim between A and B among sim against all impostors by round; the value is used to aggregate all relative ranks (i.e. the values by round). Default: 0.
 # * useAggregateSim: 0, diff, ratio. if not 0, computes X = the aggregate sim value between A and B across all runs and Y= the aggregate sim value between any probe and any impostor across all rounds; returns A-B (diff) or A/B (ratio); default : 0.
 # * aggregateSimStat:  median, arithm, geom, harmo. aggregate method to use if useAggregateSim is not 0 (ignored if 0). default: arithm.
-
+#
+#/twdoc
 #
 sub new {
     my ($class, $params) = @_;
@@ -92,12 +99,15 @@ sub new {
 }
 
 
-
-
+#twdoc compute($self, $probeDocsLists, $writeScoresTableToFile)
+#
+# see parent.
 #
 # * $probeDocsLists: [ [docA1, docA2, ...] ,  [docB1, docB2,...] ]
-#    ** where docX = DocProvider
+# ** where docX = ``DocProvider``
 # * writeScoresTableToFile (optional)
+#/twdoc
+#
 sub compute {
     my $self = shift;
     my $probeDocsLists = shift;
@@ -159,15 +169,15 @@ sub pickImpostors {
 }
 
 
-
+#twdoc  computeGI($self, $probeDocsLists, $impostors)
 #
-# input:
 # * $probeDocsLists: [ [docA1, docA2, ...] ,  [docB1, docB2,...] ]
-#    ** where docX = DocProvider
+# ** where docX = ``DocProvider``
 # * $impostors : [ [impostorDocProvider1, datasetId1], ... ]
-#
-# output: $scores->[roundNo] = [  [ probeDocNoA, probeDocNoB ], simProbeAvsB, $simRound ], with 
+# * output: $scores->[roundNo] = [  [ probeDocNoA, probeDocNoB ], simProbeAvsB, $simRound ], with 
 #         $simRound->[probe0Or1]->[impostorNo]
+#
+#/twdoc
 #
 sub computeGI {
     my $self = shift;
@@ -297,9 +307,12 @@ sub filterObservations {
 }
 
 
-
-
-# $self->{selectNTimesMostSimilarFirst}>0
+#twdoc preselectMostSimilarImpostorsDataset($self, $probeDocsLists)
+#
+# for each impostors dataset, selects a subset of the documents which are the most similar to the input probe documents. The similarity between the impostors and the
+# probe documents must have been precomputed, either provided directly in the parameter ``preSimValues`` or the corresponding similarity files must have been stored previously.
+#
+#/twdoc
 #
 sub preselectMostSimilarImpostorsDataset {
     my $self = shift;

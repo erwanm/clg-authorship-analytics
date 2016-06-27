@@ -3,6 +3,7 @@ package CLGAuthorshipAnalytics::Verification::Basic;
 #twdoc
 #
 # "Basic" verification strategy: simply computes the similarity between two documents according to a sim measure, for a set of observation types.
+# ---
 # EM December 2015
 # 
 #/twdoc
@@ -32,8 +33,8 @@ our @EXPORT_OK = qw//;
 #
 # * logging
 # * obsTypesList 
-# * simMeasure:  a CLGTextTools::Measure object (initialized) (default minMax)
-# * multipleProbeAggregate: random,  median, arithm, geom, harmo. If there are more than one probe doc on either side (or both), specifies which method should be used to aggregate the similarity scores. If "random" (default), then a default doc is picked among the list (disadvantage: same input can give different results). Otherwise the similarity is computed between all pairs (cartesian product NxM), and the values are aggregated according to the parameter (disadvantage: NxM longer).
+# * simMeasure:  a ``CLGTextTools::Measure`` object (initialized) (default minMax)
+# * multipleProbeAggregate: random,  median, arithm, geom, harmo. If there are more than one probe doc on either side (or both), specifies which method should be used to aggregate the similarity scores. If "random" (default), then a default doc is picked among the list (disadvantage: same input can give different results). Otherwise the similarity is computed between all pairs (cartesian product ~NxM), and the values are aggregated according to the parameter (disadvantage: ~NxM longer).
 #
 #/twdoc
 #
@@ -54,7 +55,7 @@ sub new {
 # see parent.
 #
 # * $probeDocsLists: [ [docA1, docA2, ...] ,  [docB1, docB2,...] ]
-# ** where docX = DocProvider
+# ** where docX = ``DocProvider``
 #/twdoc
 #
 sub compute {

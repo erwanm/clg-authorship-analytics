@@ -1,8 +1,13 @@
 package CLGAuthorshipAnalytics::Verification::Universum;
 
+#twdoc
+#
+# Universum verification strategy: given two documents A and B, repeatedly mix differents portions of A and B together, then compare the similarity obtained between A and A, B and B, A and B, mixed-AB and A, mixed-AB and B, mixed-AB and mixed-AB. If A and B have the same author, the resulting similarity scores should be all similar.
+#
+# ---
 # EM Dec 2015
 # 
-#
+#/twdoc
 
 
 use strict;
@@ -25,9 +30,10 @@ my $nanStr = "NA";
 
 
 
-
+#twdoc new($class, $params)
 #
 # $params:
+#
 # * logging
 # * obsTypesList 
 # * nbRounds: number of rounds (higher number -> more randomization, hence less variance in the result) (default 100)
@@ -39,10 +45,8 @@ my $nanStr = "NA";
 # * aggregSimByRound: all homogeneity sameCat mergedOrNot: 'all' means use all individual categories as features. with 'homogeneity' four final features are considered: AA+BB, AM+BM, AB, MM; with 'sameCat' there are only two final features: AA+BB+MM, AB+AM+BM. with 'mergedOrNot' there are two categories: AA+BB+AB, AM+BM+MM. default = 'sameCat'
 # * countMostSimByRound: all homogeneity sameCat mergedOrNot. see above.  default = 'sameCat'
 # * aggregSimByRoundAggregType: median, arithm, geom, harmo. default = "arithm"
-
-
-
-
+#
+#/twdoc
 #
 sub new {
     my ($class, $params) = @_;
@@ -63,10 +67,12 @@ sub new {
 
 
 
-
+#twdoc compute($self, $probeDocsLists)
+#
+# see parent.
 #
 # * $probeDocsLists: [ [docA1, docA2, ...] ,  [docB1, docB2,...] ]
-#    ** where docX = DocProvider
+#    ** where docX = ~DocProvider
 #
 sub compute {
     my $self = shift;
@@ -78,15 +84,16 @@ sub compute {
 
 
 
-
+#twdoc computeUniversum($self, $probeDocsLists)
 #
 # At each round two docs are picked from the two input sets: P0 vs P1 (P for "probe"). docs are split into thirds: a, b and the third used for the merged doc (M). Thus we obtain 6 "docs": P0a, P0b, P1a, P1b, Ma, Mb. Similarity is computed between:  P0a-P0b, P1a-P1b, Ma-Mb, P0?-P1?, P0?-M?, P1?-M? (X? means that we pick either Xa or Xb). In other words we compute: P0 against itself, P1 against itself, M against itself, then P0 against P1, P0 against M, P1 against M.
 #
 # 
 # * input: $probeDocsLists = [ [docA1, docA2, ...] ,  [docB1, docB2,...] ]
-#    ** where docX = DocProvider
-# * output: scores->[roundNo] = [ [ sim(P0,P0) ] , [ sim(P0,P1) , sim(M,P1) ], [ sim(P0,M) , sim(P1,M) , sim(M,M) ] ]     (remark: done weeks after coding, possible errors!)
+# ** where docX = ~DocProvider
+# * output: scores->[roundNo] = [ [ sim(P0,P0) ] , [ sim(P0,P1) , sim(M,P1) ], [ sim(P0,M) , sim(P1,M) , sim(M,M) ] ]     (remark: comments done weeks after coding, possible errors!)
 #
+#/twdoc
 #
 sub computeUniversum {
     my $self = shift;
@@ -175,10 +182,12 @@ sub computeUniversum {
 
 
 
-
+#twdoc featuresFromScores($self, $scores)
 #
-# scores: $scores->[roundNo] = [  [ probeDocNoA, probeDocNoB ], simProbeAvsB, $simRound ], with 
+# * scores: $scores->[roundNo] = [  [ probeDocNoA, probeDocNoB ], simProbeAvsB, $simRound ], with 
 #         $simRound->[probe0Or1]->[impostorNo] = sim between doc probe0or1 and imp $impostorNo (as returned by computeGI)
+#
+#/twdoc
 #
 sub featuresFromScores {
     my ($self, $scores) = @_;
