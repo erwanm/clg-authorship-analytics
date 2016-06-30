@@ -276,7 +276,7 @@ if [ -z "$resourcesDir" ]; then
     mkdirSafe "$destDir/resources/stop-words" "$progName:$LINENO: "
     vocabResources=""
     for stopWordLimit in $stopWordsLimits; do
-	evalSafe "sort -r -n +1 -2 \"$destDir/input/global.$basicTokensObsType.count\" | cut -f 1 | head -n $stopWordLimit >\"$destDir/resources/stop-words/$stopWordLimit.stop-list\" " "$progName:$LINENO: "
+	evalSafe "sort -r -n +1 -2 \"$destDir/input/global.observations/$basicTokensObsType.count\" | cut -f 1 | head -n $stopWordLimit >\"$destDir/resources/stop-words/$stopWordLimit.stop-list\" " "$progName:$LINENO: "
 	vocabResources="$vocabResources;$stopWordLimit:$destDir/resources/stop-words/$stopWordLimit.stop-list"
     done
 else
