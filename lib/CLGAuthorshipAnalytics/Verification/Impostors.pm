@@ -337,7 +337,7 @@ sub preselectMostSimilarImpostorsDataset {
 		$self->{logger}->trace("padding dataset '$impDataset': we have ".scalar(@mostSimilarDocs).", we need $nbToSelect.") if ($self->{logger});
 		push(@mostSimilarDocs, @$impostors);
 	    }
-	    warnLog("Warning: not enough impostors in dataset '$impDataset' for preselecting $nbByDataset docs, using all impostors") if (scalar(@mostSimilarDocs) > 0);
+	    warnLog($self->{logger}, "Warning: not enough impostors in dataset '$impDataset' for preselecting $nbByDataset docs, using all impostors") if (scalar(@mostSimilarDocs) > 0);
 	    $nbToSelect = $nbToSelect - scalar(@mostSimilarDocs); # guaranteed to have  0 <= $nbToSelect < scalar(@$impostors)
 	    if ($nbToSelect > 0) {
 		my @sortedImpBySimByProbe;
