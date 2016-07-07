@@ -121,6 +121,8 @@ Error message and password prompt
 
 <li>$:/DefaultTiddlers</li>
 
+<li>$:/Import</li>
+
 <li>$:/isEncrypted</li>
 
 <li>$:/plugins/tiddlywiki/highlight</li>
@@ -137,7 +139,17 @@ Error message and password prompt
 
 <li>$:/state/tab/sidebar--1835078512</li>
 
+<li>$:/state/toc/Table of Contents-Usage--538476547</li>
+
+<li>$:/state/toc/Table of Contents-Usage-1680752989</li>
+
+<li>$:/state/toc/Table of Contents-User Guide--538476547</li>
+
+<li>$:/state/toc/Table of Contents-User Guide-1007616929</li>
+
 <li>$:/state/toc/Table of Contents-User Guide-1680752989</li>
+
+<li>$:/state/toc/Usage-Concepts-1680752989</li>
 
 <li>$:/state/toc/User Guide-Scripts-1680752989</li>
 
@@ -197,11 +209,19 @@ Error message and password prompt
 
 <li>CLGAuthorshipAnalytics/Verification/VerifStrategy.pm/newVerifStrategyFromId($strategyId, $params, ?$removeStrategyIdPrefix)</li>
 
+<li>Concepts</li>
+
+<li>ConfigurationFile</li>
+
+<li>ContentsFooter</li>
+
 <li>Documentation in progress...</li>
 
 <li>generate-multi-conf.sh</li>
 
 <li>Genetic process</li>
+
+<li>Meta-classifier</li>
 
 <li>meta-training-extract-scores.pl</li>
 
@@ -244,8 +264,6 @@ Error message and password prompt
 <li>train-top-level.sh</li>
 
 <li>Usage</li>
-
-<li>User Guide</li>
 
 <li>verif-author.pl</li>
 
@@ -6314,6 +6332,11 @@ Error message and password prompt
 <pre>[[clg-authorship-analytics]]
 </pre>
 </div>
+<div status="complete" title="$:/Import">
+<pre>The following tiddlers were imported:
+
+# [[ContentsFooter]]</pre>
+</div>
 <div bag="default" revision="0" title="$:/isEncrypted">
 <pre>no</pre>
 </div>
@@ -6368,7 +6391,7 @@ Error message and password prompt
 <div created="20160627172515140" modified="20160627172515140" title="$:/state/showeditpreview">
 <pre>yes</pre>
 </div>
-<div created="20160627172513205" modified="20160627173258209" title="$:/state/sidebar">
+<div created="20160627172513205" modified="20160704145402732" title="$:/state/sidebar">
 <pre>yes</pre>
 </div>
 <div created="20160627173132481" modified="20160628150901507" title="$:/state/tab/moresidebar-401116514">
@@ -6377,16 +6400,31 @@ Error message and password prompt
 <div created="20160627153749860" modified="20160628151650694" title="$:/state/tab/sidebar--1835078512">
 <pre>Table of Contents</pre>
 </div>
+<div created="20160701145543751" modified="20160703165708493" title="$:/state/toc/Table of Contents-Usage--538476547">
+<pre>close</pre>
+</div>
+<div created="20160703173344634" modified="20160703173344634" title="$:/state/toc/Table of Contents-Usage-1680752989">
+<pre>open</pre>
+</div>
+<div created="20160630191625223" modified="20160630191625223" title="$:/state/toc/Table of Contents-User Guide--538476547">
+<pre>open</pre>
+</div>
+<div created="20160630193038771" modified="20160630193038771" title="$:/state/toc/Table of Contents-User Guide-1007616929">
+<pre>open</pre>
+</div>
 <div created="20160627182441401" modified="20160627183531894" title="$:/state/toc/Table of Contents-User Guide-1680752989">
 <pre>open</pre>
 </div>
-<div created="20160627182442625" modified="20160628150541911" title="$:/state/toc/User Guide-Scripts-1680752989">
+<div created="20160704145747098" modified="20160704145747098" title="$:/state/toc/Usage-Concepts-1680752989">
 <pre>open</pre>
+</div>
+<div created="20160627182442625" modified="20160630193128691" title="$:/state/toc/User Guide-Scripts-1680752989">
+<pre>close</pre>
 </div>
 <div created="20160627182447249" modified="20160627182448206" title="$:/state/toc/User Guide-Verification Strategies-1680752989">
 <pre>close</pre>
 </div>
-<div list="Usage About [[User Guide]] Scripts Requirements [[Table of Contents]] clg-authorship-analytics [[Genetic process]]" title="$:/StoryList">
+<div list="Usage Concepts clg-authorship-analytics Requirements [[Genetic process]] Meta-classifier [[Verification Strategies]] Scripts ConfigurationFile verif-author.pl" title="$:/StoryList">
 <pre></pre>
 </div>
 <div plugin-type="info" title="$:/temp/info-plugin" type="application/json">
@@ -6587,7 +6625,7 @@ Error message and password prompt
 
 </pre>
 </div>
-<div bag="default" caption="Introduction" created="20160520172058387" modified="20160627182657271" revision="0" tags="[[Table of Contents]] TODO" title="clg-authorship-analytics">
+<div bag="default" caption="Introduction" created="20160520172058387" modified="20160701194217143" revision="0" tags="[[Table of Contents]] TODO" title="clg-authorship-analytics">
 <pre>! Overview
 
 The package contains a set of scripts and libraries to perform author-identification related tasks. 
@@ -6601,30 +6639,20 @@ The task of author verification consists primarily in answering the following qu
 * Variant PAN: given a set of 1 to 5 texts written by author A and a &quot;questioned&quot; text, was the latter written by author A?
 * General case: given two sets of texts {A1,..,An} and {B1,..,Bm}, where all Ai were authored by A and all Bj authored by B, are A and B the same person?
 
-! Implementation
+!! Main features
 
-The current version provides three author verification strategies (see below), as well as a system which applies a genetic process in order to:
+The current version of the package provides:
+
+* Three author [[verification strategies|Verification Strategies]]
+* , as well as a system which applies a genetic process in order to:
 
 * find the best verification systems (in short, classifiers based on variants of one of the strategies),
-* and combine a selection of these into a meta-classifier (stacked generalization has proved to be reliable approach at the PAN 2015 competition).
+* and combine a selection of these into a meta-classifier (stacked generalization has proved to be a reliable approach at the PAN 2015 competition).
 
-See [[Genetic process]], [[Meta-classifier]]
-
-!! Important
-
-Here we call ''verification strategy'' a program which:
-
-* takes as input two sets of documents, all the documents in one set being by the same author
-* returns a set of ''feature values'' which are supposed to be relevant for answering the question of whether the two sets of documents are by the same author. It is possible for a verification strategy to return only one feature value which answers the question directly, but in general the output is a set of features (the meaning of which depends on the strategy). This set of features is intended to be used as input to a ML learning algorithm.
-
-The package contains script for learning or applying from a set of features using Weka.
+See [[Verification Strategies]], [[Genetic process]], [[Meta-classifier]]
 
 
-!! Author verification strategies
-
-{{{[tag[Verification Strategies]]}}}
-
-! Contents
+! Table of Contents
 
 {{Table of Contents}}</pre>
 </div>
@@ -6790,6 +6818,29 @@ The class is specified by a string id.
 
 </pre>
 </div>
+<div created="20160704145541721" modified="20160704145552354" tags="Usage" title="Concepts">
+<pre></pre>
+</div>
+<div created="20160701194850254" modified="20160704145540457" tags="Concepts" title="ConfigurationFile">
+<pre>A ''configuration file'' is a text file which defines values for parameters, one by line: ``paramName=value``. Config files are used in many places in the package for different things, but the main usages for these are:
+
+* Define the parameters for applying a verification strategy, as used in [[verif-author.pl]].
+* Define all the parameters for the full process of applying a strategy, including the step of using the features with a ML method in order to provide a score in [0,1] , as used in the [[Genetic process]].
+* Additionally, the training parameters for the [[Genetic process]] are added the config files for convenience. This is also the case for the meta-training genetic stage (see [[Meta-classifier]]).
+
+The concept of ''multi config file'' is introduced for the [[Genetic process]] . Such a config file is meant to enumerate all the possible values for a parameter: ``paramName=value1 value2 ... valueN``. The genetic process selects one of the possible values among the list in order to generate new configurations.</pre>
+</div>
+<div created="20160630185719153" modified="20160630190834456" tags="$:/tags/ViewTemplate" title="ContentsFooter">
+<pre>&lt;hr/&gt;
+
+
+&lt;div class=&quot;tc-table-of-contents&quot;&gt;
+
+&lt;&lt;toc-selective-expandable &quot;&quot;&quot;$(currentTiddler)$&quot;&quot;&quot;&gt;&gt;
+
+&lt;/div&gt;
+</pre>
+</div>
 <div bag="default" created="20160522173938450" modified="20160522174243840" revision="0" tags="$:/tags/AboveStory" title="Documentation in progress...">
 <pre>@@color:red;
 This documentation is a work in progress...
@@ -6816,8 +6867,30 @@ This documentation is a work in progress...
 
 </pre>
 </div>
-<div created="20160628150535112" modified="20160628150854147" tags="TODO" title="Genetic process">
-<pre>* observations can be either precomputed with[[prepare-input-data.sh]] or computed on the fly. When using distributed computing, it is safer to use the former option in order to avoid any concurrency issue when the count files are written to disk (there is no mechanism in place in the code to deal with concurrency issues).</pre>
+<div created="20160628150535112" modified="20160704145623224" tags="Concepts" title="Genetic process">
+<pre>
+! Overview
+
+Every [[verification strategy|Verification Strategies]] accepts potentially many parameters, each with possibly many options. The original idea was to use a genetic algorithm simply to learn the optimal combination of parameters for a given strategy: since applying a strategy to a set of documents does not take long, the high number of runs that need to happen (which is the main disadvantage of a genetic algorithm) is not too big a problem. The idea was generalized in order to generate the &quot;N best [[configs|ConfigurationFile]]&quot; for every strategy, so that it becomes possible to combine multiple strategies from different strategies into a [[Meta-classifier]].
+
+//Remark:// we occasionally call //genetic process// the whole training process, including cross-validation, multiple stages with different parameters for the genetic learning, as well as the [[Meta-classifier]] training stage, etc.
+
+! Process
+
+By definition, the genetic process is used only in the training stage. 
+
+* It uses a script which is part of the in-house ``erw-ml-utils`` package (see [[Requirements]]): the script can generate a set of random configurations based on one or several [[multi config files|ConfigurationFile]], or apply the genetic process to generate a new generation based on the results of the previous one (see the parameters in the genetic config file in the ``conf`` directory).
+* The top level script which starts the global genetic process is [[train-top-level.sh]]. However it can be convenient to use [[run-std-training.sh]], which first performs the &quot;preparation of the data&quot; (see [[prepare-input-data.sh]]).
+* The genetic process can be resumed at any stage: see option ``-r`` in several scripts, including [[train-top-level.sh]].
+
+! Efficiency, distributed computing
+
+
+* Several scripts accept an option ``-P &lt;dest dir&gt;``, which is intended to process tasks in parallel. It is meant to work with the script ``task-distrib-daemon.sh`` from package ``erw-bash-commons`` (see [[Requirements]]): the principle is that the individual tasks are written as scripts in a predetermined directory ``dest dir``, where ``task-distrib-daemon.sh`` will execute them in parallel when a slot is available.
+* Observations can be either precomputed with [[prepare-input-data.sh]] or computed on the fly. When using distributed computing, it is safer to use the former option in order to avoid any concurrency issue when the count files are written to disk (there is no mechanism in place in the code to deal with concurrency issues).</pre>
+</div>
+<div created="20160704145432693" modified="20160704150225140" tags="TODO Concepts" title="Meta-classifier">
+<pre></pre>
 </div>
 <div bag="default" created="20160623190537000" revision="0" tags="Scripts" title="meta-training-extract-scores.pl" type="text/plain">
 <pre>Usage: meta-training-extract-scores.pl [options] &lt;cases file&gt; &lt;input dir&gt; &lt;config file&gt;
@@ -6968,10 +7041,9 @@ The different dependencies can be installed using an in-house basic package mana
 
 </pre>
 </div>
-<div bag="default" created="20160623135401691" modified="20160627183616263" revision="0" tags="[[User Guide]]" title="Scripts">
+<div bag="default" created="20160623135401691" modified="20160701145519471" revision="0" tags="Usage" title="Scripts">
 <pre>Every executable script has a ``-h`` option which prints a short description (inline help message). This section provides the content printed by every script in the package for convenience.
-
-{{{[tag[Scripts]]}}}</pre>
+</pre>
 </div>
 <div bag="default" created="20160623174439000" revision="0" tags="Scripts" title="setup.erw-pm.sh" type="text/plain">
 <pre></pre>
@@ -7189,23 +7261,25 @@ TODO
 
 </pre>
 </div>
-<div bag="default" created="20160623140437077" modified="20160628175544946" revision="0" tags="[[Table of Contents]] TODO" title="Usage" type="">
-<pre>The programs in this package can be used in many different ways, although not all of them are properly tested and documented. The ``tests`` directory contains a few examples to use it.
+<div bag="default" created="20160623140437077" list="Concepts Scripts [Genetic process]]" modified="20160704145727670" revision="0" tags="[[Table of Contents]] TODO" title="Usage" type="">
+<pre>The programs in this package can be used in many different ways, although not all of them are properly tested and documented. The ``tests`` directory contains a few examples which show how to use it.
 
-!! Single impostors strategy
+! Command line scripts
 
-See [[verif-author.pl]].
+The directory ``bin`` contains many Bash and Perl [[scripts|Scripts]]. 
+
+!! Applying a single strategy
+
+[[verif-author.pl]]: applies an author verification strategy (defined in a ConfigurationFile) to a pair of sets of documents, or to a series of such cases.
+
 
 !! Meta-classifier and genetic process
 
-See [[Genetic process]], [[Meta-classifier]].</pre>
-</div>
-<div bag="default" created="20160623145317748" modified="20160627183408448" revision="0" tags="[[Table of Contents]]" title="User Guide">
-<pre>&lt;div class=&quot;tc-table-of-contents&quot;&gt;
+See [[Genetic process]], [[Meta-classifier]].
 
-&lt;&lt;toc-selective-expandable 'User Guide'&gt;&gt;
+! Perl libraries
 
-&lt;/div&gt;
+See [[Verification Strategies]].
 </pre>
 </div>
 <div bag="default" created="20160623190537000" revision="0" tags="Scripts" title="verif-author.pl" type="text/plain">
@@ -7247,8 +7321,14 @@ See [[Genetic process]], [[Meta-classifier]].</pre>
 
 </pre>
 </div>
-<div bag="default" created="20160623144844641" modified="20160623145436506" revision="0" tags="TODO [[User Guide]]" title="Verification Strategies">
-<pre>{{{[tag[Verification Strategies]]}}}</pre>
+<div bag="default" created="20160623144844641" modified="20160703180747697" revision="0" tags="Usage" title="Verification Strategies">
+<pre>In this system, we call ''verification strategy'' a program which:
+
+* takes as input two sets of documents, all the documents in one set being by the same author
+* returns a set of ''feature values'' which are supposed to be relevant for answering the question of whether the two sets of documents are by the same author. It is possible for a verification strategy to return only one feature value which answers the question directly, but in general the output is a set of features (the meaning of which depends on the strategy). This set of features is intended to be used as input to a ML learning algorithm.
+
+The package contains [[scripts|Scripts]] for learning or applying from a set of features using Weka.
+</pre>
 </div>
 
 </div>
