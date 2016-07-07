@@ -543,7 +543,7 @@ sub countMostSimFeature {
     }
     $self->{logger}->debug("Counting most similar between probe values and impostor values, method '".$self->{GI_useCountMostSimFeature}."': sum = $sum; nb rounds counted = $nbCounted; 'normalized' score = ".($sum / $nbCounted))  if ($self->{logger});
     if ($nbCounted == 0) {
-	warnLog($self->{logger}, "Error: no round counted at all in 'countMostSimFeature'");
+	warnLog($self->{logger}, "Warning: no round counted at all in 'countMostSimFeature'");
 	return $nanStr;
     } else {
 	# IMPORTANT: the normalisation makes sense only for the original version
