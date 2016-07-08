@@ -43,6 +43,7 @@ die "$progName error: Different number of lines between '$goldFile' and '$predic
 for (my $i=0; $i< scalar(@gold); $i++) {
     chomp($gold[$i]);
     chomp($pred[$i]);
+    print STDERR "DEBUG gold[$i] = ".$gold[$i]."\n";
     die "$progName error: gold is neither 0 or 1 line $i in '$goldFile'" if (($gold[$i]!=0) && ($gold[$i] != 1));
     print "CONFIDENT\n" if ( (($gold[$i]==1) && ($pred[$i]>0.5)) || (($gold[$i]==0) && ($pred[$i]<0.5)));
     print "UNSURE\n" if ( (($gold[$i]==1) && ($pred[$i]<=0.5)) || (($gold[$i]==0) && ($pred[$i]>=0.5)));
