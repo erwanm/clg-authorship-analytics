@@ -140,11 +140,11 @@ function generateTrainingDataConfidence {
     tmpLabels=$(mktemp --tmpdir "tmp.$progName.generateTrainingDataConfidence2.XXXXXXXXXX")
     echo "confidenceLabel" >$tmpLabels
     tmpGold=$(mktemp --tmpdir "tmp.$progName.generateTrainingDataConfidence3.XXXXXXXXXX")
+#    echo "DEBUG featuresTSV=$featuresTSV; predictedScoreTSV=$predictedScoreTSV; tmpGold=$tmpGold; tmpLabels=$tmpLabels" 1>&2
     evalSafe "cut -f $nbCols \"$featuresTSV\" | tail -n +2 >\"$tmpGold\"" "$progName,$LINENO: "
     evalSafe "score-to-confidence-label.pl \"$tmpGold\" \"$predictedScoreTSV\" >>\"$tmpLabels\"" "$progName,$LINENO: "
     local nb1=$(grep CONFIDENT "$tmpLabels" | wc -l)
     local nb2=$(grep UNSURE "$tmpLabels" | wc -l)
-#    echo "DEBUG featuresTSV=$featuresTSV; predictedScoreTSV=$predictedScoreTSV; tmpGold=$tmpGold; tmpLabels=$tmpLabels" 1>&2
     if [ $nb1 -gt 0 ] &&  [ $nb2 -gt 0 ]; then
 	rm -f "$outPrefix.no-model" # just in case (?)
 	tmpFeats=$(mktemp --tmpdir "tmp.$progName.generateTrainingDataConfidence4.XXXXXXXXXX")

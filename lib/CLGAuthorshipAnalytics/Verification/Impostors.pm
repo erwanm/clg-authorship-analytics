@@ -94,6 +94,11 @@ sub new {
     $self->{GI_aggregRelRank} = assignDefaultAndWarnIfUndef("aggregRelRank", $params->{aggregRelRank}, "0", $self->{logger});
     $self->{useAggregateSim} = assignDefaultAndWarnIfUndef("useAggregateSim", $params->{useAggregateSim}, "0", $self->{logger});
     $self->{GI_aggregateSimStat} = assignDefaultAndWarnIfUndef("aggregateSimStat", $params->{aggregateSimStat},  "arithm", $self->{logger});
+    if (($self->{GI_useCountMostSimFeature} eq "0") && ($self->{GI_aggregRelRank} eq "0") && ($self->{useAggregateSim} eq "0")) {
+	warnLog($self->{logger}, "Impostors strategy: no output feature selected at all. Setting parameter 'GI_useCountMostSimFeature' to  default 'original'.");
+	$self->{GI_useCountMostSimFeature} = "original";
+    }
+
     bless($self, $class);
 #    print STDERR Dumper($self);
     return $self;
