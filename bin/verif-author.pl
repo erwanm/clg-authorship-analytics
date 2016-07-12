@@ -59,7 +59,7 @@ sub usage {
 #	print $fh "        (applies only to CHAR and WORD observations).\n";
 #	print $fh "     -t pre-tokenized text, do not perform default tokenization\n";
 #	print $fh "        (applies only to WORD observations).\n";
-	print $fh "     -v <resourceId1=filename1[;resourceId2=filename2;...]> vocab resouces files\n";
+	print $fh "     -v <resourceId1:filename1[;resourceId2:filename2;...]> vocab resouces files\n";
 	print $fh "        with their ids. Can also be provided in the config as:\n";
 	print $fh "          wordVocab.resourceId=filename\n";
 	print $fh "     -d <datasetsResourcesPath> for impostors method.\n";
