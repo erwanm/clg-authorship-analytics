@@ -71,7 +71,7 @@ sub new {
     $self->{impostors} = $impostors;
     confessLog($self->{logger}, "Error: at least one impostor dataset must be provided") if (!defined($impostors) || (ref($impostors) && (scalar(@$impostors)==0)) || (!ref($impostors) && ($impostors eq "")));
     if (!ref($impostors)) { # if impostors not provided directly as a list of DocCollection objects
-	confessLog("Error: if impostors are not provided as a list of DocCollection objects, then parameter 'datasetResources' must be defined.") if (!defined($params->{datasetResources}));
+	confessLog($self->{logger}, "Error: if impostors are not provided as a list of DocCollection objects, then parameter 'datasetResources' must be defined.") if (!defined($params->{datasetResources}));
 	my @impDatasetsIds = split(/;/, $impostors);
 	my %impParams = %$params;
 	$impParams{useCountFiles} = 1; # TODO possible problem if the disk is not writable and some count files are generated.
