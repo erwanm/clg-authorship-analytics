@@ -85,8 +85,8 @@ function usage {
   echo "       documents; these will be used if the config parameter 'impostors'"
   echo "       contains the corresponding id(s)." #special id 'web' is reserved."
   echo "       This option is ignored if '-r' is supplied."
-  echo "    -i <impostors path> same as above but assuming all impostors datasets"
-  echo "       are located as subdirs of <impostors path>."
+  echo "    -i <resources path> same as above but assuming all impostors datasets"
+  echo "       are located as subdirs of <resources path>."
   #  echo "    -s <stop words directory> provide path to stop words directory:"
   echo "       "
   echo
@@ -166,8 +166,6 @@ function getImpostorsDir {
 	fi
 	shift
     done
-    echo "$progName: error, no path found for impostors dataset '$impId'" 1>&2
-    exit 4
  }
 
 
@@ -316,6 +314,10 @@ for impId in $usedImpostorsIds; do
     if [ -z "$resourcesDir" ]; then
 	if [ -z "$uniqueImpPath" ]; then
 	    impPath=$(getImpostorsDir "$impId" $impostorsDataSpace)
+	    if [ -z "$impPath" ]; then
+		echo "$progName: error, no path found for impostors dataset '$impId'" 1>&2
+		exit 4
+	    fi
 	else
 	    impPath="$uniqueImpPath/$impId"
 	fi

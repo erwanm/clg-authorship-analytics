@@ -79,6 +79,11 @@ sub new {
         # instead, it will be applied only to the selected impostors in pickImpostors.
 #	$self->{impostors} = createDatasetsFromParams(\%impParams, \@impDatasetsIds, $params->{datasetResources}."/impostors", $params->{minDocFreq}, $params->{filePattern}, $self->{logger});
 	$self->{impostors} = createDatasetsFromParams(\%impParams, \@impDatasetsIds, $params->{datasetResources}."/impostors", 0, $params->{filePattern}, $self->{logger});
+	if ($self->{logger}) {
+	    foreach my $dataset (keys %{$self->{impostors}}) {
+		$self->{logger}->debug("Impostors dataset '$dataset' contains ".$self->{impostors}->{$dataset}->getNbDocs()." docs.");
+	    }
+	}
     }
     $self->{minDocFreq} = defined($params->{minDocFreq}) ?  $params->{minDocFreq} : 1;
     $self->{nbImpostorsUsed} = assignDefaultAndWarnIfUndef("nbImpostorsUsed", $params->{nbImpostorsUsed}, 25, $self->{logger});
@@ -122,12 +127,11 @@ sub compute {
     $self->{logger}->debug("Impostors strategy: computing features between pair of sets of docs") if ($self->{logger});
     confessLog($self->{logger}, "Cannot process case: no obs types at all") if ((scalar(@{$self->{obsTypesList}})==0) && $self->{logger});
     my $preseletedImpostors = $self->preselectMostSimilarImpostorsDataset($probeDocsLists);
-#    foreach my $dataset (keys %$preseletedImpostors) {
-#	print STDERR "DEBUG imp dataset = $dataset\n";
-#	foreach my $imp (@{$preseletedImpostors->{$dataset}}) {
-#	    print STDERR "DEBUG  imp id = '".$imp->getId()."'\n";
-#	}
-#   }
+    if ($self->{logger}) {
+	foreach my $dataset (keys %$preseletedImpostors) {
+	    $self->{logger}->debug("Impostor dataset '$dataset': ".scalar(@{$preseletedImpostors->{$dataset}})." docs preselected.");
+	}
+    }
     my $selectedImpostors = $self->pickImpostors($preseletedImpostors);
     my $scores = $self->computeGI($probeDocsLists, $selectedImpostors);
     $self->writeScoresToFile($scores, $writeScoresTableToFile) if (defined($writeScoresTableToFile));
@@ -323,10 +327,10 @@ sub preselectMostSimilarImpostorsDataset {
     my $self = shift;
     my $probeDocsLists = shift;
 
-    $self->{logger}->debug("Preselecting most similar impostors") if ($self->{logger});
     my @impostorsDatasets = keys %{$self->{impostors}};
     my %preSelectedImpostors;
     if ($self->{selectNTimesMostSimilarFirst}>0) {
+	$self->{logger}->debug("Preselecting most similar impostors") if ($self->{logger});
 #	my $preSimValues = defined($self->{preSimValues}) ? $self->{preSimValues} : $self->computePreSimValues($probeDocsLists);
 	my $preSimValues = defined($self->{preSimValues}) ? $self->{preSimValues} : {};
 	my $nbByDataset = $self->{selectNTimesMostSimilarFirst} * $self->{nbImpostorsUsed} / scalar(@impostorsDatasets);
