@@ -11,6 +11,7 @@ progName=$(basename "$BASH_SOURCE")
 
 cleanupTempData=
 failSafe=
+preferedDataLocation=""
 
 function usage {
   echo
@@ -29,6 +30,8 @@ function usage {
   echo "    -s failsafe mode: in case of error, does not abort the whole process (which"
   echo "       is the default) but assigns 0 as performance for the config with which the"
   echo "       error happened."
+  echo "    -L <prefered input location>"
+  echo "       if specified, <input dir> is replaced with this dir if it exists."
   echo
 }
 
@@ -39,10 +42,11 @@ function usage {
 
 
 OPTIND=1
-while getopts 'hcs' option ; do 
+while getopts 'hcsL:' option ; do 
     case $option in
 	"s" ) failSafe=1;;
 	"c" ) cleanupTempData=1;;
+	"L" ) preferedDataLocation="$OPTARG";;
 #	"r" ) refDataDir=$OPTARG;;
 	"h" ) usage
  	      exit 0;;
@@ -64,6 +68,9 @@ configFile="$1"
 inputDir="$2"
 outputPerfDir="$3"
 
+if [ ! -z "$preferedDataLocation" ]; then
+    inputDir="$preferedDataLocation"
+fi
 
 # actually tests already done in train-generation.sh, but playing it safe
 dieIfNoSuchFile "$configFile" "$progName,$LINENO: "

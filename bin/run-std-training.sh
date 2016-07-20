@@ -10,6 +10,8 @@ force=0
 addToExisting=0
 prepareParams=""
 trainingParams=""
+trainCVParams=""
+preferedDataLocation=""
 
 mcFile=""
 useCountFiles=1
@@ -36,6 +38,16 @@ function usage {
   echo "    -i <impostors path> same as above but assuming all impostors datasets"
   echo "       are located as subdirs of <impostors path>."
   echo "    -o <train-cv options> options to transmit to train-cv.sh, e.g. '-c -s'."
+  echo "    -L <prefered input/resources location>"
+  echo "       If the genetic process is going to run on a cluster and the regular"
+  echo "       <work dir> is mounted from the nodes, making access to input/resources"
+  echo "       too slow, this option allows to specify a 'prefered location'"
+  echo "       where directories 'input' and 'resources' can be found (typically"
+  echo "       on the local filesystem for every node). This script will:"
+  echo "         (1) generate archives of 'input' and 'resources';"
+  echo "         (2) transmit the option appropriately to the other scripts;"
+  echo "       BUT the step of copying/extracting the archives and mounting them"
+  echo "       is left to be performed independently."
   echo "    -P <parallel prefix> TODO"
   echo
 }
@@ -43,14 +55,15 @@ function usage {
 
 
 OPTIND=1
-while getopts 'hfai:o:P:' option ; do
+while getopts 'hfai:o:P:L:' option ; do
     case $option in
         "f" ) force=1;;
         "a" ) addToExisting=1;;
         "i" ) prepareParams="$prepareParams -i \"$OPTARG\"";;
         "P" ) parallelPrefix="$OPTARG"
 	      trainingParams="$trainingParams -P \"$parallelPrefix\"";;
-        "o" ) constantParams="$trainingParams -o \"$OPTARG\"";;
+        "o" ) trainCVParams="$trainCVParams $OPTARG";;
+	"L" ) preferedDataLocation="$OPTARG";;
         "h" ) usage
               exit 0;;
         "?" )
@@ -119,13 +132,37 @@ dieIfNoSuchFile "$workDir/meta-template.multi-conf" "$progName, $LINENO: "
 
 # prepare
 evalSafe "ls $workDir/*.multi-conf | prepare-input-data.sh $prepareParams '$sourceDir' '$workDir'" "$progName, $LINENO: "
+if [ ! -f "$workDir/resources-options.conf" ]; then
+    echo "$progName error: no file '$workDir/resources-options.conf' after preparing data." 1>&2
+fi
+
+
+# generate archives if preferedDataLocation is set (very long!!!)
+if [ ! -z "$preferedDataLocation" ]; then
+    echo "$progName: redirecting 'input' and 'resources' to '$preferedDataLocation'"
+    # replace 'datasetResourcesPath' in resources-options.conf
+    grep -v "datasetResourcesPath" "$workDir/resources-options.conf" >"$preferedDataLocation/resources-options.conf"
+    echo "datasetResourcesPath=$preferedDataLocation/resources"  >>"$preferedDataLocation/resources-options.conf"
+    cat "$preferedDataLocation/resources-options.conf" >"$workDir/resources-options.conf" # overwrite original resources-options.conf
+    if [ ! -f "$workDir/input.sqfs" ] || [ ! -f "$workDir/resources.sqfs" ]; then
+	echo "$progName: archives not found or option 'force' enabled, generating (very long!)"
+	pushd "$workDir" >/dev/null
+	evalSafe "tar cfj input input.tar.bz2" "$progName, $LINENO: "
+	evalSafe "tar cfj resources resources.tar.bz2" "$progName, $LINENO: "
+	popd  >/dev/null
+    fi
+    trainCVParams="$trainCVParams -L $preferedDataLocation"
+fi
 
 # run
 if [ $addToExisting -ne 0 ] && [ -d "$workDir/outerCV-folds" ] ; then
     trainingParams="$trainingParams -r"
 fi
+trainingParams="$trainingParams -o \"$trainCVParams\""
 echo "train-top-level.sh -r $trainingParams '$workDir'" >"$workDir/restart-top-level.sh"
 chmod a+x "$workDir/restart-top-level.sh"
 evalSafe "train-top-level.sh $trainingParams '$workDir'" "$progName, $LINENO: "
+
+
 
 

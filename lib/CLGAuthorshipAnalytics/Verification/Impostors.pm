@@ -682,8 +682,8 @@ sub writeScoresToFile {
 	    for (my $impNo = 0; $impNo<$nbImp; $impNo++) {
 		print $fh "\t".sprintf("%.${decimalDigits}f", $scores->[$roundNo]->[2]->[$probeSide]->[$impNo]);
 	    }
+	    print $fh "\n";
 	}
-	print $fh "\n";
     }
     close($fh);
 }
