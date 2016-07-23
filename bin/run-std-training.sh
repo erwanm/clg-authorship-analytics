@@ -137,22 +137,26 @@ if [ ! -f "$workDir/resources-options.conf" ]; then
 fi
 
 
+
 # generate archives if preferedDataLocation is set (very long!!!)
 if [ ! -z "$preferedDataLocation" ]; then
     echo "$progName: redirecting 'input' and 'resources' to '$preferedDataLocation'"
     # replace 'datasetResourcesPath' in resources-options.conf
-    grep -v "datasetResourcesPath" "$workDir/resources-options.conf" >"$preferedDataLocation/resources-options.conf"
-    echo "datasetResourcesPath=$preferedDataLocation/resources"  >>"$preferedDataLocation/resources-options.conf"
-    cat "$preferedDataLocation/resources-options.conf" >"$workDir/resources-options.conf" # overwrite original resources-options.conf
-    if [ ! -f "$workDir/input.sqfs" ] || [ ! -f "$workDir/resources.sqfs" ]; then
+    grep -v "datasetResourcesPath" "$workDir/resources-options.conf" >"$workDir/resources-options2.conf"
+    echo "datasetResourcesPath=$workDir/resources"  >>"$workDir/resources-options2.conf"
+    rm -f "$workDir/resources-options.conf"
+    mv "$workDir/resources-options2.conf" "$workDir/resources-options.conf"
+    if [ ! -f "$workDir/input.tar.bz2" ] || [ ! -f "$workDir/resources.tar.bz2" ]; then
 	echo "$progName: archives not found or option 'force' enabled, generating (very long!)"
 	pushd "$workDir" >/dev/null
-	evalSafe "tar cfj input input.tar.bz2" "$progName, $LINENO: "
-	evalSafe "tar cfj resources resources.tar.bz2" "$progName, $LINENO: "
+	evalSafe "tar cfj input.tar.bz2 input" "$progName, $LINENO: "
+	evalSafe "tar cfj resources.tar.bz2 resources" "$progName, $LINENO: "
 	popd  >/dev/null
     fi
     trainCVParams="$trainCVParams -L $preferedDataLocation"
 fi
+
+
 
 # run
 if [ $addToExisting -ne 0 ] && [ -d "$workDir/outerCV-folds" ] ; then

@@ -68,7 +68,7 @@ configFile="$1"
 inputDir="$2"
 outputPerfDir="$3"
 
-if [ ! -z "$preferedDataLocation" ]; then
+if [ ! -z "$preferedDataLocation" ] && [ -d "$preferedDataLocation" ] ; then
     inputDir="$preferedDataLocation"
 fi
 
@@ -122,17 +122,13 @@ if [ ! -z "$obsTypesListOrStrategiesList" ]; then
 	echo -n " $foldId;"
 	mkdirSafe "$outputPerfDir/$prefix/$foldId" "$progName,$LINENO: "
 	if [ -z "$failSafe" ]; then # default: no failsafe, abort if error
-#	    evalSafe "train-test.sh -l \"$foldPrefix.train.cases\" -m \"$outputPerfDir/$prefix/$foldId/\" \"$specificPreparedInputDir\" \"$configFile\"  \"$inputDir\" \"$outputPerfDir/$prefix/$foldId/\"" "$progName,$LINENO: "
-#	    evalSafe "train-test.sh -a \"$foldPrefix.test.cases\" -m \"$outputPerfDir/$prefix/$foldId/\" \"$specificPreparedInputDir\" \"$configFile\"  \"$inputDir\" \"$outputPerfDir/$prefix/$foldId/\"" "$progName,$LINENO: "
 	    evalSafe "train-test.sh -l \"$foldPrefix.train.cases\" -m \"$outputPerfDir/$prefix/$foldId/\" \"$inputDir\" \"$configFile\"  \"$outputPerfDir/$prefix/$foldId/\"" "$progName,$LINENO: "
 	    evalSafe "train-test.sh -a \"$foldPrefix.test.cases\" -m \"$outputPerfDir/$prefix/$foldId/\" \"$inputDir\" \"$configFile\"  \"$outputPerfDir/$prefix/$foldId/\"" "$progName,$LINENO: "
 	else
-#	    train-test.sh -l "$foldPrefix.train.cases" -m "$outputPerfDir/$prefix/$foldId/" "$specificPreparedInputDir" "$configFile" "$inputDir" "$outputPerfDir/$prefix/$foldId/"
-	    train-test.sh -l "$foldPrefix.train.cases" -m "$outputPerfDir/$prefix/$foldId/" "$inputDir" "$configFile" "$inputDir" "$outputPerfDir/$prefix/$foldId/"
+	    train-test.sh -l "$foldPrefix.train.cases" -m "$outputPerfDir/$prefix/$foldId/" "$inputDir" "$configFile" "$outputPerfDir/$prefix/$foldId/"
 	    status=$?
 	    if [ $status -eq 0 ]; then
-#		train-test.sh -a "$foldPrefix.test.cases" -m "$outputPerfDir/$prefix/$foldId/" "$specificPreparedInputDir" "$configFile" "$inputDir" "$outputPerfDir/$prefix/$foldId/"
-		train-test.sh -a "$foldPrefix.test.cases" -m "$outputPerfDir/$prefix/$foldId/" "$inputDir" "$configFile" "$inputDir" "$outputPerfDir/$prefix/$foldId/"
+		train-test.sh -a "$foldPrefix.test.cases" -m "$outputPerfDir/$prefix/$foldId/" "$inputDir" "$configFile" "$outputPerfDir/$prefix/$foldId/"
 		status=$?
 	    fi
 	    if [ $status -ne 0 ]; then # fail safe

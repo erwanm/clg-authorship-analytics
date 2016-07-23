@@ -233,7 +233,7 @@ while getopts 'hl:a:r:m:' option ; do
 done
 shift $(($OPTIND - 1))
 if [ $# -ne 3 ]; then
-    echo "Error: expecting 4 args." 1>&2
+    echo "Error: expecting 3 args." 1>&2
     printHelp=1
 fi
 if [ -z "$trainFile" ] &&  [ -z "$testFile" ]; then

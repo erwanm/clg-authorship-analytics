@@ -45,10 +45,12 @@ fi
 sourceDir="$1"
 targetDir="$2"
 
+[ -d "$targetDir" ] || mkdir "$targetDir"
 dieIfNoSuchDir "$sourceDir" "$progName,$LINENO: "
 dieIfNoSuchDir "$targetDir" "$progName,$LINENO: "
 
 if [ ! -d "$targetDir/input" ] || [ ! -d "$targetDir/resources" ]; then
+    echo "$progName: copy archives"
     dieIfNoSuchFile "$sourceDir/input.tar.bz2" "$progName,$LINENO: "
     dieIfNoSuchFile "$sourceDir/resources.tar.bz2" "$progName,$LINENO: "
     cp "$sourceDir/input.tar.bz2" "$sourceDir/resources.tar.bz2" "$targetDir"
@@ -56,4 +58,6 @@ if [ ! -d "$targetDir/input" ] || [ ! -d "$targetDir/resources" ]; then
     tar xfj "input.tar.bz2"
     tar xfj "resources.tar.bz2"
     popd >/dev/null
+else
+    echo "$progName: archives already there, nothing to do"
 fi
