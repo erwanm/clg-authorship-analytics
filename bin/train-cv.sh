@@ -68,7 +68,7 @@ configFile="$1"
 inputDir="$2"
 outputPerfDir="$3"
 
-if [ ! -z "$preferedDataLocation" ] && [ -d "$preferedDataLocation" ] ; then
+if [ ! -z "$preferedDataLocation" ] && [ -d "$preferedDataLocation" ] && [ ! -f "$preferedDataLocation/lock" ] ; then
     inputDir="$preferedDataLocation"
 fi
 
