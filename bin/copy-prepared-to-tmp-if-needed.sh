@@ -4,7 +4,7 @@ source common-lib.sh
 source file-lib.sh
 
 progName="copy-prepared-to-tmp-if-needed.sh"
-
+sleepTime=10m
 
 
 function usage {
@@ -75,6 +75,10 @@ if [ ! -d "$targetDir/input" ] || [ ! -d "$targetDir/resources" ]; then
 	    rm -f "$targetDir/lock"
 	fi
     fi
+    # either the current job did the current process and removed the lock; or the lock was there; or there was no lock but the current process did not not get the job
+    while [ -f "$targetDir/lock" ]; do # wait for preparation job to finish
+	sleep $sleepTime
+    done
     rm -f $mytemp 
 else
     echo "$progName: archives already there, nothing to do"
