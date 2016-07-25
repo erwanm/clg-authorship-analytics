@@ -69,6 +69,7 @@ inputDir="$2"
 outputPerfDir="$3"
 
 if [ ! -z "$preferedDataLocation" ] && [ -d "$preferedDataLocation" ] && [ ! -f "$preferedDataLocation/lock" ] ; then
+    echo "$progName: using prefered data location '$preferedDataLocation'"
     inputDir="$preferedDataLocation"
 fi
 

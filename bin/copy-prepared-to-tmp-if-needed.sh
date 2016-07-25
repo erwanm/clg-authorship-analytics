@@ -29,7 +29,9 @@ function doTheJob {
     echo "$progName: copy archives"
     dieIfNoSuchFile "$sourceDir/input.tar.bz2" "$progName,$LINENO: "
     dieIfNoSuchFile "$sourceDir/resources.tar.bz2" "$progName,$LINENO: "
+    rm -f "$targetDir/input.tar.bz2" "$targetDir/resources.tar.bz2"
     cp "$sourceDir/input.tar.bz2" "$sourceDir/resources.tar.bz2" "$targetDir"
+    cat "$sourceDir/resources-options.conf" >"$targetDir/resources-options.conf"
     pushd "$targetDir" >/dev/null
     tar xfj "input.tar.bz2"
     tar xfj "resources.tar.bz2"
@@ -64,7 +66,7 @@ targetDir="$2"
 dieIfNoSuchDir "$sourceDir" "$progName,$LINENO: "
 dieIfNoSuchDir "$targetDir" "$progName,$LINENO: "
 
-if [ ! -d "$targetDir/input" ] || [ ! -d "$targetDir/resources" ]; then
+if [ ! -d "$targetDir/input" ] || [ ! -d "$targetDir/resources" ] || [ ! -f "$targetDir/resources-options.conf" ] || [ -f "$targetDir/lock" ]; then
     mytemp=$(mktemp --tmpdir)
     if [ ! -f "$targetDir/lock" ]; then
 	echo $mytemp > "$targetDir/lock"
