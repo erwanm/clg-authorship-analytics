@@ -141,11 +141,6 @@ fi
 # generate archives if preferedDataLocation is set (very long!!!)
 if [ ! -z "$preferedDataLocation" ]; then
     echo "$progName: redirecting 'input' and 'resources' to '$preferedDataLocation'"
-    # replace 'datasetResourcesPath' in resources-options.conf
-    grep -v "datasetResourcesPath" "$workDir/resources-options.conf" >"$workDir/resources-options2.conf"
-    echo "datasetResourcesPath=$workDir/resources"  >>"$workDir/resources-options2.conf"
-    rm -f "$workDir/resources-options.conf"
-    mv "$workDir/resources-options2.conf" "$workDir/resources-options.conf"
     if [ ! -f "$workDir/input.tar.bz2" ] || [ ! -f "$workDir/resources.tar.bz2" ]; then
 	echo "$progName: archives not found or option 'force' enabled, generating (very long!)"
 	pushd "$workDir" >/dev/null

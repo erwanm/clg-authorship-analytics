@@ -82,6 +82,7 @@ else
     tmpCasesFile=$(mktemp  --tmpdir  "$progName.main.XXXXXXXXX")
     cut -f 1 "$casesFile" | while read caseId; do
 	knownDocsList=$(find "$inputDataDir/$caseId" -name "known*.txt" | tr '\n' ':')
+	knownDocsList=${knownDocsList%:}
 #	echo "DEBUG caseId='$caseId'; knownDocsList='$knownDocsList'" 1>&2
 	echo "$knownDocsList $inputDataDir/$caseId/unknown.txt"
     done >"$tmpCasesFile"
