@@ -149,18 +149,13 @@ confNo=1
 rm -f "$outputDir/best.prefix-list"
 casesForRetrainingFile="$bestDir/cases"
 generateTruthCasesFile "$outputDir" "$casesForRetrainingFile" 0 " | filter-column.pl \"$casesFile\" 1 1" # different from truthFile above: 0/1 instead of Y/N
-waitFile=$(mktemp --tmpdir "$progName.main.wait.XXXXXXXXX")
+waitFile=$(mktemp --tmpdir="$bestDir" "$progName.main.wait.XXXXXXXXX") # not using local /tmp because different in case running on cluster (unsure if it's useful? but apparently solved a bug??)
 #echo "DEBUG $waitFile" 1>&2
 cat "$outputDir/runs/runs.final-rank" | cut -f 1 | while read configFile; do
     confNoStr=$(printf "%04d" $confNo)
     if [ $resume -eq 0 ] || [ ! -d "$bestDir/$confNoStr.model" ] || [ ! -s "$bestDir/$confNoStr/predicted.answers" ] ; then
 	evalSafe "cat \"$configFile\" >\"$bestDir/$confNoStr.conf\""  "$progName,$LINENO: "
 	mkdirSafe "$bestDir/$confNoStr.model"  "$progName,$LINENO: "
-#	if [ "$strategy" != "meta" ]; then
-#	    specificPreparedInputDir=$(getPreparedSpecificDir "$bestDir/$confNoStr.conf" "$outputDir/prepared-data/input" "input")
-#	else
-#	    specificPreparedInputDir="$outputDir/prepared-data" # not used
-#	fi
 	command1="train-test.sh -l \"$casesForRetrainingFile\" -m \"$bestDir/$confNoStr.model\" \"$outputDir\" \"$bestDir/$confNoStr.conf\" \"$bestDir/$confNoStr.model\""
 	command2="train-cv.sh  \"$bestDir/$confNoStr.conf\" \"$outputDir\" \"$bestDir\""
 

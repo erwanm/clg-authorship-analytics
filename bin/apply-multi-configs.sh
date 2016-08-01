@@ -103,7 +103,8 @@ if [ ! -z "$preprocessStrategyConfigs" ]; then # calling self to compute strateg
 fi
 
 # computePerf=0 or 1, always cut the 2 column to be safe
-onlyCasesFile=$(mktemp --tmpdir "$progName.main.cases.XXXXXXXXX")
+onlyCasesFile="$destDir/apply-strategy-configs/only-cases.tmp" # written to the target dir because /tmp might be different!! (if running on cluster)
+#onlyCasesFile=$(mktemp --tmpdir "$progName.main.cases.XXXXXXXXX")
 evalSafe "cut -d \" \" -f 1 \"$casesFile\" > \"$onlyCasesFile\"" "$progName,$LINENO: "
 
 params=""
