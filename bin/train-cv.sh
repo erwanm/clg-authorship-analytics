@@ -68,15 +68,20 @@ configFile="$1"
 inputDir="$2"
 outputPerfDir="$3"
 
-if [ ! -z "$preferedDataLocation" ] && [ -d "$preferedDataLocation" ] && [ ! -f "$preferedDataLocation/lock" ] ; then
+
+# actually tests already done in train-generation.sh, but playing it safe
+dieIfNoSuchFile "$configFile" "$progName,$LINENO: "
+dieIfNoSuchDir "$outputPerfDir" "$progName,$LINENO: "
+
+readFromParamFile "$configFile" "strategy" "$progName,$LINENO: "
+
+if [ ! -z "$preferedDataLocation" ] && [ -d "$preferedDataLocation" ] && [ ! -f "$preferedDataLocation/lock" ] && [ "$strategy" != "meta" ]; then
     echo "$progName: using prefered data location '$preferedDataLocation'"
     inputDir="$preferedDataLocation"
 fi
 
-# actually tests already done in train-generation.sh, but playing it safe
-dieIfNoSuchFile "$configFile" "$progName,$LINENO: "
 dieIfNoSuchDir "$inputDir"  "$progName,$LINENO: "
-dieIfNoSuchDir "$outputPerfDir" "$progName,$LINENO: "
+
 
 if [ -z "$failSafe" ]; then # default: no failsafe, abort if error
     echo "$progName: fail safe mode is OFF"
@@ -95,7 +100,6 @@ prefix=$(basename ${configFile%.conf})
 #echo -en "\r$prefix / $nbConfigs: "
 mkdirSafe "$outputPerfDir/$prefix" "$progName,$LINENO: "
 
-readFromParamFile "$configFile" "strategy" "$progName,$LINENO: "
 #if [ "$strategy" != "meta" ]; then
 #    specificPreparedInputDir=$(getPreparedSpecificDir "$configFile" "$inputDir/input" "input")
 #else
