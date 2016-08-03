@@ -12,10 +12,7 @@ prepareParams=""
 trainingParams=""
 trainCVParams=""
 preferedDataLocation=""
-
-mcFile=""
-useCountFiles=1
-resourcesAccess=r
+confDir="./conf"
 
 function usage {
   echo
@@ -23,11 +20,13 @@ function usage {
   echo
   echo "  Starts the whole training process in a 'standard' way (simplified parameters)."
   echo "  Assumes the following:"
-  echo "  - the current dir contains a subdir 'conf' containing the multi-conf parts."
+  echo "  - the current dir contains a subdir 'conf' containing the multi-conf parts,"
+  echo "    unless using option '-c' (see below)."
   echo
   echo
   echo "  Options:"
   echo "    -h this help"
+  echo "    -c <conf directory> default: '$confDir'."
   echo "    -f force overwriting the destination directory if it is not empty;"
   echo "       default: error and exit (to avoid deleting stuff accidentally)."
   echo "    -a add to existing data in destination directory if it is not empty;"
@@ -55,8 +54,9 @@ function usage {
 
 
 OPTIND=1
-while getopts 'hfai:o:P:L:' option ; do
+while getopts 'hfai:o:P:L:c:' option ; do
     case $option in
+	"c" ) confDir="$OPTARG";;
         "f" ) force=1;;
         "a" ) addToExisting=1;;
         "i" ) prepareParams="$prepareParams -i \"$OPTARG\"";;
@@ -102,11 +102,6 @@ if [ $nbEntries -ne 0 ]; then
     fi
 fi
 
-if [ ! -z "$resourcesDir" ]; then
-    dieIfNoSuchDir "$resourcesDir" "$progName:$LINENO: "
-fi
-
-
 
 language=$(grep language "$sourceDir/contents.json" | cut -d '"' -f 4)
 language=$(echo "$language" | tr '[:upper:]' '[:lower:]')
@@ -122,9 +117,9 @@ echo "$progName: withPOS = $withPOS"
 
 
 # generating multi-config
-evalSafe "generate-multi-conf.sh $withPOS '$workDir/'" "$progName, $LINENO: "
+evalSafe "generate-multi-conf.sh -d '$confDir' $withPOS '$workDir/'" "$progName, $LINENO: "
 
-cat "conf/meta-template.std.multi-conf"> "$workDir/meta-template.multi-conf"
+cat "$confDir/meta-template.std.multi-conf"> "$workDir/meta-template.multi-conf"
 dieIfNoSuchFile "$workDir/multi-conf-files/basic.multi-conf" "$progName, $LINENO: "
 dieIfNoSuchFile "$workDir/meta-template.multi-conf" "$progName, $LINENO: "
 

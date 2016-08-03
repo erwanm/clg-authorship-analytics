@@ -81,7 +81,7 @@ fi
 sourceDir="$1"
 targetDir="$2"
 
-[ -d "$targetDir" ] || mkdir "$targetDir"
+mkdirSafe "$targetDir" "$progName,$LINENO: "
 dieIfNoSuchDir "$sourceDir" "$progName,$LINENO: "
 dieIfNoSuchDir "$targetDir" "$progName,$LINENO: "
 
