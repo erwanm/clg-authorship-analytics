@@ -23,6 +23,10 @@ function usage {
   echo "  - the current dir contains a subdir 'conf' containing the multi-conf parts,"
   echo "    unless using option '-c' (see below)."
   echo
+  echo "  Remark: this script generates the multi-conf files based on the content of "
+  echo "          'conf' directory and the language; if the language is supported by"
+  echo "          TreeTagger, then POS tags observations can be used."
+  echo
   echo
   echo "  Options:"
   echo "    -h this help"
