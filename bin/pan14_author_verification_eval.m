@@ -83,7 +83,8 @@ end
 
 PARAMS=['-i';'-t';'-o'];
 % CODES={'DE','Dutch','Essays';'DR','Dutch','Reviews';'EE','English','Essays';'EN','English','Novels';'GR','Greek','Articles';'SP','Spanish','Articles'};
-CODES={'DU','Dutch','xxx';'EN','English','xxx';'GR','Greek','xxx';'SP','Spanish','xxx'};
+% CODES={'DU','Dutch','xxx';'EN','English','xxx';'GR','Greek','xxx';'SP','Spanish','xxx'};
+CODES={'DE','Dutch','Essays';'DR','Dutch','Reviews';'EE','English','Essays';'EN','English','Novels';'GR','Greek','Articles';'SP','Spanish','Articles'; 'DU','Dutch','xxx'};
 
 for i=1:2:nargin
     for j=1:size(PARAMS,1)

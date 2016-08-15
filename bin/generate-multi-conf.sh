@@ -73,7 +73,7 @@ destDir="$outputDir/$dirName"
 mkdirSafe "$destDir" "$progName,$LINENO"
 rm -f "$destDir"/*
 for s in $strategies; do
-    echo -n  "$progName: Strategy '$s' " 1>&2
+    echo -n  "$progName: Strategy '$s' "
     file="$configDir/$s.multi-conf.part"
     dieIfNoSuchFile "$file" "$progName,$LINENO"    
     posFilter=""

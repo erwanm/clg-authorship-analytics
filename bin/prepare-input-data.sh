@@ -249,7 +249,8 @@ mkdirSafe "$destDir/input"  "$progName:$LINENO: "
 mkdirSafe "$destDir/resources"  "$progName:$LINENO: "
 
 echo "$progName init: copying input data"
-cloneDir "$sourceDir" "$destDir/input"
+#cloneDir "$sourceDir" "$destDir/input"
+cp -R "$sourceDir"/* "$destDir/input"
 listDocFiles "$destDir/input" >"$destDir/input/all-data.files" 
 
 # find formatting options in config files
@@ -325,7 +326,8 @@ for impId in $usedImpostorsIds; do
 
 	echo "$progName, impostors dataset '$impId' copying impostors file"
 	mkdirSafe "$destDir/resources/impostors/$impId" "$progName,$LINENO: "
-	cloneDir "$impPath" "$destDir/resources/impostors/$impId"
+#	cloneDir "$impPath" "$destDir/resources/impostors/$impId"
+	cp -R "$impPath"/* "$destDir/resources/impostors/$impId"
 	listDocFiles "$destDir/resources/impostors/$impId" >"$destDir/resources/impostors/$impId/all-data.files" 
 
 	echo "$progName, impostors dataset '$impId': generating count files for all obs types"

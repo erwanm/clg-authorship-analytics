@@ -6,7 +6,7 @@ source file-lib.sh
 progName="run-std-training-multiple-datasets.sh"
 
 
-sleepTime=10s
+sleepTime=5s
 
 runParams=""
 preferedDataLocation=""
@@ -89,14 +89,15 @@ fi
 
 workDir="$1"
 
-
 mkdirSafe "$workDir"  "$progName:$LINENO: "
+rm -f "$workDir/datasets.list"
 while read inputLine; do 
     set -- $inputLine
     dirId="$1"
     impOpt="$2"
+#    echo "DEBUG: inputLine='$inputLine', dirId='$dirId', impOpt='$impOpt'" 1>&2
     dir=${dirId%:*}
-    if [ "$dir" ne "$dirId" ]; then # two parts
+    if [ "$dir" != "$dirId" ]; then # two parts
 	id=${dirId#*:}
     else
 	id=$(basename "$dir")
@@ -104,20 +105,23 @@ while read inputLine; do
     if [ -d "$dir" ]; then
 	if [ $resuming -ne 0 ] && [ -f "$workDir/$id/restart-top-level.sh" ]; then
 	    echo "$progName: restarting process for dataset '$id', dir = '$dir'"
-	    eval "$workDir/$id/restart-top-level.sh >\"$workDir/$id/main-process.out\" 2>\"$workDir/$id/main-process.err\"" &
+	    eval "$workDir/$id/restart-top-level.sh >\"$workDir/$id.main-process.out\" 2>\"$workDir/$id.main-process.err\"" &
 	else
 	    echo "$progName: starting process for dataset '$id', dir = '$dir'"
 	    mkdirSafe "$workDir/$id"   "$progName:$LINENO: "
+	    thisParams="$runParams"
 	    if [ ! -z "$preferedDataLocation" ]; then
-		runParams="$runParams -L \"$preferedDataLocation/$id\""
+		thisParams="$thisParams -L \"$preferedDataLocation/$id\""
 	    fi
-	    if [ ! -z "$parallelPrefix=" ]; then
-		runParams="$runParams -P \"$parallelPrefix.$id\""
+	    if [ ! -z "$parallelPrefix" ]; then
+		thisParams="$thisParams -P \"$parallelPrefix.$id\""
 	    fi
 	    if [ ! -z "$impOpt" ]; then
-		runParams="$runParams -i \"$impOpt\""
+		thisParams="$thisParams -i \"$impOpt\""
 	    fi
-	    eval "run-std-training.sh $runParams \"$dir\" \"$workDir/$id\" >\"$workDir/$id/main-process.out\" 2>\"$workDir/$id/main-process.err\"" &
+	    eval "run-std-training.sh $thisParams \"$dir\" \"$workDir/$id\" >\"$workDir/$id.main-process.out\" 2>\"$workDir/$id.main-process.err\"" &
+#	    echo "DEBUG run-std-training.sh $thisParams \"$dir\" \"$workDir/$id\" >\"$workDir/$id.main-process.out\" 2>\"$workDir/$id.main-process.err\"" 1>&2
+	    echo "$id" >>"$workDir/datasets.list"
 	fi
     else
 	echo "$progName: source dir '$dir' for dataset '$id' doesn't exist, ignoring." 1>&2
@@ -127,10 +131,12 @@ done
 echo "$progName: all processes started, waiting $sleepTime"
 sleep $sleepTime
 
-for dir in "$workDir"/*; do
+cat "$workDir/datasets.list" | while read dataset; do
+    dir="$workDir/$dataset"
     if [ -d "$dir" ]; then
+	id=$(basename "$dir")
 	echo "$progName: showing first 10 lines of stderr for process '$id':"
-	head "$dir/main-process.err"
+	head "$workDir/$id.main-process.err"
     fi
 done
 
