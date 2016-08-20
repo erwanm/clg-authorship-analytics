@@ -14,6 +14,8 @@ nbFoldsOuterCV=2
 resume=0
 sleepTime=1m
 applyMultiConfigsParams="-p -s 5s"
+runMasterTasksInBackground=1
+
 
 function usage {
   echo
@@ -33,6 +35,8 @@ function usage {
   echo "    -r resume previous process"
 #  echo "       remark: recomputes generation <num> and following if existing"
   echo "    -P <parallel prefix> TODO"
+  echo "    -M run master tasks as regular tasks instead of as background daemons."
+  echo "       ignored if -P is not enabled."
 #  echo "    -f <first gen configs list file> use a list of individual configs"
 #  echo "       to initiate the genetic process (reads only the first column"
 #  echo "       of the file)"
@@ -49,7 +53,7 @@ function usage {
 
 
 OPTIND=1
-while getopts 'hP:o:r' option ; do 
+while getopts 'hP:o:rM' option ; do 
     case $option in
 	"h" ) usage
  	      exit 0;;
@@ -59,6 +63,8 @@ while getopts 'hP:o:r' option ; do
 	"r" ) resume=1
               applyMultiConfigsParams="$applyMultiConfigsParams -r"
 	      constantParams="$constantParams -r";;
+	"M" ) runMasterTasksInBackground=0
+   	      constantParams="$constantParams -M";;
 	"?" ) 
 	    echo "Error, unknow option." 1>&2
             printHelp=1;;
@@ -120,7 +126,13 @@ for foldIndexesFile in "$outputDir/outerCV-folds"/*.train.indexes; do
     if [ -z "$parallelPrefix" ]; then
 	evalSafe "train-outerCV-1fold.sh $constantParams \"$outputDir/$foldId\" \"$foldPrefix.train.cases\" \"$foldPrefix.test.cases\" \"$outputDir/multi-conf-files\"" "$progName,$LINENO: "
     else
-	eval "train-outerCV-1fold.sh -P \"$parallelPrefix.${foldId}\" $constantParams \"$outputDir/$foldId\" \"$foldPrefix.train.cases\" \"$foldPrefix.test.cases\" \"$outputDir/multi-conf-files\" >\"$outputDir/$foldId.out\" 2>\"$outputDir/$foldId.err\"" &
+	command="train-outerCV-1fold.sh -P \"$parallelPrefix.${foldId}\" $constantParams \"$outputDir/$foldId\" \"$foldPrefix.train.cases\" \"$foldPrefix.test.cases\" \"$outputDir/multi-conf-files\" >\"$outputDir/$foldId.out\" 2>\"$outputDir/$foldId.err\""
+	if [ $runMasterTasksInBackground -eq 1 ]; then
+	    eval "$command" &
+	else
+	    taskFile=$(evalSafe "mktemp $parallelPrefix.${foldId}.XXXXXXXXX" "$progName,$LINENO: ")
+	    echo "$command" >"$taskFile"
+	fi
     fi
     evalSafe "echo \"$outputDir/$foldId/best-meta-configs.list\" >>\"$waitFile\"" "$progName,$LINENO: "
 done

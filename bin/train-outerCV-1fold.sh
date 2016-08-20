@@ -14,6 +14,7 @@ parallelPrefix=""
 applyMultiConfigsParams="-p -s 5s"
 #sleepTimeIndivGenetic=15m
 sleepTimeIndivGenetic=1m
+runMasterTasksInBackground=1
 
 function usage {
   echo
@@ -30,6 +31,8 @@ function usage {
   echo "    -r resume previous process"
 #  echo "       remark: recomputes generation <num> and following if existing"
   echo "    -P <parallel prefix> TODO"
+  echo "    -M run master tasks as regular tasks instead of as background daemons."
+  echo "       ignored if -P is not enabled."
 #  echo "    -f <first gen configs list file> use a list of individual configs"
 #  echo "       to initiate the genetic process (reads only the first column"
 #  echo "       of the file)"
@@ -66,7 +69,7 @@ function generateMetaMultiConf {
 
 
 OPTIND=1
-while getopts 'hP:o:r' option ; do 
+while getopts 'hP:o:rM' option ; do 
     case $option in
 	"h" ) usage
  	      exit 0;;
@@ -76,6 +79,7 @@ while getopts 'hP:o:r' option ; do
 	      applyMultiConfigsParams="$applyMultiConfigsParams -r"
 	      constantParams="$constantParams -r";;
         "o" ) constantParams="$constantParams -o \"$OPTARG\"";;
+	"M" ) runMasterTasksInBackground=0;;
  	"?" ) 
 	    echo "Error, unknow option." 1>&2
             printHelp=1;;
@@ -114,7 +118,14 @@ for multiConfStrategyFile in "$multiConfDir"/*.multi-conf; do
     if [ -z "$parallelPrefix" ]; then
 	evalSafe "train-multi-stages.sh $constantParams \"$strategyDir\" \"$trainCasesFile\" \"$multiConfStrategyFile\" \"indivGenetic\"" "$progName,$LINENO: "
     else
-	eval "train-multi-stages.sh -P \"$parallelPrefix.$strategy\" $constantParams \"$strategyDir\" \"$trainCasesFile\" \"$multiConfStrategyFile\" \"indivGenetic\" >\"$strategyDir/train-multi-stages.out\" 2>\"$strategyDir/train-multi-stages.err\""  &
+	command="train-multi-stages.sh -P \"$parallelPrefix.$strategy\" $constantParams \"$strategyDir\" \"$trainCasesFile\" \"$multiConfStrategyFile\" \"indivGenetic\" >\"$strategyDir/train-multi-stages.out\" 2>\"$strategyDir/train-multi-stages.err\""
+	if [ $runMasterTasksInBackground -eq 1 ]; then
+	    eval "$command" &
+	else
+	    taskFile=$(evalSafe "mktemp $parallelPrefix.$strategy.XXXXXXXXX" "$progName,$LINENO: ")
+            echo "$command" >"$taskFile"
+ 
+	fi
     fi
     evalSafe "echo \"$strategyDir/done.signal\" >>\"$waitFile\"" "$progName,$LINENO: "
     nbStrategies=$(( $nbStrategies + 1 ))

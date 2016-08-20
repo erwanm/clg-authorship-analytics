@@ -52,13 +52,15 @@ function usage {
   echo "       BUT the step of copying/extracting the archives and mounting them"
   echo "       is left to be performed independently."
   echo "    -P <parallel prefix> TODO"
+  echo "    -M run master tasks as regular tasks instead of as background daemons."
+  echo "       ignored if -P is not enabled."
   echo
 }
 
 
 
 OPTIND=1
-while getopts 'hfai:o:P:L:c:' option ; do
+while getopts 'hfai:o:P:L:c:M' option ; do
     case $option in
 	"c" ) confDir="$OPTARG";;
         "f" ) force=1;;
@@ -68,6 +70,7 @@ while getopts 'hfai:o:P:L:c:' option ; do
 	      trainingParams="$trainingParams -P \"$parallelPrefix\"";;
         "o" ) trainCVParams="$trainCVParams $OPTARG";;
 	"L" ) preferedDataLocation="$OPTARG";;
+	"M" ) trainingParams="$trainingParams -M";;
         "h" ) usage
               exit 0;;
         "?" )

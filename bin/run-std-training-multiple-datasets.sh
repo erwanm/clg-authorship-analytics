@@ -12,6 +12,7 @@ runParams=""
 preferedDataLocation=""
 parallelPrefix=""
 resuming=0
+runMasterTasksInBackground=1
 
 
 function usage {
@@ -56,13 +57,15 @@ function usage {
   echo "       if the script restart-top-level.sh exists then it is called. In"
   echo "       other words, skip all the preparation of the dataset if it has been"  
   echo "       done previously."
+  echo "    -M run master tasks as regular tasks instead of as background daemons."
+  echo "       ignored if -P is not enabled."
   echo
 }
 
 
 
 OPTIND=1
-while getopts 'hc:fao:P:L:r' option ; do
+while getopts 'hc:fao:P:L:rM' option ; do
     case $option in
         "f" ) runParams="$runParams -f";;
         "a" ) runParams="$runParams -a";;
@@ -70,6 +73,8 @@ while getopts 'hc:fao:P:L:r' option ; do
         "o" ) runParams="$runParams -o \"$OPTARG\"";; 
 	"L" ) preferedDataLocation="$OPTARG";;
 	"r" ) resuming=1;;
+	"M" ) runMasterTasksInBackground=0
+	    runParams="$runParams -M";;
         "h" ) usage
               exit 0;;
         "?" )
@@ -119,8 +124,13 @@ while read inputLine; do
 	    if [ ! -z "$impOpt" ]; then
 		thisParams="$thisParams -i \"$impOpt\""
 	    fi
-	    eval "run-std-training.sh $thisParams \"$dir\" \"$workDir/$id\" >\"$workDir/$id.main-process.out\" 2>\"$workDir/$id.main-process.err\"" &
-#	    echo "DEBUG run-std-training.sh $thisParams \"$dir\" \"$workDir/$id\" >\"$workDir/$id.main-process.out\" 2>\"$workDir/$id.main-process.err\"" 1>&2
+	    command="run-std-training.sh $thisParams \"$dir\" \"$workDir/$id\" >\"$workDir/$id.main-process.out\" 2>\"$workDir/$id.main-process.err\""
+	    if [ $runMasterTasksInBackground -eq 1 ] || [ -z "$parallelPrefix" ]; then
+		eval  "$command" &
+	    else # use the task distrib daemon
+		taskFile=$(evalSafe "mktemp  $parallelPrefix.$id.run-std.XXXXXXXXX" "$progName,$LINENO: ")
+		echo "$command" >"$taskFile"
+	    fi
 	    echo "$id" >>"$workDir/datasets.list"
 	fi
     else
