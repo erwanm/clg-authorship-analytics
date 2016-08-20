@@ -131,8 +131,8 @@ while read inputLine; do
 		taskFile=$(evalSafe "mktemp  $parallelPrefix.$id.run-std.XXXXXXXXX" "$progName,$LINENO: ")
 		echo "$command" >"$taskFile"
 	    fi
-	    echo "$id" >>"$workDir/datasets.list"
 	fi
+	echo "$id" >>"$workDir/datasets.list"
     else
 	echo "$progName: source dir '$dir' for dataset '$id' doesn't exist, ignoring." 1>&2
     fi
