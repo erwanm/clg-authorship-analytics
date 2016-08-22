@@ -75,7 +75,7 @@ function oneDataset {
 	echo "$progName $$: warning, no source directory '$sourceDir', ignoring" 1>&2
 	return 0
     fi
-    if [ ! -d "$targetDir/input" ] || [ ! -d "$targetDir/resources" ] || [ ! -s "$targetDir/resources-options.conf" ] || [ -f "$targetDir/lock" ]; do
+    if [ ! -d "$targetDir/input" ] || [ ! -d "$targetDir/resources" ] || [ ! -s "$targetDir/resources-options.conf" ] || [ -f "$targetDir/lock" ]; then
 	echo "DEBUG $$: target data not found" 1>&2
         # if the lock is too old then there was a problem (probably interrupted process), remove it and redo the process
 	if [ -f "$targetDir/lock" ]; then
@@ -131,21 +131,27 @@ fi
 
 notDoneFile=$(mktemp --tmpdir "$progName.not-done.XXXXXXXX")
 echo "let's do this" > "$notDoneFile"
-echo "DEBUG $$: before loop, notDoneFile=$notDoneFile" 1>&2
+echo "DEBUG $$: before loop, notDoneFile=$notDoneFile, inputFile='$inputFile'" 1>&2
 while [ -s "$notDoneFile" ]; do
     echo "DEBUG $$: inside loop" 1>&2
     rm -f "$notDoneFile"
     if [ -z "$inputFile" ]; then
 #    sourceDir="$1" 
 #    targetDir="$2"
+	echo "DEBUG $$: oneDataset \"$1\" \"$2\"" 1>&2
 	oneDataset "$1" "$2"
 	if [ $? -ne 0 ]; then
 	    echo "DEBUG $$: sourceDir=$1, not done" 1>&2
 	    echo "$sourceDir" >> "$notDoneFile"
 	fi
     else
+	if [ ! -s "$inputFile" ]; then
+	    echo "$progName $$: error, no input file '$inputFile'" 1>&2
+	    exit 2
+	fi
 	cat "$inputFile" | while read line; do
 	    set -- $line
+	    echo "DEBUG $$: oneDataset \"$1\" \"$2\"" 1>&2
 	    oneDataset "$1" "$2"
 	    if [ $? -ne 0 ]; then
 		echo "DEBUG $$: sourceDir=$1, not done" 1>&2
@@ -153,7 +159,7 @@ while [ -s "$notDoneFile" ]; do
 	    fi
 	done
     fi
-    if [ ! -s  "$notDoneFile" ]; then
+    if [ -s  "$notDoneFile" ]; then
 	echo "DEBUG $$: sleeping" 1>&2
 	sleep $sleepTime
     fi

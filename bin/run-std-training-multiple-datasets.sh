@@ -6,14 +6,14 @@ source file-lib.sh
 progName="run-std-training-multiple-datasets.sh"
 
 
-sleepTime=5s
+sleepTime=100s
 
 runParams=""
 preferedDataLocation=""
 parallelPrefix=""
 resuming=0
 runMasterTasksInBackground=1
-
+confDir="conf"
 
 function usage {
   echo
@@ -25,6 +25,9 @@ function usage {
   echo "  <source dir>[:<id>] [impostors option]"
   echo
   echo "  where [impostors options] is transmitted via '-i' to run-std-training.sh."
+  echo
+  echo "  Caution: if using -M, all paths must be absolute, including in"
+  echo "           [impostors options]."
   echo
   echo "  Assumes the following:"
   echo "  - the current dir contains a subdir 'conf' containing the multi-conf parts,"
@@ -67,6 +70,7 @@ function usage {
 OPTIND=1
 while getopts 'hc:fao:P:L:rM' option ; do
     case $option in
+	"c" ) confDir="$OPTARG";;
         "f" ) runParams="$runParams -f";;
         "a" ) runParams="$runParams -a";;
         "P" ) parallelPrefix="$OPTARG";;
@@ -92,7 +96,10 @@ if [ ! -z "$printHelp" ]; then
     exit 1
 fi
 
-workDir="$1"
+workDir=$(absolutePath "$1")
+confDir=$(absolutePath "$confDir")
+
+runParams="$runParams -c \"$confDir\""
 
 mkdirSafe "$workDir"  "$progName:$LINENO: "
 rm -f "$workDir/datasets.list"
@@ -108,6 +115,7 @@ while read inputLine; do
 	id=$(basename "$dir")
     fi
     if [ -d "$dir" ]; then
+	dir=$(absolutePath "$dir")
 	if [ $resuming -ne 0 ] && [ -f "$workDir/$id/restart-top-level.sh" ]; then
 	    echo "$progName: restarting process for dataset '$id', dir = '$dir'"
 	    eval "$workDir/$id/restart-top-level.sh >\"$workDir/$id.main-process.out\" 2>\"$workDir/$id.main-process.err\"" &
