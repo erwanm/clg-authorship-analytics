@@ -71,8 +71,8 @@ function oneDataset {
     targetDir="$2"
 
     mkdirSafe "$targetDir" "$progName,$LINENO: "
-    if [ ! -d "$sourceDir" ]; then # if source dir doesn't exist, echo warning and consider done (pointless to wait)
-	echo "$progName $$: warning, no source directory '$sourceDir', ignoring" 1>&2
+    if [ ! -d "$sourceDir" ] || [ ! -f  "$sourceDir/input.tar.bz2" ] || [ ! -f "$sourceDir/resources.tar.bz2" ] ; then # if source dir doesn't exist, echo warning and consider done (pointless to wait)
+	echo "$progName $$: warning, no source directory '$sourceDir' or missing archive(s) in directory, ignoring" 1>&2
 	return 0
     fi
     if [ ! -d "$targetDir/input" ] || [ ! -d "$targetDir/resources" ] || [ ! -s "$targetDir/resources-options.conf" ] || [ -f "$targetDir/lock" ]; then
