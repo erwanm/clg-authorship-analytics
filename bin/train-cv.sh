@@ -75,9 +75,19 @@ dieIfNoSuchDir "$outputPerfDir" "$progName,$LINENO: "
 
 readFromParamFile "$configFile" "strategy" "$progName,$LINENO: "
 
-if [ ! -z "$preferedDataLocation" ] && [ -d "$preferedDataLocation" ] && [ ! -f "$preferedDataLocation/lock" ] && [ "$strategy" != "meta" ]; then
-    echo "$progName: using prefered data location '$preferedDataLocation'"
-    inputDir="$preferedDataLocation"
+if [ ! -z "$preferedDataLocation" ] && [ "$strategy" != "meta" ]; then
+    if [ -d "$preferedDataLocation" ]; then
+	echo "$progName info: Prefered data location '$preferedDataLocation' exists, ok." 1>&2
+	if [ ! -f "$preferedDataLocation/lock" ]; then
+	    echo "$progName info: Prefered data location: no lock, ok." 1>&2
+	    echo "$progName: info: using prefered data location '$preferedDataLocation'" 1>&2
+	    inputDir="$preferedDataLocation"
+	else
+	    echo "$progName info: Prefered data location: locked, cannot use." 1>&2
+	fi
+    else
+	echo "$progName info: Prefered data location '$preferedDataLocation' does not exist" 1>&2
+    fi
 fi
 
 dieIfNoSuchDir "$inputDir"  "$progName,$LINENO: "
