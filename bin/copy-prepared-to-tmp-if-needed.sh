@@ -164,6 +164,7 @@ while [ -s "$notDoneFile" ]; do
 	sleep $sleepTime
     fi
 done
+echo "DEBUG $$: after loop, finished."
 rm -f "$notDoneFile"
 
 

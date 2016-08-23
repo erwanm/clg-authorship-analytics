@@ -118,7 +118,13 @@ while read inputLine; do
 	dir=$(absolutePath "$dir")
 	if [ $resuming -ne 0 ] && [ -f "$workDir/$id/restart-top-level.sh" ]; then
 	    echo "$progName: restarting process for dataset '$id', dir = '$dir'"
-	    eval "$workDir/$id/restart-top-level.sh >\"$workDir/$id.main-process.out\" 2>\"$workDir/$id.main-process.err\"" &
+	    command="$workDir/$id/restart-top-level.sh >\"$workDir/$id.main-process.out\" 2>\"$workDir/$id.main-process.err\""
+	    if [ $runMasterTasksInBackground -eq 1 ] || [ -z "$parallelPrefix" ]; then
+		eval "$command" &
+	    else # use the task distrib daemon
+		taskFile=$(evalSafe "mktemp  $parallelPrefix.$id.run-std.XXXXXXXXX" "$progName,$LINENO: ")
+		echo "$command" >"$taskFile"
+	    fi
 	else
 	    echo "$progName: starting process for dataset '$id', dir = '$dir'"
 	    mkdirSafe "$workDir/$id"   "$progName:$LINENO: "
