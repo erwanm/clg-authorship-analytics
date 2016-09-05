@@ -162,10 +162,17 @@ if [ ! -z "$obsTypesListOrStrategiesList" ]; then
 	    echo "$progName error: one of '$outputPerfDir/$prefix/predicted.answers' and/or '$truthFile' does not exist or is empty; $!" 1>&2
 	    exit 42
 	fi
-	evalSafe "pan14_author_verification_eval.m -i \"$outputPerfDir/$prefix/predicted.answers\" -t \"$truthFile\" -o \"$outputPerfDir/$prefix/eval.out\" >/dev/null 2>&1"  "$progName,$LINENO: "
-	scoreAUC=$(evalSafe "cat \"$outputPerfDir/$prefix/eval.out\" | grep AUC | cut -f 2 -d ':' | tr -d ' },'")
-	scoreC1=$(evalSafe "cat \"$outputPerfDir/$prefix/eval.out\" | grep C1 | cut -f 2 -d ':' | tr -d ' },'")
-	scoreFinal=$(evalSafe "cat \"$outputPerfDir/$prefix/eval.out\" | grep finalScore | cut -f 2 -d ':' | tr -d ' },'")
+# Sept 16:  old version with pan14 eval script, not needed anymore
+#	evalSafe "pan14_author_verification_eval.m -i \"$outputPerfDir/$prefix/predicted.answers\" -t \"$truthFile\" -o \"$outputPerfDir/$prefix/eval.out\" >/dev/null 2>&1"  "$progName,$LINENO: "
+#	scoreAUC=$(evalSafe "cat \"$outputPerfDir/$prefix/eval.out\" | grep AUC | cut -f 2 -d ':' | tr -d ' },'")
+#	scoreC1=$(evalSafe "cat \"$outputPerfDir/$prefix/eval.out\" | grep C1 | cut -f 2 -d ':' | tr -d ' },'")
+#	scoreFinal=$(evalSafe "cat \"$outputPerfDir/$prefix/eval.out\" | grep finalScore | cut -f 2 -d ':' | tr -d ' },'")
+#	echo -e "V1: $scoreAUC\t$scoreC1\t$scoreFinal" 1>&2
+	scoreAUC=$(evalSafe "auc.pl -p 6 -l N:Y \"$truthFile\" \"$outputPerfDir/$prefix/predicted.answers\"")
+	scoreC1=$(evalSafe "accuracy.pl -c -p 6 -l N:Y \"$truthFile\" \"$outputPerfDir/$prefix/predicted.answers\" | cut -f 1")
+#	echo "DEBUG: printf(\"%.6f\n\", $scoreAUC * $scoreC1);" 1>&2
+	scoreFinal=$(perl -e "printf(\"%.6f\n\", $scoreAUC * $scoreC1);")
+#	echo -e "V2: $scoreAUC\t$scoreC1\t$scoreFinal" 1>&2
     else # failsafe mode AND error happened: all scores to zero
 	echo "$progName: an error occured in failsafe mode, returning null scores for '$outputPerfDir/$prefix'" 1>&2
 	scoreAUC=0
@@ -173,7 +180,7 @@ if [ ! -z "$obsTypesListOrStrategiesList" ]; then
 	scoreFinal=0
     fi
     if [ -z "$scoreAUC" ] || [ -z "$scoreC1" ] || [ -z "$scoreFinal" ] ; then
-	echo "$progName error: was not able to extract one of the evaluation scores from '$outputPerfDir/$prefix/eval.out'" 1>&2
+	echo "$progName error: was not able to compute one of the evaluation scores for '$outputPerfDir/$prefix'" 1>&2
 	exit 1
     fi
     echo -e "$scoreFinal\t$scoreAUC\t$scoreC1" >"$outputPerfDir/$prefix.perf"
