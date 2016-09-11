@@ -185,7 +185,7 @@ done
 
 
 nbCases=$(cat "$testCasesFile" | wc -l)
-if [ $resume -ne 0 ] || [ ! -d "$outputDir/sub-folds" ]; then
+if [ $resume -eq 0 ] || [ ! -d "$outputDir/sub-folds" ]; then
     echo "$progName: generating sub-folds"
     mkdir "$outputDir/sub-folds"
     evalSafe "generate-random-cross-fold-ids.pl 2 $nbCases \"$outputDir/sub-folds/fold\"" "$progName,$LINENO: "
@@ -205,7 +205,7 @@ metaTestCasesFile="$outputDir/sub-folds"/fold.1.test.cases
 metaDir="$outputDir/meta-training"
 metaMC="$metaDir/meta.multi-conf"
 mkdirSafe "$metaDir"
-echo "$progName: generating the mluti-conf file for meta training stage in '$metaMC'"
+echo "$progName: generating the multi-conf file for meta training stage in '$metaMC'"
 generateMetaMultiConf "$outputDir/meta-template.multi-conf" "$outputDir/selected-strategy-configs.list" "$metaMC"
 rm -f "$metaDir/$(basename "$applyDir")" 
 linkAbsolutePath "$metaDir" "$applyDir" 

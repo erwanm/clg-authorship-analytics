@@ -94,7 +94,6 @@ casesFile="$outputPerfDir/cases.list"
 dieIfNoSuchFile "$casesFile" "$progName,$LINENO: "
 
 
-echo "$progName: generating folds"
 
 truthFile="$outputPerfDir/truth"
 generateTruthCasesFile "$inputDir" "$truthFile" 1 " | filter-column.pl \"$casesFile\" 1 1" # filter only the  specified cases
@@ -102,7 +101,8 @@ nbCases=$(cat "$truthFile" | wc -l)
 #echo "DEBUG truthFile=$truthFile; nbCases=$nbCases" 1>&2
 #exit 2
 
-if [ $resume -eq 0 ] || [ ! -d "$outputPerfDir/folds" ]; then
+if [ $resume -eq 0 ] || [ ! -d "$outputPerfDir/folds" ]; then 
+    echo "$progName: generating folds"
     rm -rf "$outputPerfDir/folds" # remove previous folds (especially if previous nbFolds > current nbFolds!!)
     mkdirSafe "$outputPerfDir/folds"
     evalSafe "generate-random-cross-fold-ids.pl $nbFoldsCV $nbCases \"$outputPerfDir/folds/fold\"" "$progName: "
