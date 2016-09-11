@@ -173,15 +173,21 @@ if [ ! -z "$obsTypesListOrStrategiesList" ]; then
 #	echo "DEBUG: printf(\"%.6f\n\", $scoreAUC * $scoreC1);" 1>&2
 	scoreFinal=$(perl -e "printf(\"%.6f\n\", $scoreAUC * $scoreC1);")
 #	echo -e "V2: $scoreAUC\t$scoreC1\t$scoreFinal" 1>&2
-    else # failsafe mode AND error happened: all scores to zero
-	echo "$progName: an error occured in failsafe mode, returning null scores for '$outputPerfDir/$prefix'" 1>&2
-	scoreAUC=0
-	scoreC1=0
-	scoreFinal=0
-    fi
+    fi 
+    # if status was not zero then we are in falsafe mode AND an error occured;
+    # in this case all the scores are undefined and we will set them to zero below:
+    # remark: it is also possible that an error occured in computing AUC/C1/final scores,
+    #         in this case the error is dealt with below as well.
     if [ -z "$scoreAUC" ] || [ -z "$scoreC1" ] || [ -z "$scoreFinal" ] ; then
-	echo "$progName error: was not able to compute one of the evaluation scores for '$outputPerfDir/$prefix'" 1>&2
-	exit 1
+	if [ -z "$failSafe" ]; then # default: no failsafe, abort if error
+	    echo "$progName error: was not able to compute one of the evaluation scores for '$outputPerfDir/$prefix'" 1>&2
+	    exit 1
+	else # failsafe mode AND error happened: all scores to zero
+	    echo "$progName: an error occured in failsafe mode, returning null scores for '$outputPerfDir/$prefix'" 1>&2
+	    scoreAUC=0
+	    scoreC1=0
+	    scoreFinal=0
+	fi
     fi
     echo -e "$scoreFinal\t$scoreAUC\t$scoreC1" >"$outputPerfDir/$prefix.perf"
 else # no obs type at all, or no strategy config at all if meta: all scores = zero
