@@ -106,7 +106,7 @@ else
     mkdir "$outputDir/outerCV-folds"
     evalSafe "generate-random-cross-fold-ids.pl $nbFoldsOuterCV $nbCases \"$outputDir/outerCV-folds/fold\"" "$progName,$LINENO: "
     for foldIndexesFile in "$outputDir/outerCV-folds"/fold*.indexes; do
-	evalSafe "cat \"$truthFile\" | select-lines-nos.pl \"$foldIndexesFile\" 1 >\"${foldIndexesFile%.indexes}.cases\""  "$progName,$LINENO: "
+	generateTruthCasesFile "$outputDir" "${foldIndexesFile%.indexes}.cases" 1 " | select-lines-nos.pl \"$foldIndexesFile\" 1"
     done
 fi
 
