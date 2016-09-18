@@ -95,7 +95,8 @@ for runNo in $(seq 1 $nbRuns); do
 	rm -rf "$runDir/folds" # remove previous folds (especially if previous nbFolds > current nbFolds!!)
 	mkdirSafe "$runDir/folds"
 	evalSafe "generate-random-cross-fold-ids.pl 2 \"$nbCases\" \"$runDir/folds/fold\"" "$progName: "
-	evalSafe "cat \"$goldFile\" | select-lines-nos.pl \"$runDir/folds/fold.1.train.indexes\" 1 > \"$runDir/random.cases\"" "$progName,$LINENO: "
+	generateTruthCasesFile UNUSED "$runDir/random.cases" 1 " |  select-lines-nos.pl \"$runDir/folds/fold.1.train.indexes\" 1 " "$goldFile"
+#	evalSafe "cat \"$goldFile\" | select-lines-nos.pl \"$runDir/folds/fold.1.train.indexes\" 1 > \"$runDir/random.cases\"" "$progName,$LINENO: "
 	rm -rf  "$runDir/folds"
     fi
     evalSafe "apply-multi-configs.sh $resumeParam -p $applyMCParams \"$configsListFile\" \"$runDir/random.cases\" \"$runDir\"" "$progName,$LINENO: "
