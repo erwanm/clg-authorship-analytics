@@ -211,6 +211,7 @@ mkdirSafe "$baggingDir"
 
 readFromParamFile "$outputDir/meta-template.multi-conf" "final_bagging_nbRuns" "$progName,$LINENO: "
 readFromParamFile "$outputDir/meta-template.multi-conf" "final_bagging_returnNbBest" "$progName,$LINENO: "
+readFromParamFile "$outputDir/meta-template.multi-conf" "final_bagging_selectMethod" "$progName,$LINENO: "
 
 
 resumeParam=""
@@ -221,6 +222,18 @@ evalSafe "apply-bagging.sh $resumeParam -o \"$applyMultiConfigsParams -m $output
 
 # final-final-final selection: average mean perf on meta-test fold (real unseen test set) + all data (all configs applied to the same data and more instances)
 
+sortColNo=
+if [ "$final_bagging_selectMethod" == "metaTestSet" ]; then
+    sortColNo=1
+elif [ "$final_bagging_selectMethod" == "fullTrainSet" ]; then
+    sortColNo=2
+elif [ "$final_bagging_selectMethod" == "avgMetaTestSetFullTrainSet" ]; then
+    sortColNo=3
+else
+    echo "$progName,$LINENO: invalid value '$final_bagging_selectMethod' for parameter 'final_bagging_selectMethod'" 1>&2
+    exit 6
+fi
+
 cat "$baggingDir/runs.stats" | while read line; do
     name=$(echo "$line" | cut -f 1)
     meanPerfAll=$(echo "$line" | cut -f 2)
@@ -228,7 +241,7 @@ cat "$baggingDir/runs.stats" | while read line; do
     avg=$(perl -e " print (($meanPerfAll + $meanPerfMetaTestSet) /2); ")
 #    echo "DEBUG: avg( $meanPerfAll , $meanPerfMetaTestSet ) = $avg" 1>&2
     echo -e "$name\t$meanPerfAll\t$meanPerfMetaTestSet\t$avg"
-done | sort -r -g +3 -4 >"$outputDir/best.results"
+done | sort -r -g -k $sortColNo,$sortColNo >"$outputDir/best.results"
 if [ $? -ne 0 ]; then
     echo "$progName: bug line $LINENO" 1>&2
     exit 4

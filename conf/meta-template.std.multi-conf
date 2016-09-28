@@ -20,8 +20,13 @@ metaGenetic_final_returnNbBest=100
 
 metaTestFold_bagging_nbRuns=20
 metaTestFold_bagging_returnNbBest=50
+#metaTestFold_bagging_selectMethod=mean mixedMeanMedianMinusSD
+metaTestFold_bagging_selectMethod=mean
+
 
 final_bagging_nbRuns=20
 final_bagging_returnNbBest=50
+#final_bagging_selectMethod=metaTestSet fullTrainSet avgMetaTestSetFullTrainSet
+final_bagging_selectMethod=metaTestSet
 
 

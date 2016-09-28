@@ -272,6 +272,7 @@ fi
 
 readFromParamFile "$metaMC" "metaTestFold_bagging_nbRuns" "$progName,$LINENO: "
 readFromParamFile "$metaMC" "metaTestFold_bagging_returnNbBest" "$progName,$LINENO: "
+readFromParamFile "$metaMC" "metaTestFold_bagging_selectMethod" "$progName,$LINENO: "
 
 allPrefixes="$outputDir/strategy+best-meta.prefix-list"
 evalSafe "cat \"$outputDir/refactored-strategy-configs.list\" \"$metaDir/best.prefix-list\" > \"$allPrefixes\"" "$progName,$LINENO: "
@@ -283,14 +284,19 @@ if [ $resume -ne 0 ]; then
 fi
 evalSafe "apply-bagging.sh $resumeParam  -o \"$applyMultiConfigsParams -m $outputDir\" \"$metaTestFold_bagging_nbRuns\" \"$allPrefixes\" \"$metaTestCasesFile\" \"$baggingDir\"" "$progName,$LINENO: "
 
-nbMedian=$(( $metaTestFold_bagging_returnNbBest / 2 ))
-nbMeanMinusSD=$(( $metaTestFold_bagging_returnNbBest - $nbMedian ))
-
-#evalSafe "cut -f 1 \"$baggingDir/runs.final-rank\" >\"$outputDir/best-meta-configs.list\"" "$progName,$LINENO: "
-evalSafe "cut -f 1,3 \"$baggingDir/runs.stats\" | sort -r -g +1 -2 | head -n $nbMedian | cut -f 1 >\"$outputDir/best-meta-configs-median.list\"" "$progName,$LINENO: "
-evalSafe "cut -f 1,4 \"$baggingDir/runs.stats\" | sort -r -g +1 -2 | head -n $nbMeanMinusSD | cut -f 1 >\"$outputDir/best-meta-configs-meanMinusSD.list\"" "$progName,$LINENO: "
-# remove duplicates
-evalSafe "cat \"$outputDir/best-meta-configs-median.list\" \"$outputDir/best-meta-configs-meanMinusSD.list\" | sort -u >\"$outputDir/best-meta-configs.list\"" "$progName,$LINENO: "
+if [ "$metaTestFold_bagging_selectMethod" == "mean" ]; then
+    evalSafe "cut -f 1,2 \"$baggingDir/runs.stats\" | sort -r -g -k 2,2 | cut -f 1  >\"$outputDir/best-meta-configs.list\"" "$progName,$LINENO: "
+elif [ "$metaTestFold_bagging_selectMethod" == "mixedMeanMedianMinusSD" ]; then
+    nbMedian=$(( $metaTestFold_bagging_returnNbBest / 2 ))
+    nbMeanMinusSD=$(( $metaTestFold_bagging_returnNbBest - $nbMedian ))
+    evalSafe "cut -f 1,3 \"$baggingDir/runs.stats\" | sort -r -g +1 -2 | head -n $nbMedian | cut -f 1 >\"$outputDir/best-meta-configs-median.list\"" "$progName,$LINENO: "
+    evalSafe "cut -f 1,5 \"$baggingDir/runs.stats\" | sort -r -g +1 -2 | head -n $nbMeanMinusSD | cut -f 1 >\"$outputDir/best-meta-configs-meanMinusSD.list\"" "$progName,$LINENO: "
+    # remove duplicates
+    evalSafe "cat \"$outputDir/best-meta-configs-median.list\" \"$outputDir/best-meta-configs-meanMinusSD.list\" | sort -u >\"$outputDir/best-meta-configs.list\"" "$progName,$LINENO: "
+else
+    echo "$progName,$LINENO: invalid value '$metaTestFold_bagging_selectMethod' for parameter 'metaTestFold_bagging_selectMethod'" 1>&2
+    exit 6
+fi
 
 
 echo "$progName: done."

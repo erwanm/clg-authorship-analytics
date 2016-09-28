@@ -131,7 +131,23 @@ Error message and password prompt
 
 <li>$:/SiteTitle</li>
 
+<li>$:/state/showeditpreview</li>
+
+<li>$:/state/sidebar</li>
+
 <li>$:/state/tab/sidebar--1835078512</li>
+
+<li>$:/state/tag-manager/Concepts</li>
+
+<li>$:/state/tag-manager/Libraries</li>
+
+<li>$:/state/tag-manager/MakingOf</li>
+
+<li>$:/state/tag-manager/Scripts</li>
+
+<li>$:/state/tag-manager/Table of Contents</li>
+
+<li>$:/state/tag-manager/Usage</li>
 
 <li>$:/state/toc/Libraries-CLGAuthorshipAnalytics/Verification/Basic.pm--28507052</li>
 
@@ -162,6 +178,8 @@ Error message and password prompt
 <li>apply-config.sh</li>
 
 <li>apply-multi-configs.sh</li>
+
+<li>Bagging</li>
 
 <li>clg-authorship-analytics</li>
 
@@ -241,6 +259,8 @@ Error message and password prompt
 
 <li>stop-criterion.pl</li>
 
+<li>StrategyTraining</li>
+
 <li>Table of Contents</li>
 
 <li>TODO</li>
@@ -260,6 +280,8 @@ Error message and password prompt
 <li>train-test.sh</li>
 
 <li>train-top-level.sh</li>
+
+<li>TrainingProcess</li>
 
 <li>Usage</li>
 
@@ -7980,8 +8002,32 @@ Error message and password prompt
 <div bag="default" created="20160520172007785" modified="20160520172022716" revision="0" title="$:/SiteTitle">
 <pre>CLG Authorship analytics</pre>
 </div>
-<div created="20160922191545032" modified="20160922191545032" title="$:/state/tab/sidebar--1835078512">
+<div created="20160922204019437" modified="20160922204019437" title="$:/state/showeditpreview">
+<pre>yes</pre>
+</div>
+<div created="20160922204016926" modified="20160927154515464" title="$:/state/sidebar">
+<pre>no</pre>
+</div>
+<div created="20160922191545032" modified="20160927154503900" title="$:/state/tab/sidebar--1835078512">
 <pre>Table of Contents</pre>
+</div>
+<div created="20160922192429253" modified="20160922192429253" title="$:/state/tag-manager/Concepts">
+<pre>open</pre>
+</div>
+<div created="20160922192425245" modified="20160922192425245" title="$:/state/tag-manager/Libraries">
+<pre>open</pre>
+</div>
+<div created="20160922192421545" modified="20160922192421545" title="$:/state/tag-manager/MakingOf">
+<pre>open</pre>
+</div>
+<div created="20160922192408246" modified="20160922192408246" title="$:/state/tag-manager/Scripts">
+<pre>open</pre>
+</div>
+<div created="20160922192359422" modified="20160922192359422" title="$:/state/tag-manager/Table of Contents">
+<pre>open</pre>
+</div>
+<div created="20160922192403757" modified="20160922192403757" title="$:/state/tag-manager/Usage">
+<pre>open</pre>
 </div>
 <div created="20160922191657490" modified="20160922191658721" title="$:/state/toc/Libraries-CLGAuthorshipAnalytics/Verification/Basic.pm--28507052">
 <pre>close</pre>
@@ -7998,10 +8044,10 @@ Error message and password prompt
 <div created="20160922191625904" modified="20160922191909633" title="$:/state/toc/Usage-Libraries-1680752989">
 <pre>close</pre>
 </div>
-<div created="20160922191550304" modified="20160922191908350" title="$:/state/toc/Usage-Scripts-1680752989">
-<pre>close</pre>
+<div created="20160922191550304" modified="20160923234954333" title="$:/state/toc/Usage-Scripts-1680752989">
+<pre>open</pre>
 </div>
-<div list="clg-authorship-analytics" title="$:/StoryList">
+<div list="TrainingProcess Bagging clg-authorship-analytics" title="$:/StoryList">
 <pre></pre>
 </div>
 <div plugin-type="info" title="$:/temp/info-plugin" type="application/json">
@@ -8219,7 +8265,23 @@ Error message and password prompt
 
 </pre>
 </div>
-<div bag="default" caption="Overview" created="20160520172058387" modified="20160922192043176" revision="0" tags="[[Table of Contents]]" title="clg-authorship-analytics">
+<div created="20160926191250245" modified="20160926193525950" tags="Concepts" title="Bagging">
+<pre>[[Bootstrap aggregating|https://en.wikipedia.org/wiki/Bootstrap_aggregating]], or ''bagging'', consists in running the same model(s) (ConfigurationFile and possibly weka model) multiple times using different random subsets of instances (we use 50% subsets). 
+
+This step is intended to smooth the variance in the evaluated performance of the models, especially in cases when the number of instances is low, or when some instances might be particularly easier to classify than others. Bagging is used several times during the TrainingProcess (especially after the [[Genetic process]]), in order to:
+
+* Evaluate the models more accurately, in order to rank the best ones in a reliable way.
+* Assess the variance in performance. This information is not currently used by the software, but made available to the user. This is useful to detect overfitting, or evaluate the level of error in predicted answers.
+
+The bagging process is performed for a set of [[configurations|ConfigurationFile]] (models) by [[apply-bagging.sh]]. At the end, a summary file named ``runs.stats`` is generated, where every line is:
+
+```
+&lt;config path prefix&gt; &lt;mean&gt; &lt;median&gt; &lt;standard deviation (sd)&gt; &lt;mean - sd&gt;
+```
+
+</pre>
+</div>
+<div bag="default" caption="Overview" created="20160520172058387" modified="20160922215314994" revision="0" tags="[[Table of Contents]]" title="clg-authorship-analytics">
 <pre>! Overview
 
 The package contains a set of scripts and libraries to perform author-identification related tasks. 
@@ -8238,7 +8300,7 @@ The task of author verification consists primarily in answering the following qu
 The current version of the package provides:
 
 * Three author [[verification strategies|Verification Strategies]]
-* , as well as a system which applies a genetic process in order to:
+* A system which applies a genetic process in order to:
 
 * find the best verification systems (in short, classifiers based on variants of one of the strategies),
 * and combine a selection of these into a meta-classifier (stacked generalization has proved to be a reliable approach at the PAN 2015 competition).
@@ -8412,7 +8474,7 @@ The class is specified by a string id.
 
 </pre>
 </div>
-<div bag="default" created="20160704145541721" modified="20160704145552354" revision="0" tags="Usage" title="Concepts">
+<div bag="default" color="#3ba2ea" created="20160704145541721" modified="20160922192431373" revision="0" tags="Usage" title="Concepts">
 <pre></pre>
 </div>
 <div bag="default" created="20160701194850254" modified="20160704145540457" revision="0" tags="Concepts" title="ConfigurationFile">
@@ -8502,14 +8564,16 @@ By definition, the genetic process is used only in the training stage.
 * Several scripts accept an option ``-P &lt;dest dir&gt;``, which is intended to process tasks in parallel. It is meant to work with the script ``task-distrib-daemon.sh`` from package ``erw-bash-commons`` (see [[Requirements]]): the principle is that the individual tasks are written as scripts in a predetermined directory ``dest dir``, where ``task-distrib-daemon.sh`` will execute them in parallel when a slot is available.
 * Observations can be either precomputed with [[prepare-input-data.sh]] or computed on the fly. When using distributed computing, it is safer to use the former option in order to avoid any concurrency issue when the count files are written to disk (there is no mechanism in place in the code to deal with concurrency issues).</pre>
 </div>
-<div created="20160922191611219" modified="20160922191621462" tags="Usage" title="Libraries">
+<div color="#3ba2ea" created="20160922191611219" modified="20160922192427547" tags="Usage" title="Libraries">
 <pre></pre>
 </div>
-<div bag="default" created="20160922162205040" modified="20160922162212990" revision="0" tags="[[Table of Contents]]" title="MakingOf">
+<div bag="default" color="#3ba2ea" created="20160922162205040" modified="20160922192423645" revision="0" tags="[[Table of Contents]]" title="MakingOf">
 <pre></pre>
 </div>
-<div bag="default" created="20160704145432693" modified="20160704150225140" revision="0" tags="TODO Concepts" title="Meta-classifier">
-<pre></pre>
+<div bag="default" created="20160704145432693" modified="20160926142845992" revision="0" tags="Concepts" title="Meta-classifier">
+<pre>!! Meta-training
+
+This stage is performed after the StrategyTraining stage. Training the meta-classifier consists in finding an optimal way to combine the results obtained by the N best individual strategy [[configurations|ConfigurationFile]], for all the possible [[strategies|Verification Strategies]] (e.g. if three strategies are trained, there are N x 3 configurations as possible features for the meta-training). Among these, the strategy configurations which prove useful are selected, the other ones are discarded (features selection). The method to combine them is also selected during this stage. The result of the process is a set of M best //meta-models//, each model being a combination of a selection of strategy configurations. Individual strategy configurations are also evaluated, thus it is possible that the best results are achieved by a single strategy model.</pre>
 </div>
 <div bag="default" created="20160922201503000" revision="0" tags="Scripts" title="meta-training-extract-scores.pl" type="text/plain">
 <pre>Usage: meta-training-extract-scores.pl [options] &lt;cases file&gt; &lt;input dir&gt; &lt;config file&gt;
@@ -8727,7 +8791,7 @@ The different dependencies can be configured using an in-house basic package man
 
 </pre>
 </div>
-<div bag="default" created="20160623135401691" modified="20160701145519471" revision="0" tags="Usage" title="Scripts">
+<div bag="default" color="#3ba2ea" created="20160623135401691" modified="20160922192413413" revision="0" tags="Usage" title="Scripts">
 <pre>Every executable script has a ``-h`` option which prints a short description (inline help message). This section provides the content printed by every script in the package for convenience.
 </pre>
 </div>
@@ -8749,6 +8813,15 @@ OPTIONS:
   -c &lt;col no&gt; default: 1
   -l &lt;file&gt; write detailed results by window to the file.
 
+</pre>
+</div>
+<div created="20160926140956749" modified="20160926142154057" tags="Concepts" title="StrategyTraining">
+<pre>Every [[strategy|Verification Strategies]] is trained individually using the [[genetic algorithm|Genetic process]]. For every strategy, when the stop criterion is met (no more improvement), the //N// &quot;best strategy [[configurations|ConfigurationFile]]&quot; are output. These are //strategy models//, which contain the configuration itself and (possibly) a Weka model (trained with the features obtained from this configuration).
+
+The strategy training includes two parts:
+
+* At the individual level, i.e. for an individual [[strategy configuration|ConfigurationFile]], a ML model is trained (with Weka)  from the features obtained with this [[strategy|Verification Strategies]].
+* at the highest level, the parameters are trained using [[genetic algorithm|Genetic process]].
 </pre>
 </div>
 <div bag="default" color="#3ba2ea" created="20160623134748850" list="clg-authorship-analytics Requirements Usage [[User Guide]] About" modified="20160922162228681" revision="0" tags="$:/tags/SideBar MakingOf" title="Table of Contents">
@@ -8953,7 +9026,56 @@ TODO
 
 </pre>
 </div>
-<div bag="default" created="20160623140437077" list="Concepts Scripts [Genetic process]]" modified="20160922192014891" revision="0" tags="[[Table of Contents]]" title="Usage" type="">
+<div created="20160922203944271" modified="20160928003508873" tags="Concepts" title="TrainingProcess">
+<pre>
+There are two main parts in the training:
+
+# [[StrategyTraining]]
+# [[Meta-training|Meta-classifier]]
+
+Both are performed using the [[Genetic process]]. The combination of [[genetic learning|Genetic process]] and [[meta-classification|Meta-classifier]] generates constraints which make a standard cross-validation setting difficult to implement. In short, there are three specific features in this process:
+
+* The [[Genetic process]] is computationally costly, thus it should be carried out only a minimum number of times. The [[Genetic process]] is also non-deterministic, therefore it is unlikely that several runs on the same data would give exactly the same model.
+* The [[meta-training|Meta-classifier]] stage requires fresh (unseen) instances, in order to avoid overfitting. This implies that the strategy training stage and the [[meta-training|Meta-classifier]] stage should use independent sets of instances.
+* Finally, we need another set of fresh instances to select the best meta-model(s) at the end of the training process (again, to avoid overfitting).
+
+This is why the system proceeds as follows:
+
+# At the highest level, the data is split two-folds, and the whole training is performed twice.
+# For each [[&quot;outer-fold&quot;|train-outerCV-1fold.sh]]:
+## ''Strategy training set''. 50% of the training data is used as training set for the [[strategy training stage|StrategyTraining]]. the N best individual strategy [[configurations|ConfigurationFile]] (and possibly weka models) are selected using only these instances.
+## ''Meta training set.'' 25% of the training data is used as training set for the [[meta-training|Meta-classifier]] stage.
+## ''Validation set'' (also called meta-test set in the code sometimes). 25% of the training data is used as test set for the [[meta-training|Meta-classifier]] stage, i.e. as final test set for the whole process. The final best meta-[[configurations|ConfigurationFile]] (and possibly weka models) are selected using these instances.
+
+See [[the original paper published at PAN 2015|https://hal.archives-ouvertes.fr/hal-01226030/document]] (section 3.2 &quot;ML Settings&quot;) for detailed explanations about this choice.
+
+
+! Implementation
+
+!! [[train-top-level.sh]] 
+
+# [[train-top-level.sh]] splits the training data randomly into ''two'' subsets //A// and //B//. Then [[train-outerCV-1fold.sh]] is called twice: 
+## With //A// as [[strategy training|StrategyTraining]] set and //B// as [[meta-training|Meta-classifier]] set + validation set, 
+## With //B// as [[strategy training|StrategyTraining]] set and //A// as [[meta-training|Meta-classifier]] set + validation set.
+# After extracting/copying the best models ([[ConfigurationFile]] and - possibly - weka model) from both folds, the final bagging stage is performed on the whole training data. ''TODO''
+
+* Of course, the whole training data includes the half which was used as training data in the fold where the model comes from.
+
+
+
+!! [[train-outerCV-1fold.sh]]
+
+# [[train-outerCV-1fold.sh]] calls [[train-multi-stages.sh]] to perform the [[StrategyTraining]] for every strategy using only the strategy training set. Then:
+#  The predictions of the N best strategies (for every strategy) are computed on all the instances in the second half of the training data. These instances are then split randomly between the [[meta-training|Meta-classifier]] set and the validation set.
+# [[train-outerCV-1fold.sh]] calls [[train-multi-stages.sh]], this time to perform the [[meta-training|Meta-classifier]] stage, using only the meta training set.
+# The predictions of the N best meta-[[configurations|ConfigurationFile]] are computed on all the other instances, i.e. both the strategy training set and the validation set.
+# Finally, [[Bagging]] is performed on the validation set (also called meta-test set), in order to evaluate the models on fresh (unseen) instances. The results can also be used to assess the variance in performance (see [[Bagging]]).
+
+
+''NOT FINISHED''
+</pre>
+</div>
+<div bag="default" color="#3ba2ea" created="20160623140437077" icon="" list="Concepts Scripts [Genetic process]]" modified="20160922192418183" revision="0" tags="[[Table of Contents]]" title="Usage" type="">
 <pre>The programs in this package can be used in many different ways, although not all of them are properly tested and documented. The ``tests`` directory contains a few examples which show how to use it.
 
 ! Command line scripts
@@ -9013,14 +9135,22 @@ See [[Verification Strategies]].
 
 </pre>
 </div>
-<div bag="default" created="20160623144844641" modified="20160922191846803" revision="0" tags="Concepts" title="Verification Strategies">
-<pre>In this system, we call ''verification strategy'' a program which:
+<div bag="default" created="20160623144844641" modified="20160926142330245" revision="0" tags="Concepts" title="Verification Strategies">
+<pre>!! Definition
+
+In this system, we call ''verification strategy'' a program which:
 
 * takes as input two sets of documents, all the documents in one set being by the same author
 * returns a set of ''feature values'' which are supposed to be relevant for answering the question of whether the two sets of documents are by the same author. It is possible for a verification strategy to return only one feature value which answers the question directly, but in general the output is a set of features (the meaning of which depends on the strategy). This set of features is intended to be used as input to a ML learning algorithm.
+* A strategy can have (multiple) parameters specified in a ConfigurationFile. These parameters can be trained using the [[Genetic process]].
 
-* Verification strategies are implemented as subclasses of [[CLGAuthorshipAnalytics/Verification/VerifStrategy.pm]]. See [[Libraries]].
-* The package contains [[scripts|Scripts]] for learning or applying from a set of features using Weka.
+!! Implementation
+
+* The package is intended to allow various kinds of strategies, and to allow the possibility to add new strategies (although this might not be straightforward in the current implementation).
+* The current verification strategies are implemented as subclasses of [[CLGAuthorshipAnalytics/Verification/VerifStrategy.pm]]. See [[Libraries]].
+* The package contains [[scripts|Scripts]] for:
+** Learning or applying from a set of features using Weka.
+** Training the parameters of a strategy using a simple [[genetic algorithm|Genetic process]]. See StrategyTraining.
 </pre>
 </div>
 
