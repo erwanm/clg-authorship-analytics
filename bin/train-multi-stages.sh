@@ -125,6 +125,23 @@ echo "$progName: calling 'train-multi-runs.sh $params \"$outputDir\" \"$casesFil
 evalSafe "train-multi-runs.sh $params \"$outputDir\" \"$casesFile\" \"$prevStageBest\""  "$progName,$LINENO: "
 
 
+bestConfigsRunsList="$outputDir/runs-best-configs.list"
+
+if [ "$indivGenetic_final_selectMethod" == "mean" ]; then
+    evalSafe "cut -f 1,2 \"$outputDir/runs/runs.stats\" | sort -r -g -k 2,2 | cut -f 1  >\"$bestConfigsRunsList\"" "$progName,$LINENO: "
+elif [ "$indivGenetic_final_selectMethod" == "mixedMeanMedianMinusSD" ]; then
+    nbMedian=$(( $metaTestFold_bagging_returnNbBest / 2 ))
+    nbMeanMinusSD=$(( $metaTestFold_bagging_returnNbBest - $nbMedian ))
+    evalSafe "cut -f 1,3 \"$baggingDir/runs.stats\" | sort -r -g +1 -2 | head -n $nbMedian | cut -f 1 >\"$outputDir/runs-best-configs-median.list\"" "$progName,$LINENO: "
+    evalSafe "cut -f 1,5 \"$baggingDir/runs.stats\" | sort -r -g +1 -2 | head -n $nbMeanMinusSD | cut -f 1 >\"$outputDir/runs-best-configs-meanMinusSD.list\"" "$progName,$LINENO: "
+    # remove duplicates
+    evalSafe "cat \"$outputDir/runs-best-configs-median.list\" \"$outputDir/runs-best-configs-meanMinusSD.list\" | sort -u >\"$bestConfigsRunsList\"" "$progName,$LINENO: "
+else
+    echo "$progName,$LINENO: invalid value '$indivGenetic_final_selectMethod' for parameter 'indivGenetic_final_selectMethod'" 1>&2
+    exit 6
+fi
+
+
 
 # re-train selected models on all the cases
 echo "$progName: re-training selected configs using all cases AND re-cross-validating to obtain unbiased predictions"
@@ -151,7 +168,7 @@ casesForRetrainingFile="$bestDir/cases"
 generateTruthCasesFile "$outputDir" "$casesForRetrainingFile" 0 " | filter-column.pl \"$casesFile\" 1 1" # different from truthFile above: 0/1 instead of Y/N
 waitFile=$(mktemp --tmpdir="$bestDir" "$progName.main.wait.XXXXXXXXX") # not using local /tmp because different in case running on cluster (unsure if it's useful? but apparently solved a bug??)
 #echo "DEBUG $waitFile" 1>&2
-cat "$outputDir/runs/runs.final-rank" | cut -f 1 | while read configFile; do
+cat "$bestConfigsRunsList" | cut -f 1 | while read configFile; do
     confNoStr=$(printf "%04d" $confNo)
     if [ $resume -eq 0 ] || [ ! -d "$bestDir/$confNoStr.model" ] || [ ! -s "$bestDir/$confNoStr/predicted.answers" ] ; then
 	evalSafe "cat \"$configFile\" >\"$bestDir/$confNoStr.conf\""  "$progName,$LINENO: "

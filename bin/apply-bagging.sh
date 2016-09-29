@@ -119,14 +119,3 @@ rm -f "$tmp"
 echo "$progName: main loop done, extracting stats"
 # sort to make sure the values are sorted by config id before computing ranks
 evalSafe "num-stats.pl -s \"mean median stdDev meanMinusStdDev\" -c 2 \"$destDir/runs.perf\" | sort +0 -1 > \"$destDir/runs.stats\"" "$progName,$LINENO: "
-#evalSafe "cat \"$destDir/runs.stats\" | rank-with-ties.pl 2 rev | cut -f 1,5 | sort +0 -1 >\"$destDir/runs.mean.rank\"" "$progName,$LINENO: "
-#evalSafe "cat \"$destDir/runs.stats\" | rank-with-ties.pl 3 rev | cut -f 1,5 | sort +0 -1 >\"$destDir/runs.median.rank\"" "$progName,$LINENO: "
-#evalSafe "cat \"$destDir/runs.stats\" | rank-with-ties.pl 4 | cut -f 1,5 | sort +0 -1 >\"$destDir/runs.stdDev.rank\"" "$progName,$LINENO: "
-
-#headPart=""
-#if [ ! -z "$nbBest" ]; then
-#    headPart=" | head -n $nbBest"
-#fi
-# remark: lowest rank = best config
-#evalSafe "cat \"$destDir\"/runs.*.rank | avg-by-group.pl -g 0 -e 3 1 | sort -g +1 -2 $headPart >\"$destDir/runs.final-rank\"" "$progName,$LINENO: "
-#echo "$progName: done."
