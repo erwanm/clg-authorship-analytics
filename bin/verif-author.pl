@@ -114,11 +114,23 @@ if (defined($configAsString)) {
 
 $config->{logging} = $opt{l} || $opt{L};
 
-# word vocab resources
-if ($vocabResourcesStr) {
-    $config->{wordVocab} = {} if (!defined($config->{wordVocab})); # this way it is possible to define some resources in the config file and some other on the command line
-    parseParamsFromString($vocabResourcesStr, $config->{wordVocab}, $logger, ":");
+
+my $vocabResources ={};
+if (defined($config->{wordVocab})) { # in case vocab resourcse specified in the config file, refactor the hash with 'filename'
+    foreach my $id (keys %{$config->{wordVocab}}) {
+	$vocabResources->{$id}->{filename} = $config->{wordVocab}->{$id};
+    }
 }
+# word vocab resources, command line
+if ($vocabResourcesStr) {
+    my @resourcesPairs = split (";", $vocabResourcesStr);
+    foreach my $pair (@resourcesPairs) {
+	my ($id, $file) = split (":", $pair);
+	$vocabResources->{$id}->{filename} = $file;
+    }
+}
+$config->{wordVocab} = $vocabResources;
+
 
 # extract input sets of documents
 my @docsPairs;
