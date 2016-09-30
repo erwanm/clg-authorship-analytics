@@ -124,7 +124,7 @@ fi
 echo "$progName: calling 'train-multi-runs.sh $params \"$outputDir\" \"$casesFile\" \"$prevStageBest\"'"
 evalSafe "train-multi-runs.sh $params \"$outputDir\" \"$casesFile\" \"$prevStageBest\""  "$progName,$LINENO: "
 
-
+readFromParamFile "$configFile" "indivGenetic_final_selectMethod" "$progName,$LINENO: "
 bestConfigsRunsList="$outputDir/runs-best-configs.list"
 
 if [ "$indivGenetic_final_selectMethod" == "mean" ]; then
