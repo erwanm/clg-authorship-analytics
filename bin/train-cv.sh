@@ -110,14 +110,6 @@ prefix=$(basename ${configFile%.conf})
 #echo -en "\r$prefix / $nbConfigs: "
 mkdirSafe "$outputPerfDir/$prefix" "$progName,$LINENO: "
 
-#if [ "$strategy" != "meta" ]; then
-#    specificPreparedInputDir=$(getPreparedSpecificDir "$configFile" "$inputDir/input" "input")
-#else
-#    specificPreparedInputDir="$inputDir" # not used
-#fi
-
-# test if there is at least one obs type (OR indiv config!)
-#readFromParamFile "$configFile" "obsTypesList" "$progName,$LINENO: " "=" 1 # no warning if empty
 if [ "$strategy" != "meta" ]; then
     obsTypesListOrStrategiesList=$(echo "$configFile" | extractPossibleObsTypes)
 else
