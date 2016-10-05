@@ -91,6 +91,7 @@ echo "$progName: stagesIds = $stagesIds; config file=$configFile"
 readFromParamFile "$configFile" "${prefixParams}_final_nbFolds" "$progName,$LINENO: " "" "" "" "finalNbFolds"
 readFromParamFile "$configFile" "${prefixParams}_final_nbRuns" "$progName,$LINENO: " "" "" "" "finalNbRuns"
 readFromParamFile "$configFile" "${prefixParams}_final_returnNbBest" "$progName,$LINENO: " "" "" "" "finalNbBest"
+readFromParamFile "$configFile" "${prefixParams}_final_selectMethod" "$progName,$LINENO: "
 readFromParamFile "$configFile" "strategy" "$progName,$LINENO: "
 
 
@@ -124,7 +125,6 @@ fi
 echo "$progName: calling 'train-multi-runs.sh $params \"$outputDir\" \"$casesFile\" \"$prevStageBest\"'"
 evalSafe "train-multi-runs.sh $params \"$outputDir\" \"$casesFile\" \"$prevStageBest\""  "$progName,$LINENO: "
 
-readFromParamFile "$configFile" "indivGenetic_final_selectMethod" "$progName,$LINENO: "
 bestConfigsRunsList="$outputDir/runs-best-configs.list"
 
 if [ "$indivGenetic_final_selectMethod" == "mean" ]; then
