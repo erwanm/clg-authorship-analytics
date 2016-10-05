@@ -91,7 +91,7 @@ echo "$progName: stagesIds = $stagesIds; config file=$configFile"
 readFromParamFile "$configFile" "${prefixParams}_final_nbFolds" "$progName,$LINENO: " "" "" "" "finalNbFolds"
 readFromParamFile "$configFile" "${prefixParams}_final_nbRuns" "$progName,$LINENO: " "" "" "" "finalNbRuns"
 readFromParamFile "$configFile" "${prefixParams}_final_returnNbBest" "$progName,$LINENO: " "" "" "" "finalNbBest"
-readFromParamFile "$configFile" "${prefixParams}_final_selectMethod" "$progName,$LINENO: "
+readFromParamFile "$configFile" "${prefixParams}_final_selectMethod" "$progName,$LINENO: " "" "" "" "finalSelectMethod"
 readFromParamFile "$configFile" "strategy" "$progName,$LINENO: "
 
 
@@ -127,9 +127,9 @@ evalSafe "train-multi-runs.sh $params \"$outputDir\" \"$casesFile\" \"$prevStage
 
 bestConfigsRunsList="$outputDir/runs-best-configs.list"
 
-if [ "$indivGenetic_final_selectMethod" == "mean" ]; then
+if [ "$finalSelectMethod" == "mean" ]; then
     evalSafe "cut -f 1,2 \"$outputDir/runs/runs.stats\" | sort -r -g -k 2,2 | cut -f 1  >\"$bestConfigsRunsList\"" "$progName,$LINENO: "
-elif [ "$indivGenetic_final_selectMethod" == "mixedMeanMedianMinusSD" ]; then
+elif [ "$finalSelectMethod" == "mixedMeanMedianMinusSD" ]; then
     nbMedian=$(( $metaTestFold_bagging_returnNbBest / 2 ))
     nbMeanMinusSD=$(( $metaTestFold_bagging_returnNbBest - $nbMedian ))
     evalSafe "cut -f 1,3 \"$baggingDir/runs.stats\" | sort -r -g +1 -2 | head -n $nbMedian | cut -f 1 >\"$outputDir/runs-best-configs-median.list\"" "$progName,$LINENO: "
@@ -137,7 +137,7 @@ elif [ "$indivGenetic_final_selectMethod" == "mixedMeanMedianMinusSD" ]; then
     # remove duplicates
     evalSafe "cat \"$outputDir/runs-best-configs-median.list\" \"$outputDir/runs-best-configs-meanMinusSD.list\" | sort -u >\"$bestConfigsRunsList\"" "$progName,$LINENO: "
 else
-    echo "$progName,$LINENO: invalid value '$indivGenetic_final_selectMethod' for parameter 'indivGenetic_final_selectMethod'" 1>&2
+    echo "$progName,$LINENO: invalid value '$finalSelectMethod' for parameter '${prefixParams}_final_selectMethod'" 1>&2
     exit 6
 fi
 
