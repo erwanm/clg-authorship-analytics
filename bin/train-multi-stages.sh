@@ -117,7 +117,7 @@ for stageId in $stagesIds; do
     prevStageBest="$outputDir/$stageId/best-configs.res"
 done
 
-params="$constantParams -x $finalNbRuns -f $finalNbFolds -b $finalNbBest"
+params="$constantParams -x $finalNbRuns -f $finalNbFolds"
 if [ ! -z "$parallelPrefix"  ]; then
     params="$params -P \"$parallelPrefix.runs\""
 fi
@@ -128,10 +128,10 @@ evalSafe "train-multi-runs.sh $params \"$outputDir\" \"$casesFile\" \"$prevStage
 bestConfigsRunsList="$outputDir/runs-best-configs.list"
 
 if [ "$finalSelectMethod" == "mean" ]; then
-    evalSafe "cut -f 1,2 \"$outputDir/runs/runs.stats\" | sort -r -g -k 2,2 | cut -f 1  >\"$bestConfigsRunsList\"" "$progName,$LINENO: "
+    evalSafe "cut -f 1,2 \"$outputDir/runs/runs.stats\" | sort -r -g -k 2,2 | head -n $finalNbBest | cut -f 1  >\"$bestConfigsRunsList\"" "$progName,$LINENO: "
 elif [ "$finalSelectMethod" == "mixedMeanMedianMinusSD" ]; then
-    nbMedian=$(( $metaTestFold_bagging_returnNbBest / 2 ))
-    nbMeanMinusSD=$(( $metaTestFold_bagging_returnNbBest - $nbMedian ))
+    nbMedian=$(( $finalNbBest / 2 ))
+    nbMeanMinusSD=$(( $finalNbBest - $nbMedian ))
     evalSafe "cut -f 1,3 \"$baggingDir/runs.stats\" | sort -r -g +1 -2 | head -n $nbMedian | cut -f 1 >\"$outputDir/runs-best-configs-median.list\"" "$progName,$LINENO: "
     evalSafe "cut -f 1,5 \"$baggingDir/runs.stats\" | sort -r -g +1 -2 | head -n $nbMeanMinusSD | cut -f 1 >\"$outputDir/runs-best-configs-meanMinusSD.list\"" "$progName,$LINENO: "
     # remove duplicates

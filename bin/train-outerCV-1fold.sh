@@ -285,7 +285,7 @@ fi
 evalSafe "apply-bagging.sh $resumeParam  -o \"$applyMultiConfigsParams -m $outputDir\" \"$metaTestFold_bagging_nbRuns\" \"$allPrefixes\" \"$metaTestCasesFile\" \"$baggingDir\"" "$progName,$LINENO: "
 
 if [ "$metaTestFold_bagging_selectMethod" == "mean" ]; then
-    evalSafe "cut -f 1,2 \"$baggingDir/runs.stats\" | sort -r -g -k 2,2 | cut -f 1  >\"$outputDir/best-meta-configs.list\"" "$progName,$LINENO: "
+    evalSafe "cut -f 1,2 \"$baggingDir/runs.stats\" | sort -r -g -k 2,2 | head -n $metaTestFold_bagging_returnNbBest | cut -f 1  >\"$outputDir/best-meta-configs.list\"" "$progName,$LINENO: "
 elif [ "$metaTestFold_bagging_selectMethod" == "mixedMeanMedianMinusSD" ]; then
     nbMedian=$(( $metaTestFold_bagging_returnNbBest / 2 ))
     nbMeanMinusSD=$(( $metaTestFold_bagging_returnNbBest - $nbMedian ))

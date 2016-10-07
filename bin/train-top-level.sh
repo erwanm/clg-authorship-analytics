@@ -205,6 +205,7 @@ done
 
 
 # final-final bagging from both folds
+echo "$progName: last stage: bagging for all data and all best models."
 
 baggingDir="$outputDir/final-bagging"
 mkdirSafe "$baggingDir"
