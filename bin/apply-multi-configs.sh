@@ -146,11 +146,11 @@ waitFilesList "$progName: applying configs/models '$configsListFile' to '$casesF
 rm -f  "$waitFile" "$onlyCasesFile"
 
 # copy the answers where they are expected by meta-training-extract-scores.pl (not too sure, see also apply-config.sh)
-# current state: playing it safe by keeping the two versions
 cat "$configsListFile" | while read prefix; do
     confId=$(basename "$prefix")
     id="${outputIdPrefix}${confId}"
     cat "$destDir/$id/predicted.answers" >"$destDir/$id.answers"
+    rm -rf "$destDir/$id" # update oct 16: remove dir to save space
 done
 
 echo "$progName: done."
