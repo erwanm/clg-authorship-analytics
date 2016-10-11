@@ -19,5 +19,5 @@ if [ ! -d "$scoresDir" ]; then
     fi
 fi
 echo "$0 info: printing scores tables to dir '$scoresDir'"
-eval "verif-author.pl -i rw $logOpt -p $scoresDir -d tests/data/pan14.impostors tests/009-GI.conf tests/data/english-20-cases/EN001/known01.txt tests/data/english-20-cases/EN001/unknown.txt"
+eval "verif-author.pl $logOpt -p $scoresDir -d tests/data/pan14.impostors tests/009-GI.conf tests/data/english-20-cases/EN001/known01.txt tests/data/english-20-cases/EN001/unknown.txt"
 

@@ -69,15 +69,15 @@ sub usage {
 	print $fh "     -p <dir> if specified, for every case processed the raw scores table is written\n";
 	print $fh "        to file <dir>/<NNN>.scores, where <NNN> is the number of the case in the\n";
 	print $fh "        input list (if reading input cases from STDIN) or '001' (if single case).\n";
-	print $fh "     -i <r|w|rw> allow verif strategy to read/write/both to/from resources disk;\n";
-	print $fh "        this is currently only used by the impostors strategy for pre-sim values.\n";
+#	print $fh "     -i <r|w|rw> allow verif strategy to read/write/both to/from resources disk;\n";
+#	print $fh "        this is currently only used by the impostors strategy for pre-sim values.\n";
 	print $fh "\n";
 }
 
 
 # PARSING OPTIONS
 my %opt;
-getopts('hl:L:mcv:sd:p:i:', \%opt ) or  ( print STDERR "Error in options" &&  usage(*STDERR) && exit 1);
+getopts('hl:L:mcv:sd:p:', \%opt ) or  ( print STDERR "Error in options" &&  usage(*STDERR) && exit 1);
 usage(*STDOUT) && exit 0 if $opt{h};
 print STDERR "Either 1 or 3 arguments expected, but ".scalar(@ARGV)." found: ".join(" ; ", @ARGV)  && usage(*STDERR) && exit 1 if ((scalar(@ARGV) != 1) && (scalar(@ARGV) != 3));
 
@@ -90,7 +90,7 @@ my $vocabResourcesStr = $opt{v};
 my $configAsString=$opt{s};
 my $datasetsResourcesPath=$opt{d};
 my $printScoreDir = $opt{p};
-my $strategyDiskAccess = $opt{i};
+#my $strategyDiskAccess = $opt{i};
 
 # init log
 my $logger;
@@ -157,8 +157,9 @@ $config->{datasetResources} = $datasetsResourcesPath;
 #      currently used only for pre-sim values for the impostors strategy
 #     rationale: this script is not supposed to deal with strategy-specific options, but on the other hand
 #                reading/writing to disk is not something which should be specified in the config file
-$config->{diskReadAccess} = (defined($strategyDiskAccess) && (($strategyDiskAccess eq "r") || ($strategyDiskAccess eq "rw"))) ? 1 : 0;
-$config->{diskWriteAccess} = (defined($strategyDiskAccess) && (($strategyDiskAccess eq "w") || ($strategyDiskAccess eq "rw"))) ? 1 : 0;
+#     UPDATE Oct 16: currently not used by any strategy, might be needed later?? commented out for now.
+# $config->{diskReadAccess} = (defined($strategyDiskAccess) && (($strategyDiskAccess eq "r") || ($strategyDiskAccess eq "rw"))) ? 1 : 0;
+# $config->{diskWriteAccess} = (defined($strategyDiskAccess) && (($strategyDiskAccess eq "w") || ($strategyDiskAccess eq "rw"))) ? 1 : 0;
 
 $logger->trace("config content = \n".Dumper($config)) if (defined($logger));
 my $strategy = newVerifStrategyFromId($config->{strategy}, $config, 1);

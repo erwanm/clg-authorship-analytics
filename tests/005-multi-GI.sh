@@ -28,5 +28,5 @@ eval "sim-collections-doc-by-doc.pl $logOpt -R BASENAME  -r '$vocabResources' -o
 echo "$0: apply impostors strategy"
 for d in "$workDir"/english-20-cases/*/; do 
     echo "$d/known01.txt $d/unknown.txt"
-done | eval "verif-author.pl -c -v '$vocabResources' -i rw $logOpt -p $scoresDir -d tests/data/pan14.impostors tests/005-multi-GI.conf"
+done | eval "verif-author.pl -c -v '$vocabResources' $logOpt -p $scoresDir -d tests/data/pan14.impostors tests/005-multi-GI.conf"
 

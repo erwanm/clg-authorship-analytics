@@ -60,7 +60,7 @@ dieIfNoSuchFile "$resourcesOptionsFile" "$progName,$LINENO: "
 readFromParamFile "$resourcesOptionsFile" "vocabResources"  "$progName,$LINENO: "
 readFromParamFile "$resourcesOptionsFile" "useCountFiles"  "$progName,$LINENO: "
 readFromParamFile "$resourcesOptionsFile" "datasetResourcesPath"  "$progName,$LINENO: "
-readFromParamFile "$resourcesOptionsFile" "resourcesAccess"  "$progName,$LINENO: "
+#readFromParamFile "$resourcesOptionsFile" "resourcesAccess"  "$progName,$LINENO: "
 
 dieIfNoSuchDir "$datasetResourcesPath"  "$progName,$LINENO: "
 
@@ -75,7 +75,8 @@ else
 	echo "$progName error: invalid value for parameter 'strategy': '$strategy'" 1>&2
 	exit 1
     fi
-    verifParams="-i $resourcesAccess -v '$vocabResources' -d '$datasetResourcesPath/' "
+#    verifParams="-i $resourcesAccess -v '$vocabResources' -d '$datasetResourcesPath/' "
+    verifParams=" -v '$vocabResources' -d '$datasetResourcesPath/' "
     if [ "$useCountFiles" == "1" ]; then
 	verifParams="-c $verifParams"
     fi

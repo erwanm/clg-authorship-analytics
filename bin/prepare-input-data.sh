@@ -346,7 +346,7 @@ done
 echo "$progName: writing resources options file"
 echo >"$destDir/$resourcesOptionsFilename"
 echo "useCountFiles=1" >>"$destDir/$resourcesOptionsFilename" # use count files (otherwise there's no point precomputing them)
-echo "resourcesAccess=r" >>"$destDir/$resourcesOptionsFilename" # only read access, normally everything has been pre-computed
+#echo "resourcesAccess=r" >>"$destDir/$resourcesOptionsFilename" # only read access, normally everything has been pre-computed
 echo "datasetResourcesPath=$destDir/resources" >>"$destDir/$resourcesOptionsFilename"
 echo "vocabResources=$vocabResources" >>"$destDir/$resourcesOptionsFilename"
 

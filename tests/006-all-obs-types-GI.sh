@@ -19,5 +19,5 @@ if [ ! -d "$scoresDir" ]; then
 	echo "Error cannot create dir '$scoresDir'" 1>&2
     fi
 fi
-eval "verif-author.pl -v '$vocabResources' -i rw $logOpt -p $scoresDir -d tests/data/pan14.impostors tests/005-multi-GI.conf tests/data/english-20-cases/EN001/known01.txt tests/data/english-20-cases/EN001/unknown.txt"
+eval "verif-author.pl -v '$vocabResources' $logOpt -p $scoresDir -d tests/data/pan14.impostors tests/005-multi-GI.conf tests/data/english-20-cases/EN001/known01.txt tests/data/english-20-cases/EN001/unknown.txt"
 
