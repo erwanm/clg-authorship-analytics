@@ -121,7 +121,7 @@ cat "$configsListFile" | while read prefix; do
     id="${outputIdPrefix}${confId}"
     confDir="$destDir/$id"
     if [ $computePerf -eq 0 ]; then
-	fileToCheck="$confDir/predicted.answers"
+	fileToCheck="$confDir.answers"
     else
 	fileToCheck="$confDir.perf"
     fi

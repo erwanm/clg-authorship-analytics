@@ -166,9 +166,9 @@ for multiConfStrategyFile in "$multiConfDir"/*.multi-conf; do
 	id="$strategy.$id"
 	# copy predictions obtained with CV for train fold
 	mkdirSafe "$applyDir/fold.train/$id"
-	evalSafe "cat \"$prefix/predicted.answers\" > \"$applyDir/fold.train/$id/predicted.answers\"" "$progName,$LINENO: "
+	evalSafe "cat \"$prefix/predicted.answers\" > \"$applyDir/fold.train/$id.answers\"" "$progName,$LINENO: "
 	evalSafe "cat \"$prefix.perf\" > \"$applyDir/fold.train/$id.perf\"" "$progName,$LINENO: "
-	evalSafe "cat \"$applyDir/fold.train/$id/predicted.answers\" \"$applyDir/fold.test/$id/predicted.answers\" | sort +0 -1 >\"$applyDir/$id.answers\"" "$progName,$LINENO: "
+	evalSafe "cat \"$applyDir/fold.train/$id.answers\" \"$applyDir/fold.test/$id.answers\" | sort +0 -1 >\"$applyDir/$id.answers\"" "$progName,$LINENO: "
 	evalSafe "echo -e \"$id\\t$prefix\" >>\"$outputDir/selected-strategy-configs.list\"" "$progName,$LINENO: "
     done
     if [ $? -ne 0 ]; then
@@ -240,9 +240,9 @@ rm -f "$outputDir/selected-meta-configs.list"
 cat "$metaDir/best.prefix-list" | while read prefix; do
     id=$(basename "$prefix")
     mkdirSafe "$metaApplyDir/fold.meta-train/$id"
-    evalSafe "cat \"$prefix/predicted.answers\" > \"$metaApplyDir/fold.meta-train/$id/predicted.answers\"" "$progName,$LINENO: "
+    evalSafe "cat \"$prefix.answers\" > \"$metaApplyDir/fold.meta-train/$id.answers\"" "$progName,$LINENO: "
     evalSafe "cat \"$prefix.perf\" > \"$metaApplyDir/fold.meta-train/$id.perf\"" "$progName,$LINENO: "
-    evalSafe "cat \"$metaApplyDir/fold.meta-train/$id/predicted.answers\" \"$metaApplyDir/fold.meta-test/$id/predicted.answers\" \"$metaApplyDir/fold.strategy-train/$id/predicted.answers\" | sort +0 -1 >\"$metaApplyDir/$id.answers\"" "$progName,$LINENO: "
+    evalSafe "cat \"$metaApplyDir/fold.meta-train/$id.answers\" \"$metaApplyDir/fold.meta-test/$id.answers\" \"$metaApplyDir/fold.strategy-train/$id.answers\" | sort +0 -1 >\"$metaApplyDir/$id.answers\"" "$progName,$LINENO: "
     evalSafe "echo \"$metaApplyDir/$id\" >>\"$outputDir/selected-meta-configs.list\"" "$progName,$LINENO: "
 done
 
