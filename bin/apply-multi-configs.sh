@@ -151,7 +151,7 @@ cat "$configsListFile" | while read prefix; do
     id="${outputIdPrefix}${confId}"
     if [ $resume -eq 0 ] || [ ! -s "$destDir/$id.answers" ]; then
 	cat "$destDir/$id/predicted.answers" >"$destDir/$id.answers"
-	echo "$progName DEBUG: predicted answers in '$destDir/$id.answers', removing '$destDir/$id'" 1>&2
+#	echo "$progName DEBUG: predicted answers in '$destDir/$id.answers', removing '$destDir/$id'" 1>&2
 	rm -rf "$destDir/$id" # update oct 16: remove dir to save space
     fi
 done
