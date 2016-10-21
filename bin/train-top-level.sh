@@ -234,6 +234,7 @@ else
     echo "$progName,$LINENO: invalid value '$final_bagging_selectMethod' for parameter 'final_bagging_selectMethod'" 1>&2
     exit 6
 fi
+sortColNo=$(( $sortColNo + 1 )) # first col = name ;)
 
 cat "$baggingDir/runs.stats" | while read line; do
     name=$(echo "$line" | cut -f 1)
