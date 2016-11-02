@@ -191,6 +191,10 @@ Error message and password prompt
 
 <li>005-multi-GI</li>
 
+<li>006-all-obs-types-GI</li>
+
+<li>007-genetic-basic</li>
+
 <li>5x2 cross-validation</li>
 
 <li>About</li>
@@ -248,8 +252,6 @@ Error message and password prompt
 <li>copy-prepared-to-tmp-if-needed.sh</li>
 
 <li>DocGenerationCommand</li>
-
-<li>Draft of '004-GI'</li>
 
 <li>Examples</li>
 
@@ -8045,7 +8047,7 @@ Error message and password prompt
 <div created="20160922204019437" modified="20160922204019437" title="$:/state/showeditpreview">
 <pre>yes</pre>
 </div>
-<div created="20160922204016926" modified="20161004202050294" title="$:/state/sidebar">
+<div created="20160922204016926" modified="20161014192834418" title="$:/state/sidebar">
 <pre>no</pre>
 </div>
 <div created="20160922191545032" modified="20160930181554858" title="$:/state/tab/sidebar--1835078512">
@@ -8072,8 +8074,8 @@ Error message and password prompt
 <div created="20160922191657490" modified="20160922191658721" title="$:/state/toc/Libraries-CLGAuthorshipAnalytics/Verification/Basic.pm--28507052">
 <pre>close</pre>
 </div>
-<div created="20161004200207448" modified="20161004200207448" title="$:/state/toc/Libraries-CLGAuthorshipAnalytics/Verification/Impostors.pm-1680752989">
-<pre>open</pre>
+<div created="20161004200207448" modified="20161012172843443" title="$:/state/toc/Libraries-CLGAuthorshipAnalytics/Verification/Impostors.pm-1680752989">
+<pre>close</pre>
 </div>
 <div created="20161004195934669" modified="20161004200206462" title="$:/state/toc/Libraries-CLGAuthorshipAnalytics/Verification/Universum.pm-1680752989">
 <pre>close</pre>
@@ -8093,13 +8095,13 @@ Error message and password prompt
 <div created="20160922191625904" modified="20161004195159440" title="$:/state/toc/Usage-Libraries-1680752989">
 <pre>open</pre>
 </div>
-<div created="20160922191550304" modified="20160930154817152" title="$:/state/toc/Usage-Scripts-1680752989">
-<pre>close</pre>
+<div created="20160922191550304" modified="20161012172849818" title="$:/state/toc/Usage-Scripts-1680752989">
+<pre>open</pre>
 </div>
 <div created="20160930153955940" modified="20160930163230448" title="$:/state/toc/Usage-TrainingProcess-1680752989">
 <pre>open</pre>
 </div>
-<div list="005-multi-GI [[Draft of '004-GI']] [[CLGAuthorshipAnalytics/Verification/Impostors.pm/new($class, $params)]] 003-univ CLGAuthorshipAnalytics/Verification/Universum.pm [[CLGAuthorshipAnalytics/Verification/Universum.pm/new($class, $params)]] 000-minimal CLGAuthorshipAnalytics/Verification/Basic.pm 002-cosine 001-all-obs-types clg-authorship-analytics" title="$:/StoryList">
+<div list="007-genetic-basic ConfigurationFile generate-multi-conf.sh [[Genetic process]] train-genetic.sh 006-all-obs-types-GI [[Table of Contents]] 005-multi-GI 004-GI clg-authorship-analytics" title="$:/StoryList">
 <pre></pre>
 </div>
 <div plugin-type="info" title="$:/temp/info-plugin" type="application/json">
@@ -8116,8 +8118,8 @@ Error message and password prompt
     }
 }</pre>
 </div>
-<div created="20160922191939570" modified="20160930151552983" title="$:/temp/search">
-<pre></pre>
+<div created="20160922191939570" modified="20161011142259742" title="$:/temp/search">
+<pre>conte</pre>
 </div>
 <div author="JeremyRuston" bag="default" core-version="&gt;=5.0.0" dependents="$:/themes/tiddlywiki/vanilla" description="Emphasises individual tiddlers" name="Snow White" plugin-type="theme" revision="0" title="$:/themes/tiddlywiki/snowwhite" type="application/json" version="5.1.13">
 <pre>{
@@ -8353,11 +8355,11 @@ univ.finalScoresMethod=both
 
 </pre>
 </div>
-<div created="20161004200130289" modified="20161004201933740" tags="Examples" title="004-GI">
+<div created="20161004200130289" modified="20161011162541550" tags="Examples" title="004-GI">
 <pre>This example runs the [[&quot;Impostors&quot; strategy|CLGAuthorshipAnalytics/Verification/Impostors.pm/new($class, $params)]]. this strategy requires some resources in the form of a set of texts used as &quot;impostors&quot;.
 
 ```
-verif-author.pl -i rw -p details-dir -d tests/data/pan14.impostors tests/004-GI.conf tests/data/english-20-cases/EN001/known01.txt tests/data/english-20-cases/EN001/unknown.txt
+verif-author.pl -p details-dir -d tests/data/pan14.impostors tests/004-GI.conf tests/data/english-20-cases/EN001/known01.txt tests/data/english-20-cases/EN001/unknown.txt
 ```
 
 The config file ``tests/004-GI.conf`` contains:
@@ -8392,15 +8394,14 @@ GI.aggregateSimStat=median
 * Option ``-d &lt;path&gt;`` specifies the path where resources can be found (in this case the impostor texts).
 * Option ``-p &lt;dir&gt;`` is used to write the details of all the similarity measures performed between documents to a directory ``dir``.</pre>
 </div>
-<div created="20161004202044907" modified="20161004202730747" tags="Examples" title="005-multi-GI">
-<pre>
-This example runs the [[&quot;Impostors&quot; strategy|CLGAuthorshipAnalytics/Verification/Impostors.pm/new($class, $params)]] for a set of cases provided in the directory ``tests/data/english-20-cases``.
+<div created="20161004202044907" modified="20161011162912473" tags="Examples" title="005-multi-GI">
+<pre>This example runs the [[&quot;Impostors&quot; strategy|CLGAuthorshipAnalytics/Verification/Impostors.pm/new($class, $params)]] for a set of cases provided in the directory ``tests/data/english-20-cases``.
 
 ```
 #!/bin/bash
 
 vocabResources=&quot;stop-eng50:tests/data/stop-words/english/50.list;stop-eng200:tests/data/stop-words/english/200.list&quot;
-i
+
 workDir=$(mktemp -d)
 echo &quot;$0 info: dest dir = '$workDir'&quot;
 scoresDir=&quot;$workDir/scores-tables&quot;
@@ -8415,10 +8416,57 @@ eval &quot;sim-collections-doc-by-doc.pl $logOpt -R BASENAME  -r '$vocabResource
 echo &quot;$0: apply impostors strategy&quot;
 for d in &quot;$workDir&quot;/english-20-cases/*/; do 
     echo &quot;$d/known01.txt $d/unknown.txt&quot;
-done | eval &quot;verif-author.pl -c -v '$vocabResources' -i rw -p $scoresDir -d tests/data/pan14.impostors tests/005-multi-GI.conf&quot;
+done | eval &quot;verif-author.pl -c -v '$vocabResources' -p $scoresDir -d tests/data/pan14.impostors tests/005-multi-GI.conf&quot;
 ```
 
+* ``verif-authors.pl`` can process a batch of cases at once. This is advantageous when the verification strategy needs to load some resources, which can be loaded only once this way. The cases are read line by line from ``STDIN``.
+** This is why the input in this example is piped from a loop through the input cases.
+* The [[&quot;Impostors&quot; strategy|CLGAuthorshipAnalytics/Verification/Impostors.pm/new($class, $params)]] accepts a parameter ``selectNTimesMostSimilarFirst``; this parameter is an integer M; if M isn't zero, the impostors documents to be used in the comparisons are preselected instead of being picked randomly: if the number of impostors to be used is N, the system preselects the N x M most similar impostors. 
+** The preselection similarity scores must be pre-computed, this is why the example above ``sim-collections-doc-by-doc.pl`` is called first to compute the &quot;pre-similarities&quot;.
+*** ``sim-collections-doc-by-doc.pl`` is part of the CLGTextTools package. It extracts the observations in all the documents from two datasets, and then compares every pair of documents. The results are written to ``&lt;file1&gt;.simdir/&lt;path2 id&gt;.similarities`` (this is where the impostors strategy loads them from).
+** The preselection ensures that the most dissimilar impostors are not used, while maintaining a certain degree of randomness depending on the value of ``selectNTimesMostSimilarFirst``.
+* Option ``-c`` allows the strategy to use &quot;count files&quot; (see CLGTextTools):
+** if the observations have already been extracted from a document and written to count files, they are loaded from the files.
+** if not, the observations will be written to disk after extraction. This way they are available for later use.
 </pre>
+</div>
+<div created="20161011163047842" modified="20161011163258011" tags="Examples" title="006-all-obs-types-GI">
+<pre>This example is similar to [[004-GI]], but uses a large set of possible observation types (34).
+
+</pre>
+</div>
+<div created="20161011185500949" modified="20161014192949077" tags="Examples" title="007-genetic-basic">
+<pre>This example runs the [[Genetic process]] to train the [[basic strategy|CLGAuthorshipAnalytics/Verification/Basic.pm]] with a simplified set of parameters.
+
+* ''Remark'': this is a toy example. The small dataset, the restricted genetic parameters and the limited efficacy of the basic strategy do not permit the process to reach an acceptable performance level. This is intended to keep the test short (around 5-10 minutes normally).
+
+!! Generating the [[multi-conf|ConfigurationFile]] file
+
+In this example we generate the multi-config file from the (multi-)config files parts provided in the ``conf`` directory; see [[ConfigurationFile]] for more details. The 
+
+```
+evalSafe &quot;generate-multi-conf.sh -s basic -c common.TEST.multi-conf.part -g genetic.TEST.multi-conf.part 1 '$targetDir/0'&quot; &quot;$progName, $LINENO: &quot;
+```
+
+!! Generating the resources options config file
+
+The resources options config file is different from a regular [[ConfigurationFile]]: contrary to the latter, it contains only technical options:
+
+```
+echo &quot;vocabResources=$vocabResources&quot; &gt;&gt;&quot;$targetDir/$resourcesOptionsFilename&quot;
+echo &quot;useCountFiles=$useCountFiles&quot; &gt;&gt;&quot;$targetDir/$resourcesOptionsFilename&quot;
+echo &quot;datasetResourcesPath=$datasetResourcesPath&quot; &gt;&gt;&quot;$targetDir/$resourcesOptionsFilename&quot;
+```
+
+!! Main program
+
+[[train-genetic.sh|Implementation: train-genetic.sh]] reads the name of the [[ConfigurationFile]] from STDIN. The last parameter ``indivGenetic_1_`` is the id of the stage of genetic learning, in case there are several (see [[Implementation: train-multi-stages.sh]])
+
+```
+echo &quot;$targetDir/0/multi-conf-files/basic.multi-conf&quot; | evalSafe &quot;train-genetic.sh '$targetDir' '$targetDir/input/truth.txt' indivGenetic_1_&quot; &quot;$progName, $LINENO: &quot;
+```
+
+* Remark : the call to ``train-genetic.sh`` is inside an ``evalSafe`` command, provided in the ``erw-bash-commons`` library.</pre>
 </div>
 <div created="20160929184826119" modified="20160929193828424" tags="Concepts" title="5x2 cross-validation">
 <pre>After the [[Genetic process]] (that is, at the end of the [[StrategyTraining]] stage and at the end of the [[meta-training|Meta-classifier]] stage), the N best [[configurations|ConfigurationFile]] are re-evaluated with 5x2 cross-validation in order to:
@@ -8740,14 +8788,48 @@ The class is specified by a string id.
 <div bag="default" color="#3ba2ea" created="20160704145541721" modified="20160922192431373" revision="0" tags="Usage" title="Concepts">
 <pre></pre>
 </div>
-<div bag="default" created="20160701194850254" modified="20160704145540457" revision="0" tags="Concepts" title="ConfigurationFile">
+<div bag="default" created="20160701194850254" modified="20161012173227684" revision="0" tags="Concepts" title="ConfigurationFile">
 <pre>A ''configuration file'' is a text file which defines values for parameters, one by line: ``paramName=value``. Config files are used in many places in the package for different things, but the main usages for these are:
 
 * Define the parameters for applying a verification strategy, as used in [[verif-author.pl]].
 * Define all the parameters for the full process of applying a strategy, including the step of using the features with a ML method in order to provide a score in [0,1] , as used in the [[Genetic process]].
 * Additionally, the training parameters for the [[Genetic process]] are added the config files for convenience. This is also the case for the meta-training genetic stage (see [[Meta-classifier]]).
 
-The concept of ''multi config file'' is introduced for the [[Genetic process]] . Such a config file is meant to enumerate all the possible values for a parameter: ``paramName=value1 value2 ... valueN``. The genetic process selects one of the possible values among the list in order to generate new configurations.</pre>
+!! Multi-configuration file
+
+The concept of ''multi config file'' is introduced for the [[Genetic process]] . Such a config file is meant to enumerate all the possible values for a parameter: ``paramName=value1 value2 ... valueN``. The genetic process selects one of the possible values among the list in order to generate new configurations.
+
+The [[multi-conf|ConfigurationFile]] contains the parameters for which the [[Genetic process]] has to select the optimal values. The parameters are grouped into three categories:
+
+* Common parameters
+* Strategy-specific parameters
+* Genetic process parameter
+
+!!! Common parameters
+
+The common parameters are used with any strategy:
+
+* Observation types to be selected (1) or not (0). Example: ``obsType.POS.PPP.sl1.mf3=0 1`` means that Part-of-Speech trigrams can be selected or not by the genetic process (if only 0 or absent, it cannot be selected; if only 1, it is always selected).
+* ML parameters. Example: ``learnMethod=M5P-M4 M5P-M8 SMO-C1-N0 SMO-C1-N1 SMO-C1-N0-RBF SMO-C1-N1-RBF``. The strings ``M5P-M4``, ``M5P-M8``, ``SMO-C1-N0`` etc. are identifiers for various Weka algorithms together with their arguments. Every identifier means that the corresponding algorithm can be selected by the genetic process, and in the end the optimal one will be (hopefully) selected.
+
+!!! Strategy-specific parameters
+
+Every strategy has its own set of parameters (and possible values for each parameter). For example, the basic strategy multi-config file contains:
+
+```
+strategy=basic
+# PARAMETERS FOR BASIC STRATEGY
+basic.simMeasure=cosine minmax
+multipleProbeAggregate=random  median arithm geom harmo
+```
+
+If a parameter appears several time in a config file, only the last occurrence is considered. This behaviour is also intended to allow an //overwriting// mechanism when a config file is assembled by concatenating several parts. In particular, the strategy-specific parameters are appended after the common parameters (see below), so that it is possible for the strategy to overwrite the possible values for some of the common parameters. Example: every strategy redefines the ``strategy`` parameter, but it can also restrict the possible observations types or change other common parameters.
+
+
+
+!!! Generating the multi-config files
+
+[[generate-multi-conf.sh]] can be used to assemble the multi-config files for the full training process. This script is called in [[run-std-training.sh]].</pre>
 </div>
 <div bag="default" created="20160630185719153" modified="20160922162245418" revision="0" tags="$:/tags/ViewTemplate MakingOf" title="ContentsFooter">
 <pre>&lt;hr/&gt;
@@ -8784,45 +8866,6 @@ ls bin/*sh | generate-tw-doc-exec-h.sh -t Scripts index.html
 find lib/ -name &quot;*.pm&quot; | generate-tw-doc-lib.sh -t Libraries -r lib/  index.html
 ```
 </pre>
-</div>
-<div created="20161004200130289" draft.of="004-GI" draft.title="004-GI" modified="20161004202343191" tags="Examples" title="Draft of '004-GI'">
-<pre>This example runs the [[&quot;Impostors&quot; strategy|CLGAuthorshipAnalytics/Verification/Impostors.pm/new($class, $params)]]. this strategy requires some resources in the form of a set of texts used as &quot;impostors&quot;.
-
-```
-verif-author.pl -i rw -p details-dir -d tests/data/pan14.impostors tests/004-GI.conf tests/data/english-20-cases/EN001/known01.txt tests/data/english-20-cases/EN001/unknown.txt
-```
-
-The config file ``tests/004-GI.conf`` contains:
-
-```
-formatting=0
-wordTokenization=1
-
-strategy=GI
-
-obsType.WORD.T.lc1.sl1.mf3=1
-obsType.CHAR.CCC.lc1.sl1.mf3=1
-
-GI.impostors=english
-GI.nbImpostorsUsed=10
-GI.nbRounds=20
-GI.selectNTimesMostSimilarFirst=5
-GI.preSimObsType=WORD.T.lc1.sl1.mf3
-GI.propObsSubset=0.45
-GI.docSubsetMethod=byObservation
-GI.minDocFreq=4
-GI.simMeasure=minmax
-GI.useCountMostSimFeature=original
-GI.kNearestNeighbors=5
-GI.mostSimilarFirst=doc
-GI.aggregRelRank=arithm
-GI.useAggregateSim=ratio
-GI.aggregateSimStat=median
-```
-
-* See the description of the parameters in [[CLGAuthorshipAnalytics/Verification/Impostors.pm/new($class, $params)]].
-* Option ``-d &lt;path&gt;`` specifies the path where resources can be found (in this case the impostor texts).
-* Option ``-p &lt;dir&gt;`` is used to write the details of all the similarity measures performed between documents to a directory ``dir``.</pre>
 </div>
 <div created="20160930155144476" modified="20160930155155344" tags="Usage" title="Examples">
 <pre>''TODO''</pre>

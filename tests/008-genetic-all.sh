@@ -7,7 +7,7 @@ progName="008-genetic-all.sh"
 
 mcFile=""
 inputData="tests/data/english-20-cases/"
-vocabResources="50=tests/data/stop-words/english/50.list;200=tests/data/stop-words/english/200.list"
+vocabResources="50:tests/data/stop-words/english/50.list;200:tests/data/stop-words/english/200.list"
 resourcesOptionsFilename="resources-options.conf"
 useCountFiles=1
 datasetResourcesPath="tests/data/pan14.impostors"

@@ -7,11 +7,10 @@ progName="007-genetic-basic.sh"
 
 mcFile=""
 inputData="tests/data/english-20-cases/"
-vocabResources="50=tests/data/stop-words/english/50.list;200=tests/data/stop-words/english/200.list"
+vocabResources="50:tests/data/stop-words/english/50.list;200:tests/data/stop-words/english/200.list"
 resourcesOptionsFilename="resources-options.conf"
 useCountFiles=1
 datasetResourcesPath="tests/data/pan14.impostors"
-resourcesAccess=rw
 
 
 if [ $# -eq 1 ]; then
@@ -46,7 +45,6 @@ echo >"$targetDir/$resourcesOptionsFilename"
 echo "vocabResources=$vocabResources" >>"$targetDir/$resourcesOptionsFilename"
 echo "useCountFiles=$useCountFiles" >>"$targetDir/$resourcesOptionsFilename"
 echo "datasetResourcesPath=$datasetResourcesPath" >>"$targetDir/$resourcesOptionsFilename"
-echo "resourcesAccess=$resourcesAccess" >>"$targetDir/$resourcesOptionsFilename"
 
 # run
 echo "$targetDir/0/multi-conf-files/basic.multi-conf" | evalSafe "train-genetic.sh '$targetDir' '$targetDir/input/truth.txt' indivGenetic_1_" "$progName, $LINENO: "

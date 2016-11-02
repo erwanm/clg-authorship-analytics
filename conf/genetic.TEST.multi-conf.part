@@ -29,5 +29,7 @@ indivGenetic_1_returnNbBest=10
 indivGenetic_final_nbFolds=2
 indivGenetic_final_nbRuns=5
 indivGenetic_final_returnNbBest=5
+#indivGenetic_final_selectMethod=mean mixedMeanMedianMinusSD
+indivGenetic_final_selectMethod=mean
 
 
