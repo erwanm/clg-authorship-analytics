@@ -155,6 +155,8 @@ Error message and password prompt
 
 <li>$:/state/toc/Libraries-CLGAuthorshipAnalytics/Verification/Universum.pm-1680752989</li>
 
+<li>$:/state/toc/Table of Contents-Usage--538476547</li>
+
 <li>$:/state/toc/Table of Contents-Usage-1680752989</li>
 
 <li>$:/state/toc/TODO-Usage-335786226</li>
@@ -194,6 +196,8 @@ Error message and password prompt
 <li>006-all-obs-types-GI</li>
 
 <li>007-genetic-basic</li>
+
+<li>008-genetic-all</li>
 
 <li>5x2 cross-validation</li>
 
@@ -8047,11 +8051,11 @@ Error message and password prompt
 <div created="20160922204019437" modified="20160922204019437" title="$:/state/showeditpreview">
 <pre>yes</pre>
 </div>
-<div created="20160922204016926" modified="20161014192834418" title="$:/state/sidebar">
+<div created="20160922204016926" modified="20161102211153263" title="$:/state/sidebar">
 <pre>no</pre>
 </div>
-<div created="20160922191545032" modified="20160930181554858" title="$:/state/tab/sidebar--1835078512">
-<pre>Table of Contents</pre>
+<div created="20160922191545032" modified="20161102203608310" title="$:/state/tab/sidebar--1835078512">
+<pre>$:/core/ui/SideBar/Open</pre>
 </div>
 <div created="20160922192429253" modified="20160922192429253" title="$:/state/tag-manager/Concepts">
 <pre>open</pre>
@@ -8080,6 +8084,9 @@ Error message and password prompt
 <div created="20161004195934669" modified="20161004200206462" title="$:/state/toc/Libraries-CLGAuthorshipAnalytics/Verification/Universum.pm-1680752989">
 <pre>close</pre>
 </div>
+<div created="20161102203613709" modified="20161102203613709" title="$:/state/toc/Table of Contents-Usage--538476547">
+<pre>open</pre>
+</div>
 <div created="20160922191546272" modified="20161004183518976" title="$:/state/toc/Table of Contents-Usage-1680752989">
 <pre>open</pre>
 </div>
@@ -8101,7 +8108,7 @@ Error message and password prompt
 <div created="20160930153955940" modified="20160930163230448" title="$:/state/toc/Usage-TrainingProcess-1680752989">
 <pre>open</pre>
 </div>
-<div list="007-genetic-basic ConfigurationFile generate-multi-conf.sh [[Genetic process]] train-genetic.sh 006-all-obs-types-GI [[Table of Contents]] 005-multi-GI 004-GI clg-authorship-analytics" title="$:/StoryList">
+<div list="008-genetic-all train-top-level.sh clg-authorship-analytics Examples 007-genetic-basic generate-multi-conf.sh" title="$:/StoryList">
 <pre></pre>
 </div>
 <div plugin-type="info" title="$:/temp/info-plugin" type="application/json">
@@ -8118,8 +8125,8 @@ Error message and password prompt
     }
 }</pre>
 </div>
-<div created="20160922191939570" modified="20161011142259742" title="$:/temp/search">
-<pre>conte</pre>
+<div created="20160922191939570" modified="20161102210551592" title="$:/temp/search">
+<pre>meta</pre>
 </div>
 <div author="JeremyRuston" bag="default" core-version="&gt;=5.0.0" dependents="$:/themes/tiddlywiki/vanilla" description="Emphasises individual tiddlers" name="Snow White" plugin-type="theme" revision="0" title="$:/themes/tiddlywiki/snowwhite" type="application/json" version="5.1.13">
 <pre>{
@@ -8435,14 +8442,21 @@ done | eval &quot;verif-author.pl -c -v '$vocabResources' -p $scoresDir -d tests
 
 </pre>
 </div>
-<div created="20161011185500949" modified="20161014192949077" tags="Examples" title="007-genetic-basic">
+<div created="20161011185500949" modified="20161102210126682" tags="Examples" title="007-genetic-basic">
 <pre>This example runs the [[Genetic process]] to train the [[basic strategy|CLGAuthorshipAnalytics/Verification/Basic.pm]] with a simplified set of parameters.
 
 * ''Remark'': this is a toy example. The small dataset, the restricted genetic parameters and the limited efficacy of the basic strategy do not permit the process to reach an acceptable performance level. This is intended to keep the test short (around 5-10 minutes normally).
 
+
+
+!! Remark: evalsafe
+
+The calls to ``generate-multi-conf.sh`` and ``train-genetic.sh`` below are enclosed in  an ``evalSafe`` command, provided in the ``erw-bash-commons`` library. This command makes the program stop and print an error message if the command supplied as arguments does not return 0.
+
+
 !! Generating the [[multi-conf|ConfigurationFile]] file
 
-In this example we generate the multi-config file from the (multi-)config files parts provided in the ``conf`` directory; see [[ConfigurationFile]] for more details. The 
+In this example we generate the multi-config file from the (multi-)config files parts provided in the ``conf`` directory; see [[ConfigurationFile]] and [[generate-multi-conf.sh]] for more details.
 
 ```
 evalSafe &quot;generate-multi-conf.sh -s basic -c common.TEST.multi-conf.part -g genetic.TEST.multi-conf.part 1 '$targetDir/0'&quot; &quot;$progName, $LINENO: &quot;
@@ -8466,7 +8480,31 @@ echo &quot;datasetResourcesPath=$datasetResourcesPath&quot; &gt;&gt;&quot;$targe
 echo &quot;$targetDir/0/multi-conf-files/basic.multi-conf&quot; | evalSafe &quot;train-genetic.sh '$targetDir' '$targetDir/input/truth.txt' indivGenetic_1_&quot; &quot;$progName, $LINENO: &quot;
 ```
 
-* Remark : the call to ``train-genetic.sh`` is inside an ``evalSafe`` command, provided in the ``erw-bash-commons`` library.</pre>
+</pre>
+</div>
+<div created="20161102204313361" modified="20161102211158924" tags="Examples" title="008-genetic-all">
+<pre>
+
+This script runs the full [[TrainingProcess]], including StrategyTraining for all the [[strategies|Verification Strategies]] and [[meta-training|Meta-classifier]].
+
+* ''Important:'' the process is run //without the ``'-s'`` (failsafe) option//. As a consequence, any error causes the program to fail.  It is sometimes normal that a particular run of a strategy fails due to a particular randomization of the data, which is why there is a failsafe mode. The failsafe mode makes the main process continue and ignore a failed run in the genetic process.  
+* ''Remark'': this is a toy example. The small dataset, the restricted genetic parameters might not permit the process to reach an acceptable performance level. This is intended to keep the test short (around 5-10 minutes normally).
+
+
+See [[007-genetic-basic]] about ``evalsafe``, the generation of the resources options config file and the [[multi-config file|ConfigurationFile]].
+
+
+!! Main program
+
+See [[train-top-level.sh]] and [[TrainingProcess]].
+
+* Option ``-r`` can be used to restart a previously interrupted training process. 
+
+```
+evalSafe &quot;train-top-level.sh '$targetDir'&quot; &quot;$progName, $LINENO: &quot;
+```
+
+</pre>
 </div>
 <div created="20160929184826119" modified="20160929193828424" tags="Concepts" title="5x2 cross-validation">
 <pre>After the [[Genetic process]] (that is, at the end of the [[StrategyTraining]] stage and at the end of the [[meta-training|Meta-classifier]] stage), the N best [[configurations|ConfigurationFile]] are re-evaluated with 5x2 cross-validation in order to:

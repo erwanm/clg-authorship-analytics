@@ -1,5 +1,16 @@
 #!/bin/bash
 
+
+#
+# IMPORTANT: this script runs the genetic process for all the strategies without the
+#            '-s' (failsafe) option. As a consequence, any error causes the program
+#            to fail. It is sometimes normal that a particular run of a strategy fails
+#            due to a particular randomization of the data, which is why there is a 
+#            failsafe mode. The failsafe mode makes the main process continue and
+#            ignore a failed run in the genetic process.
+#
+#
+
 source common-lib.sh
 source file-lib.sh
 
@@ -52,6 +63,6 @@ echo "datasetResourcesPath=$datasetResourcesPath" >>"$targetDir/$resourcesOption
 echo "resourcesAccess=$resourcesAccess" >>"$targetDir/$resourcesOptionsFilename"
 
 # run
-evalSafe "train-top-level.sh -r '$targetDir'" "$progName, $LINENO: "
+evalSafe "train-top-level.sh '$targetDir'" "$progName, $LINENO: "
 
 
