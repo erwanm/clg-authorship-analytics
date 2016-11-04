@@ -199,6 +199,8 @@ Error message and password prompt
 
 <li>008-genetic-all</li>
 
+<li>009-GI-by-occurrence</li>
+
 <li>5x2 cross-validation</li>
 
 <li>About</li>
@@ -8051,11 +8053,11 @@ Error message and password prompt
 <div created="20160922204019437" modified="20160922204019437" title="$:/state/showeditpreview">
 <pre>yes</pre>
 </div>
-<div created="20160922204016926" modified="20161102211153263" title="$:/state/sidebar">
-<pre>no</pre>
+<div created="20160922204016926" modified="20161103201905216" title="$:/state/sidebar">
+<pre>yes</pre>
 </div>
-<div created="20160922191545032" modified="20161102203608310" title="$:/state/tab/sidebar--1835078512">
-<pre>$:/core/ui/SideBar/Open</pre>
+<div created="20160922191545032" modified="20161103205816327" title="$:/state/tab/sidebar--1835078512">
+<pre>Table of Contents</pre>
 </div>
 <div created="20160922192429253" modified="20160922192429253" title="$:/state/tag-manager/Concepts">
 <pre>open</pre>
@@ -8108,7 +8110,7 @@ Error message and password prompt
 <div created="20160930153955940" modified="20160930163230448" title="$:/state/toc/Usage-TrainingProcess-1680752989">
 <pre>open</pre>
 </div>
-<div list="008-genetic-all train-top-level.sh clg-authorship-analytics Examples 007-genetic-basic generate-multi-conf.sh" title="$:/StoryList">
+<div list="Usage Examples 008-genetic-all clg-authorship-analytics" title="$:/StoryList">
 <pre></pre>
 </div>
 <div plugin-type="info" title="$:/temp/info-plugin" type="application/json">
@@ -8362,7 +8364,7 @@ univ.finalScoresMethod=both
 
 </pre>
 </div>
-<div created="20161004200130289" modified="20161011162541550" tags="Examples" title="004-GI">
+<div created="20161004200130289" modified="20161103205929571" tags="Examples" title="004-GI">
 <pre>This example runs the [[&quot;Impostors&quot; strategy|CLGAuthorshipAnalytics/Verification/Impostors.pm/new($class, $params)]]. this strategy requires some resources in the form of a set of texts used as &quot;impostors&quot;.
 
 ```
@@ -8484,7 +8486,6 @@ echo &quot;$targetDir/0/multi-conf-files/basic.multi-conf&quot; | evalSafe &quot
 </div>
 <div created="20161102204313361" modified="20161102211158924" tags="Examples" title="008-genetic-all">
 <pre>
-
 This script runs the full [[TrainingProcess]], including StrategyTraining for all the [[strategies|Verification Strategies]] and [[meta-training|Meta-classifier]].
 
 * ''Important:'' the process is run //without the ``'-s'`` (failsafe) option//. As a consequence, any error causes the program to fail.  It is sometimes normal that a particular run of a strategy fails due to a particular randomization of the data, which is why there is a failsafe mode. The failsafe mode makes the main process continue and ignore a failed run in the genetic process.  
@@ -8502,6 +8503,44 @@ See [[train-top-level.sh]] and [[TrainingProcess]].
 
 ```
 evalSafe &quot;train-top-level.sh '$targetDir'&quot; &quot;$progName, $LINENO: &quot;
+```
+
+</pre>
+</div>
+<div created="20161103204349643" modified="20161103205804508" tags="Examples" title="009-GI-by-occurrence">
+<pre>This example runs the [[&quot;Impostors&quot; strategy|CLGAuthorshipAnalytics/Verification/Impostors.pm/new($class, $params)]], with a configuration file very close to the one used for [[004-GI]]. The main difference is the way random subsets of documents are picked:
+
+* &quot;by observation&quot;, as in [[004-GI]]: a given observation (typically an n-gram) is either selected or excluded. This means that the frequency of this observation in the random subset is either the frequency in the full document, or 0.
+* &quot;by occurrence&quot; (the present case): a given observation can be partially selected, i.e. if it has frequency N in the full document it can have any frequency M in the subset, with M&lt;=N.
+
+
+The config file ``tests/009-GI-by-occurrence.conf`` contains:
+
+```
+formatting=0
+wordTokenization=1
+
+strategy=GI
+
+obsType.WORD.T.lc1.sl1.mf3=1
+obsType.CHAR.CCC.lc1.sl1.mf3=1
+
+GI.impostors=english
+GI.nbImpostorsUsed=10
+GI.nbRounds=20
+GI.selectNTimesMostSimilarFirst=5
+GI.preSimObsType=WORD.T.lc1.sl1.mf3
+GI.propObsSubset=0.45
+GI.docSubsetMethod=byOccurrence
+                  
+GI.minDocFreq=2
+GI.simMeasure=minmax
+GI.useCountMostSimFeature=original
+GI.kNearestNeighbors=5
+GI.mostSimilarFirst=doc
+GI.aggregRelRank=arithm
+GI.useAggregateSim=ratio
+GI.aggregateSimStat=median
 ```
 
 </pre>
@@ -8905,8 +8944,8 @@ find lib/ -name &quot;*.pm&quot; | generate-tw-doc-lib.sh -t Libraries -r lib/  
 ```
 </pre>
 </div>
-<div created="20160930155144476" modified="20160930155155344" tags="Usage" title="Examples">
-<pre>''TODO''</pre>
+<div created="20160930155144476" modified="20161103210126782" tags="Usage" title="Examples">
+<pre>The examples presented in this section are available in the ``tests`` directory. Each example consists of a config file ``.conf`` and a script ``.sh`` to run the example. The ``tests`` directory also contains some sample data in ``tests/data``.</pre>
 </div>
 <div bag="default" created="20160922201503000" revision="0" tags="Scripts" title="generate-multi-conf.sh" type="text/plain">
 <pre>Usage: generate-multi-conf.sh [options] &lt;with POS?&gt; &lt;output dir&gt;
@@ -9533,8 +9572,8 @@ The top level script which starts the global training process is [[train-top-lev
 
 </pre>
 </div>
-<div bag="default" color="#3ba2ea" created="20160623140437077" icon="" list="Examples Concepts TrainingProcess Scripts Libraries" modified="20160930160227420" revision="0" tags="[[Table of Contents]]" title="Usage" type="">
-<pre>The programs in this package can be used in many different ways, although not all of them are properly tested and documented. The ``tests`` directory contains a few examples which show how to use it.
+<div bag="default" color="#3ba2ea" created="20160623140437077" icon="" list="Examples Concepts TrainingProcess Scripts Libraries" modified="20161103205926282" revision="0" tags="[[Table of Contents]]" title="Usage" type="">
+<pre>The programs in this package can be used in many different ways, although not all of them are properly tested and documented. The ``tests`` directory contains a few examples which show how to use it: see [[Examples]].
 
 ! Command line scripts
 
