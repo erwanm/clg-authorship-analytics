@@ -155,6 +155,8 @@ Error message and password prompt
 
 <li>$:/state/toc/Libraries-CLGAuthorshipAnalytics/Verification/Universum.pm-1680752989</li>
 
+<li>$:/state/toc/Table of Contents-MakingOf-1680752989</li>
+
 <li>$:/state/toc/Table of Contents-Usage--538476547</li>
 
 <li>$:/state/toc/Table of Contents-Usage-1680752989</li>
@@ -258,6 +260,8 @@ Error message and password prompt
 <li>copy-prepared-to-tmp-if-needed.sh</li>
 
 <li>DocGenerationCommand</li>
+
+<li>Draft of 'About'</li>
 
 <li>Examples</li>
 
@@ -8086,6 +8090,9 @@ Error message and password prompt
 <div created="20161004195934669" modified="20161004200206462" title="$:/state/toc/Libraries-CLGAuthorshipAnalytics/Verification/Universum.pm-1680752989">
 <pre>close</pre>
 </div>
+<div created="20161104162131596" modified="20161104162131598" title="$:/state/toc/Table of Contents-MakingOf-1680752989">
+<pre>open</pre>
+</div>
 <div created="20161102203613709" modified="20161102203613709" title="$:/state/toc/Table of Contents-Usage--538476547">
 <pre>open</pre>
 </div>
@@ -8095,22 +8102,22 @@ Error message and password prompt
 <div created="20160922192002947" modified="20160922192002947" title="$:/state/toc/TODO-Usage-335786226">
 <pre>open</pre>
 </div>
-<div created="20160922191705288" modified="20161004195232960" title="$:/state/toc/Usage-Concepts-1680752989">
-<pre>open</pre>
+<div created="20160922191705288" modified="20161104162458423" title="$:/state/toc/Usage-Concepts-1680752989">
+<pre>close</pre>
 </div>
-<div created="20160930172403301" modified="20161004183521040" title="$:/state/toc/Usage-Examples-1680752989">
-<pre>open</pre>
+<div created="20160930172403301" modified="20161104161958752" title="$:/state/toc/Usage-Examples-1680752989">
+<pre>close</pre>
 </div>
-<div created="20160922191625904" modified="20161004195159440" title="$:/state/toc/Usage-Libraries-1680752989">
-<pre>open</pre>
+<div created="20160922191625904" modified="20161104162004194" title="$:/state/toc/Usage-Libraries-1680752989">
+<pre>close</pre>
 </div>
-<div created="20160922191550304" modified="20161012172849818" title="$:/state/toc/Usage-Scripts-1680752989">
-<pre>open</pre>
+<div created="20160922191550304" modified="20161104162002342" title="$:/state/toc/Usage-Scripts-1680752989">
+<pre>close</pre>
 </div>
-<div created="20160930153955940" modified="20160930163230448" title="$:/state/toc/Usage-TrainingProcess-1680752989">
-<pre>open</pre>
+<div created="20160930153955940" modified="20161104162500926" title="$:/state/toc/Usage-TrainingProcess-1680752989">
+<pre>close</pre>
 </div>
-<div list="Usage Examples 008-genetic-all clg-authorship-analytics" title="$:/StoryList">
+<div list="clg-authorship-analytics [[Draft of 'About']] Requirements" title="$:/StoryList">
 <pre></pre>
 </div>
 <div plugin-type="info" title="$:/temp/info-plugin" type="application/json">
@@ -8485,8 +8492,7 @@ echo &quot;$targetDir/0/multi-conf-files/basic.multi-conf&quot; | evalSafe &quot
 </pre>
 </div>
 <div created="20161102204313361" modified="20161102211158924" tags="Examples" title="008-genetic-all">
-<pre>
-This script runs the full [[TrainingProcess]], including StrategyTraining for all the [[strategies|Verification Strategies]] and [[meta-training|Meta-classifier]].
+<pre>This script runs the full [[TrainingProcess]], including StrategyTraining for all the [[strategies|Verification Strategies]] and [[meta-training|Meta-classifier]].
 
 * ''Important:'' the process is run //without the ``'-s'`` (failsafe) option//. As a consequence, any error causes the program to fail.  It is sometimes normal that a particular run of a strategy fails due to a particular randomization of the data, which is why there is a failsafe mode. The failsafe mode makes the main process continue and ignore a failed run in the genetic process.  
 * ''Remark'': this is a toy example. The small dataset, the restricted genetic parameters might not permit the process to reach an acceptable performance level. This is intended to keep the test short (around 5-10 minutes normally).
@@ -8669,7 +8675,7 @@ Bagging is performed at the end of the meta-training stage in [[train-outerCV-1f
 
 </pre>
 </div>
-<div bag="default" caption="Overview" created="20160520172058387" modified="20160922215314994" revision="0" tags="[[Table of Contents]]" title="clg-authorship-analytics">
+<div bag="default" caption="Overview" created="20160520172058387" modified="20161104162742395" revision="0" tags="[[Table of Contents]]" title="clg-authorship-analytics">
 <pre>! Overview
 
 The package contains a set of scripts and libraries to perform author-identification related tasks. 
@@ -8695,6 +8701,16 @@ The current version of the package provides:
 
 See [[Verification Strategies]], [[Genetic process]], [[Meta-classifier]]
 
+! Using this documentation
+
+The current documentation might not cover all the aspects of the software. The plan is to improve it progressively, don't hesitate to send me [[feedback|About]].
+
+* [[Examples]] gives a few ways to use the software with explanations.
+* Sections [[Concepts]] and [[TrainingProcess]] give high level information about the system.
+* [[Scripts]] and [[Libraries]] provide detailed inline documentation.
+
+
+This documentation is made with [[TiddlyWiki|http://www.tiddlywiki.com]] (see also [[About]]).
 
 ! Table of Contents
 
@@ -8942,6 +8958,22 @@ If a parameter appears several time in a config file, only the last occurrence i
 ls bin/*sh | generate-tw-doc-exec-h.sh -t Scripts index.html
 find lib/ -name &quot;*.pm&quot; | generate-tw-doc-lib.sh -t Libraries -r lib/  index.html
 ```
+</pre>
+</div>
+<div bag="default" created="20160623135147967" draft.of="About" draft.title="About" email="erwan.more@gmail.com" gitrepo="TODO" issues="TODO" modified="20161104162341201" revision="0" tags="[[Table of Contents]] MakingOf" title="Draft of 'About'">
+<pre>    ''clg-authorship-analytics'': a set of scripts and libraries to perform author-identification related tasks.
+
+    Copyright (C) 2016 Erwan Moreau
+
+''LICENSE TODO''
+
+* Official repository: {{!!gitrepo}}
+* Bug reports and feature requests: {{!!issues}}
+* Contact the author: &lt;code&gt;{{!!email}}&lt;/code&gt;
+
+---
+
+[[TiddlyWiki|http://www.tiddlywiki.com]] is Copyright (C) Jeremy Ruston 2004-2007 Copyright (C) ~UnaMesa Association 2007-2016. [[See full license|https://github.com/Jermolene/TiddlyWiki5/blob/master/licenses/copyright.md]].
 </pre>
 </div>
 <div created="20160930155144476" modified="20161103210126782" tags="Usage" title="Examples">
