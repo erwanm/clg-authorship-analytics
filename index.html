@@ -165,6 +165,8 @@ Error message and password prompt
 
 <li>$:/state/toc/Usage-Concepts-1680752989</li>
 
+<li>$:/state/toc/Usage-Examples--1589373100</li>
+
 <li>$:/state/toc/Usage-Examples-1680752989</li>
 
 <li>$:/state/toc/Usage-Libraries-1680752989</li>
@@ -8057,7 +8059,7 @@ Error message and password prompt
 <div created="20160922204019437" modified="20160922204019437" title="$:/state/showeditpreview">
 <pre>yes</pre>
 </div>
-<div created="20160922204016926" modified="20161103201905216" title="$:/state/sidebar">
+<div created="20160922204016926" modified="20161117165540063" title="$:/state/sidebar">
 <pre>yes</pre>
 </div>
 <div created="20160922191545032" modified="20161103205816327" title="$:/state/tab/sidebar--1835078512">
@@ -8102,8 +8104,11 @@ Error message and password prompt
 <div created="20160922192002947" modified="20160922192002947" title="$:/state/toc/TODO-Usage-335786226">
 <pre>open</pre>
 </div>
-<div created="20160922191705288" modified="20161104162458423" title="$:/state/toc/Usage-Concepts-1680752989">
-<pre>close</pre>
+<div created="20160922191705288" modified="20161117163943741" title="$:/state/toc/Usage-Concepts-1680752989">
+<pre>open</pre>
+</div>
+<div created="20161117163219032" modified="20161117163219032" title="$:/state/toc/Usage-Examples--1589373100">
+<pre>open</pre>
 </div>
 <div created="20160930172403301" modified="20161104161958752" title="$:/state/toc/Usage-Examples-1680752989">
 <pre>close</pre>
@@ -8111,13 +8116,13 @@ Error message and password prompt
 <div created="20160922191625904" modified="20161104162004194" title="$:/state/toc/Usage-Libraries-1680752989">
 <pre>close</pre>
 </div>
-<div created="20160922191550304" modified="20161104162002342" title="$:/state/toc/Usage-Scripts-1680752989">
-<pre>close</pre>
+<div created="20160922191550304" modified="20161117164302246" title="$:/state/toc/Usage-Scripts-1680752989">
+<pre>open</pre>
 </div>
 <div created="20160930153955940" modified="20161104162500926" title="$:/state/toc/Usage-TrainingProcess-1680752989">
 <pre>close</pre>
 </div>
-<div list="clg-authorship-analytics [[Draft of 'About']] Requirements" title="$:/StoryList">
+<div list="Requirements train-test.sh Usage 008-genetic-all train-top-level.sh clg-authorship-analytics" title="$:/StoryList">
 <pre></pre>
 </div>
 <div plugin-type="info" title="$:/temp/info-plugin" type="application/json">
@@ -8134,8 +8139,8 @@ Error message and password prompt
     }
 }</pre>
 </div>
-<div created="20160922191939570" modified="20161102210551592" title="$:/temp/search">
-<pre>meta</pre>
+<div created="20160922191939570" modified="20161117163119022" title="$:/temp/search">
+<pre></pre>
 </div>
 <div author="JeremyRuston" bag="default" core-version="&gt;=5.0.0" dependents="$:/themes/tiddlywiki/vanilla" description="Emphasises individual tiddlers" name="Snow White" plugin-type="theme" revision="0" title="$:/themes/tiddlywiki/snowwhite" type="application/json" version="5.1.13">
 <pre>{
@@ -8675,7 +8680,7 @@ Bagging is performed at the end of the meta-training stage in [[train-outerCV-1f
 
 </pre>
 </div>
-<div bag="default" caption="Overview" created="20160520172058387" modified="20161104162742395" revision="0" tags="[[Table of Contents]]" title="clg-authorship-analytics">
+<div bag="default" caption="Overview" created="20160520172058387" modified="20161117165441689" revision="0" tags="[[Table of Contents]] TODO" title="clg-authorship-analytics">
 <pre>! Overview
 
 The package contains a set of scripts and libraries to perform author-identification related tasks. 
@@ -8694,10 +8699,16 @@ The task of author verification consists primarily in answering the following qu
 The current version of the package provides:
 
 * Three author [[verification strategies|Verification Strategies]]
-* A system which applies a genetic process in order to:
+* A system which applies a [[Genetic process]] in order to:
 
-* find the best verification systems (in short, classifiers based on variants of one of the strategies),
-* and combine a selection of these into a meta-classifier (stacked generalization has proved to be a reliable approach at the PAN 2015 competition).
+** find the best verification systems (in short, classifiers based on variants of one of the strategies),
+** and combine a selection of these into a [[Meta-classifier]] (stacked generalization has proved to be a reliable approach at the PAN 2015 competition).
+* The system is intended to allow supervised learning (see TrainingProcess) as well as unsupervised learning, although the latter is not very developed in the current version.
+* The system is intended to be extensible in different ways:
+** New strategies
+** New features
+** New learning methods
+* Distributed computing (through the in-house package ''TODO'')
 
 See [[Verification Strategies]], [[Genetic process]], [[Meta-classifier]]
 
@@ -9192,7 +9203,7 @@ Usage: prepare-input-data.sh [options] &lt;original input dir&gt; &lt;dest dir&g
 
 </pre>
 </div>
-<div bag="default" created="20160520172212606" modified="20160921175713142" revision="0" tags="[[Table of Contents]] TODO" title="Requirements">
+<div bag="default" created="20160520172212606" modified="20161117211021845" revision="0" tags="[[Table of Contents]] TODO" title="Requirements">
 <pre>! Installation
 
 The package itself is coded in Bash and Perl. No compilation is required. 
@@ -9214,6 +9225,7 @@ The different dependencies can be configured using an in-house basic package man
 ** Data::Dumper
 ** Data::Dumper::Simple
 ** Math::CDF
+** HTML::Strip
 * Java
 ** Weka
 
@@ -9524,7 +9536,7 @@ TODO
 
 </pre>
 </div>
-<div bag="default" created="20160922201503000" revision="0" tags="Scripts" title="train-test.sh" type="text/plain">
+<div bag="default" created="20160922201503000" modified="20161117165829803" revision="0" tags="Scripts" title="train-test.sh" type="text/plain">
 <pre>Usage: train-test.sh [options] &lt;input data dir&gt; &lt;config file&gt; &lt;output dir&gt;
 
   Trains or applies a model as specified by the parameters in
@@ -9532,8 +9544,6 @@ TODO
   Currently exactly one of the options -l or -a must be specified, and
   -m must be supplied.
 
- 20:15:03 up 22 days,  5:12,  5 users,  load average: 0.32, 0.38, 0.32
-USER     TTY      FROM             LOGIN@   IDLE   JCPU   PCPU WHAT
   Options:
     -h this help
     -l &lt;cases file&gt; (Learn) train using the cases in the first column of
@@ -9604,25 +9614,20 @@ The top level script which starts the global training process is [[train-top-lev
 
 </pre>
 </div>
-<div bag="default" color="#3ba2ea" created="20160623140437077" icon="" list="Examples Concepts TrainingProcess Scripts Libraries" modified="20161103205926282" revision="0" tags="[[Table of Contents]]" title="Usage" type="">
-<pre>The programs in this package can be used in many different ways, although not all of them are properly tested and documented. The ``tests`` directory contains a few examples which show how to use it: see [[Examples]].
+<div bag="default" color="#3ba2ea" created="20160623140437077" icon="" list="Examples Concepts TrainingProcess Scripts Libraries" modified="20161117165920995" revision="0" tags="[[Table of Contents]]" title="Usage" type="">
+<pre>
+Technically there are two main ways to use the software:
 
-! Command line scripts
-
-The directory ``bin`` contains many Bash and Perl [[scripts|Scripts]]. 
-
-!! Applying a single strategy
-
-[[verif-author.pl]]: applies an author verification strategy (defined in a ConfigurationFile) to a pair of sets of documents, or to a series of such cases.
+* Use the Perl libraries from a Perl program: see [[Verification Strategies]] (this is also useful to check the options specific to a strategy)
+* Use the executable scripts provided in the ``bin``directory:
+** to apply an individual strategy (defined in a ConfigurationFile): see [[verif-author.pl]].
+** to [[train|TrainingProcess]] a model on some dataset using the [[Genetic process]] (possibly using the [[Meta-classifier]]: see TrainingProcess, [[run-std-training.sh]].
+* to apply a previously trained model to some data: see [[train-test.sh]].
 
 
-!! Meta-classifier and genetic process
+The ``tests`` directory contains a few examples which show how to use these scripts: see [[Examples]]. 
 
-See [[TrainingProcess]], [[Genetic process]], [[Meta-classifier]].
 
-! Perl libraries
-
-See [[Verification Strategies]].
 </pre>
 </div>
 <div bag="default" created="20160922201503000" revision="0" tags="Scripts" title="verif-author.pl" type="text/plain">
