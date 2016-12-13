@@ -58,6 +58,18 @@ sub compute {
 }
 
 
+#twdoc featuresHeader($self)
+#
+# * output: array containing the names of the features
+#
+#/twdoc
+#
+sub featuresHeader {
+    my $self = shift;
+    confessLog($self->{logger}, "bug: calling an abstract method");
+}
+
+
 #twdoc newVerifStrategyFromId($strategyId, $params, ?$removeStrategyIdPrefix)
 #
 # static 'new' method which instantiates one of the non-abstract strategy classes. 

@@ -211,6 +211,28 @@ sub featuresFromScores {
 }
 
 
+
+sub featuresHeader {
+    my $self = shift;
+
+    my @names;
+
+
+    if (($self->{finalScoresMethod} eq "aggregSimByRound") || ($self->{finalScoresMethod} eq "both")) {
+	my $catLists = $self->getCatLists($self->{aggregSimByRound}, "simByRound");
+	push(@names, @$catLists);
+    }
+    if (($self->{finalScoresMethod} eq "countMostSimByRound") || ($self->{finalScoresMethod} eq "both")) {
+	my $catLists = $self->getCatLists($self->{aggregSimByRound}, "countMostSimByRound");
+	push(@names, @$catLists);
+    }
+    return \@names;
+}
+
+
+
+
+
 #
 # catList = a list of pairs [i,j] of categories to aggregate
 #
@@ -256,6 +278,7 @@ sub computeFeatureFromCatListCount {
 sub getCatLists {
     my $self = shift;
     my $categsId = shift;
+    my $humanNamesPrefix = shift; # if defined, return list of names instead of list of lists, with this string as prefix
 
     my @categsLists;
     if ($categsId eq "all") {
@@ -278,8 +301,34 @@ sub getCatLists {
     } else {
 	confessLog($self->{logger}, "Univ strategy: invalid categ id '$categsId' (must be 'all', 'homogeneity', 'sameCat', 'mergedOrNot')");
     }
-    return \@categsLists;
+    
+    if (defined($humanNamesPrefix)) {
+	my @names;
+	foreach my $feat (@categsLists) {
+	    my $name = $humanNamesPrefix."_".$categsId;
+	    foreach my $l (@$feat) {
+		$name .= "_".categName($l->[0])."Vs".categName($l->[1]);
+	    }
+	    push(@names, $name);
+	}
+	return \@names;
+    } else {
+	return \@categsLists;
+    }
 }
+
+
+sub categName {
+    my $num = shift;
+    if ($num == 0) {
+	return "ProbeA";
+    } elsif ($num == 1) {
+	return "ProbeB";
+    } elsif ($num == 2) {
+	return "MergedAB";
+    }
+}
+
 
 
 

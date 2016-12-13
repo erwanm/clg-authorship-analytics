@@ -7,5 +7,5 @@ if [ $# -eq 1 ]; then
 else
     echo "$0 info: no logging"
 fi
-eval "verif-author.pl $logOpt tests/003-univ.conf tests/data/english-20-cases/EN001/known01.txt tests/data/english-20-cases/EN001/unknown.txt"
+eval "verif-author.pl $logOpt -H tests/003-univ.conf tests/data/english-20-cases/EN001/known01.txt tests/data/english-20-cases/EN001/unknown.txt"
 

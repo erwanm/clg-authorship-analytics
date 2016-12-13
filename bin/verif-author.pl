@@ -69,6 +69,8 @@ sub usage {
 	print $fh "     -p <dir> if specified, for every case processed the raw scores table is written\n";
 	print $fh "        to file <dir>/<NNN>.scores, where <NNN> is the number of the case in the\n";
 	print $fh "        input list (if reading input cases from STDIN) or '001' (if single case).\n";
+	print $fh "     -H print header with features names.\n";
+	print $fh "\n";
 #	print $fh "     -i <r|w|rw> allow verif strategy to read/write/both to/from resources disk;\n";
 #	print $fh "        this is currently only used by the impostors strategy for pre-sim values.\n";
 	print $fh "\n";
@@ -77,7 +79,7 @@ sub usage {
 
 # PARSING OPTIONS
 my %opt;
-getopts('hl:L:mcv:sd:p:', \%opt ) or  ( print STDERR "Error in options" &&  usage(*STDERR) && exit 1);
+getopts('Hhl:L:mcv:sd:p:', \%opt ) or  ( print STDERR "Error in options" &&  usage(*STDERR) && exit 1);
 usage(*STDOUT) && exit 0 if $opt{h};
 print STDERR "Either 1 or 3 arguments expected, but ".scalar(@ARGV)." found: ".join(" ; ", @ARGV)  && usage(*STDERR) && exit 1 if ((scalar(@ARGV) != 1) && (scalar(@ARGV) != 3));
 
@@ -90,6 +92,7 @@ my $vocabResourcesStr = $opt{v};
 my $configAsString=$opt{s};
 my $datasetsResourcesPath=$opt{d};
 my $printScoreDir = $opt{p};
+my $printHeader=defined($opt{H});
 #my $strategyDiskAccess = $opt{i};
 
 # init log
@@ -169,6 +172,10 @@ $strategy->{obsTypesList} = readObsTypesFromConfigHash($config); # for verif str
 my %allDocs;
 my $caseNo =1;
 my $targetFileScoresTable = undef;
+if ($printHeader) {
+    my $features = $strategy->featuresHeader();
+    print join("\t", @$features)."\n";
+}
 foreach my $pair (@docsPairs) { # for each case to analyze
     $logger->debug("Initializing pair") if ($logger);
     my @casePair;

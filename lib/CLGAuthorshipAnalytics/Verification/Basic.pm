@@ -92,6 +92,15 @@ sub compute {
 }
 
 
+sub featuresHeader {
+    my $self = shift;
+
+    my @names;
+    foreach my $obsType (sort @{$self->{obsTypesList}}) {
+	push(@names, $obsType);
+    }
+    return \@names;
+}
 
 
 1;

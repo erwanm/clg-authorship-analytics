@@ -139,6 +139,11 @@ sub compute {
 }
 
 
+
+
+
+
+
 #
 #
 # input: $allImpostorsDatasets->{datasetId}->[impNo] = DocProvider
@@ -481,6 +486,17 @@ sub featuresFromScores {
 
 
 
+sub featuresHeader {
+    my $self = shift;
+
+    my @names;
+    push(@names, "countMostSim_".$self->{GI_useCountMostSimFeature}) if ($self->{GI_useCountMostSimFeature} ne "0");
+    push(@names, "relativeRank");
+    push(@names, "aggregatedSim_".$self->{useAggregateSim}) if ($self->{useAggregateSim} ne "0");
+    return \@names;
+}
+
+
 
 
 #
@@ -687,6 +703,7 @@ sub writeScoresToFile {
     }
     close($fh);
 }
+
 
 
 1;
