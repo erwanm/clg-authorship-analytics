@@ -47,7 +47,7 @@ sub usage {
 	print $fh "        or a log level (".join(",", @possibleLogLevels)."). \n";
 	print $fh "        By default there is no logging at all.\n";
 	print $fh "     -L <Log output file> log filename (useless if a log config file is given).\n";
-	print $fh "     -m by default input files are loaded into memory until the end of the script,\n";
+	print $fh "     -z by default input files are loaded into memory until the end of the script,\n";
 	print $fh "        so that the same file does not have to be loaded several times. This option\n";
 	print $fh "        prevents that behaviour, in order to save memory space when a lot of input\n";
 	print $fh "        files have to be processed (useful only when reading input files from STDIN).\n";
@@ -70,7 +70,10 @@ sub usage {
 	print $fh "        to file <dir>/<NNN>.scores, where <NNN> is the number of the case in the\n";
 	print $fh "        input list (if reading input cases from STDIN) or '001' (if single case).\n";
 	print $fh "     -H print header with features names.\n";
-	print $fh "\n";
+        print $fh "     -m <min doc freq> discard observations with doc freq lower than <min doc freq>;\n";
+ 	print $fh "        The min doc freq is applied to each set of probe documents indepently.\n";
+ 	print $fh "\n";
+ 	print $fh "\n";
 #	print $fh "     -i <r|w|rw> allow verif strategy to read/write/both to/from resources disk;\n";
 #	print $fh "        this is currently only used by the impostors strategy for pre-sim values.\n";
 	print $fh "\n";
@@ -79,21 +82,23 @@ sub usage {
 
 # PARSING OPTIONS
 my %opt;
-getopts('Hhl:L:mcv:sd:p:', \%opt ) or  ( print STDERR "Error in options" &&  usage(*STDERR) && exit 1);
+getopts('Hhl:L:m:cv:sd:p:z', \%opt ) or  ( print STDERR "Error in options" &&  usage(*STDERR) && exit 1);
 usage(*STDOUT) && exit 0 if $opt{h};
 print STDERR "Either 1 or 3 arguments expected, but ".scalar(@ARGV)." found: ".join(" ; ", @ARGV)  && usage(*STDERR) && exit 1 if ((scalar(@ARGV) != 1) && (scalar(@ARGV) != 3));
 
 my $configFileOrParams = $ARGV[0];
 my ($docsA, $docsB) = ($ARGV[1], $ARGV[2]);
 
-my $dontLoadAllFiles = $opt{m};
+my $dontLoadAllFiles = $opt{z};
 my $useCountFiles = $opt{c};
 my $vocabResourcesStr = $opt{v};
 my $configAsString=$opt{s};
 my $datasetsResourcesPath=$opt{d};
 my $printScoreDir = $opt{p};
 my $printHeader=defined($opt{H});
+my $minDocFreq  = defined($opt{m}) ? $opt{m} : 0;
 #my $strategyDiskAccess = $opt{i};
+
 
 # init log
 my $logger;
@@ -170,6 +175,7 @@ $strategy->{obsTypesList} = readObsTypesFromConfigHash($config); # for verif str
 
 
 my %allDocs;
+my @probeDocsCollection;
 my $caseNo =1;
 my $targetFileScoresTable = undef;
 if ($printHeader) {
@@ -179,9 +185,11 @@ if ($printHeader) {
 foreach my $pair (@docsPairs) { # for each case to analyze
     $logger->debug("Initializing pair") if ($logger);
     my @casePair;
-    foreach my $docSet (@$pair) { # for each of the two documents sets
-	$logger->debug("Initializing 1 doc set out of 2") if ($logger);
+    my $probeNo=0;
+    foreach my $docSet (@$pair) {
+	$logger->debug("Initializing doc ".($probeNo+1)." / 2") if ($logger);
 	my @docProvSet;
+	$probeDocsCollection[$probeNo] = CLGTextTools::DocCollection->new({logging => $config->{logging} }); # cannot use globalPath since we don't know if the files are part of the same dataset (e.g. same directory)
 	foreach my $doc (@$docSet) { # for each doc in a set
 	    $logger->debug("Initializing doc '$doc'") if ($logger);
 	    my $docProvider;
@@ -195,11 +203,19 @@ foreach my $pair (@docsPairs) { # for each case to analyze
 		$allDocs{$doc} = $docProvider if (!$dontLoadAllFiles);
 	    }
 	    push(@docProvSet, $docProvider);
+	    $probeDocsCollection[$probeNo]->addDocProvider($docProvider);
 	}
 	push(@casePair, \@docProvSet);
+	$probeNo++;
     }
 
     confess "bug! casePair must be of size 2!" if (scalar(@casePair) != 2);
+
+    if ($minDocFreq> 0) {
+	foreach my $collection (@probeDocsCollection) {
+	    $collection->applyMinDocFreq($minDocFreq);
+	}
+    }
 
     # process case
     $logger->debug("Computing similarity for case") if ($logger);
@@ -208,6 +224,10 @@ foreach my $pair (@docsPairs) { # for each case to analyze
 	$caseNo++;
     }
     my $features = $strategy->compute(\@casePair, $targetFileScoresTable);
-    print join("\t", @$features)."\n";
+    printf("%20.12f", $features->[0]);
+    for (my $i=1; $i<scalar(@$features); $i++) {
+	printf("\t%20.12f", $features->[$i]);
+    }
+    print "\n";
 }
 
