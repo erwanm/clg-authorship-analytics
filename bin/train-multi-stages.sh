@@ -9,7 +9,8 @@ source pan-utils.sh
 progName=$(basename "$BASH_SOURCE")
 
 resume=0
-constanntParams=""
+trainCVOptions=""
+constantParams=""
 parallelPrefix=""
 finalNtimes2CV=10
 sleepTime=1m
@@ -53,7 +54,8 @@ while getopts 'hP:o:r' option ; do
 	"P" ) parallelPrefix="$OPTARG";;
 	"r" ) resume=1
 	      constantParams="$constantParams -r";;
-	"o" ) constantParams="$constantParams -o \"$OPTARG\"";;
+	"o" ) trainCVOptions="$OPTARG"
+	      constantParams="$constantParams -o \"$OPTARG\"";;
 	"?" ) 
 	    echo "Error, unknown option." 1>&2
             printHelp=1;;
@@ -173,8 +175,9 @@ cat "$bestConfigsRunsList" | cut -f 1 | while read configFile; do
     if [ $resume -eq 0 ] || [ ! -d "$bestDir/$confNoStr.model" ] || [ ! -s "$bestDir/$confNoStr/predicted.answers" ] ; then
 	evalSafe "cat \"$configFile\" >\"$bestDir/$confNoStr.conf\""  "$progName,$LINENO: "
 	mkdirSafe "$bestDir/$confNoStr.model"  "$progName,$LINENO: "
+	# TODO this call to train-test does not follow the 'prefered data location' option if any (only in train-cv options)
 	command1="train-test.sh -l \"$casesForRetrainingFile\" -m \"$bestDir/$confNoStr.model\" \"$outputDir\" \"$bestDir/$confNoStr.conf\" \"$bestDir/$confNoStr.model\""
-	command2="train-cv.sh  \"$bestDir/$confNoStr.conf\" \"$outputDir\" \"$bestDir\""
+	command2="train-cv.sh $trainCVOptions \"$bestDir/$confNoStr.conf\" \"$outputDir\" \"$bestDir\""
 
 	if [ -z "$parallelPrefix"  ]; then
 	    echo "$progName: calling '$command1'"
