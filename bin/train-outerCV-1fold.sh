@@ -166,7 +166,7 @@ for multiConfStrategyFile in "$multiConfDir"/*.multi-conf; do
 	id="$strategy.$id"
 	# copy predictions obtained with CV for train fold
 	mkdirSafe "$applyDir/fold.train/$id"
-	evalSafe "cat \"$prefix/predicted.answers\" > \"$applyDir/fold.train/$id.answers\"" "$progName,$LINENO: "
+	evalSafe "cat \"$prefix.answers\" > \"$applyDir/fold.train/$id.answers\"" "$progName,$LINENO: "
 	evalSafe "cat \"$prefix.perf\" > \"$applyDir/fold.train/$id.perf\"" "$progName,$LINENO: "
 	evalSafe "cat \"$applyDir/fold.train/$id.answers\" \"$applyDir/fold.test/$id.answers\" | sort +0 -1 >\"$applyDir/$id.answers\"" "$progName,$LINENO: "
 	evalSafe "echo -e \"$id\\t$prefix\" >>\"$outputDir/selected-strategy-configs.list\"" "$progName,$LINENO: "

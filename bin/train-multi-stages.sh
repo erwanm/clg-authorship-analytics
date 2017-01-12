@@ -172,7 +172,7 @@ waitFile=$(mktemp --tmpdir="$bestDir" "$progName.main.wait.XXXXXXXXX") # not usi
 #echo "DEBUG $waitFile" 1>&2
 cat "$bestConfigsRunsList" | cut -f 1 | while read configFile; do
     confNoStr=$(printf "%04d" $confNo)
-    if [ $resume -eq 0 ] || [ ! -d "$bestDir/$confNoStr.model" ] || [ ! -s "$bestDir/$confNoStr/predicted.answers" ] ; then
+    if [ $resume -eq 0 ] || [ ! -d "$bestDir/$confNoStr.model" ] || [ ! -s "$bestDir/$confNoStr.answers" ] ; then
 	evalSafe "cat \"$configFile\" >\"$bestDir/$confNoStr.conf\""  "$progName,$LINENO: "
 	mkdirSafe "$bestDir/$confNoStr.model"  "$progName,$LINENO: "
 	# TODO this call to train-test does not follow the 'prefered data location' option if any (only in train-cv options)
@@ -195,7 +195,7 @@ cat "$bestConfigsRunsList" | cut -f 1 | while read configFile; do
     fi
     evalSafe "echo \"$bestDir/$confNoStr\" >>\"$outputDir/best.prefix-list\""  "$progName,$LINENO: "
     evalSafe "echo \"$bestDir/$confNoStr.model\" >>\"$waitFile\""  "$progName,$LINENO: "
-    evalSafe "echo \"$bestDir/$confNoStr/predicted.answers\" >>\"$waitFile\""  "$progName,$LINENO: "
+    evalSafe "echo \"$bestDir/$confNoStr.answers\" >>\"$waitFile\""  "$progName,$LINENO: "
     confNo=$(( $confNo + 1 ))
 done
 if [ $? -ne 0 ]; then
