@@ -263,8 +263,6 @@ Error message and password prompt
 
 <li>DocGenerationCommand</li>
 
-<li>Draft of 'About'</li>
-
 <li>Examples</li>
 
 <li>generate-multi-conf.sh</li>
@@ -286,6 +284,8 @@ Error message and password prompt
 <li>Implementation: train-top-level.sh</li>
 
 <li>Libraries</li>
+
+<li>License</li>
 
 <li>MakingOf</li>
 
@@ -8122,7 +8122,7 @@ Error message and password prompt
 <div created="20160930153955940" modified="20161104162500926" title="$:/state/toc/Usage-TrainingProcess-1680752989">
 <pre>close</pre>
 </div>
-<div list="Requirements train-test.sh Usage 008-genetic-all train-top-level.sh clg-authorship-analytics" title="$:/StoryList">
+<div list="License About" title="$:/StoryList">
 <pre></pre>
 </div>
 <div plugin-type="info" title="$:/temp/info-plugin" type="application/json">
@@ -8569,20 +8569,23 @@ GI.aggregateSimStat=median
 * [[Bagging]]
 </pre>
 </div>
-<div bag="default" created="20160623135147967" email="erwan.more@gmail.com" gitrepo="TODO" issues="TODO" modified="20160922162105670" revision="0" tags="[[Table of Contents]] MakingOf" title="About">
+<div bag="default" created="20160623135147967" email="erwan.more@gmail.com" gitrepo="TODO" issues="TODO" modified="20171106171428145" revision="0" tags="[[Table of Contents]] MakingOf" title="About">
 <pre>    ''clg-authorship-analytics'': a set of scripts and libraries to perform author-identification related tasks.
-
-    Copyright (C) 2016 Erwan Moreau
-
-''LICENSE TODO''
 
 * Official repository: {{!!gitrepo}}
 * Bug reports and feature requests: {{!!issues}}
 * Contact the author: &lt;code&gt;{{!!email}}&lt;/code&gt;
 
+''Copyright (C) 2016-2017 Trinity College Dublin, Adapt Centre and Erwan Moreau''
+
+{{License}}
+
+
+
+
 ---
 
-[[TiddlyWiki|http://www.tiddlywiki.com]] is Copyright (C) Jeremy Ruston 2004-2007 Copyright (C) ~UnaMesa Association 2007-2016. [[See full license|https://github.com/Jermolene/TiddlyWiki5/blob/master/licenses/copyright.md]].
+[[TiddlyWiki|http://www.tiddlywiki.com]] is used for this documentation. ~TiddlyWiki is Copyright (C) Jeremy Ruston 2004-2007 Copyright (C) ~UnaMesa Association 2007-2016. [[See full license|https://github.com/Jermolene/TiddlyWiki5/blob/master/licenses/copyright.md]].
 </pre>
 </div>
 <div bag="default" created="20160922201503000" revision="0" tags="Scripts" title="apply-bagging.sh" type="text/plain">
@@ -8971,22 +8974,6 @@ find lib/ -name &quot;*.pm&quot; | generate-tw-doc-lib.sh -t Libraries -r lib/  
 ```
 </pre>
 </div>
-<div bag="default" created="20160623135147967" draft.of="About" draft.title="About" email="erwan.more@gmail.com" gitrepo="TODO" issues="TODO" modified="20161104162341201" revision="0" tags="[[Table of Contents]] MakingOf" title="Draft of 'About'">
-<pre>    ''clg-authorship-analytics'': a set of scripts and libraries to perform author-identification related tasks.
-
-    Copyright (C) 2016 Erwan Moreau
-
-''LICENSE TODO''
-
-* Official repository: {{!!gitrepo}}
-* Bug reports and feature requests: {{!!issues}}
-* Contact the author: &lt;code&gt;{{!!email}}&lt;/code&gt;
-
----
-
-[[TiddlyWiki|http://www.tiddlywiki.com]] is Copyright (C) Jeremy Ruston 2004-2007 Copyright (C) ~UnaMesa Association 2007-2016. [[See full license|https://github.com/Jermolene/TiddlyWiki5/blob/master/licenses/copyright.md]].
-</pre>
-</div>
 <div created="20160930155144476" modified="20161103210126782" tags="Usage" title="Examples">
 <pre>The examples presented in this section are available in the ``tests`` directory. Each example consists of a config file ``.conf`` and a script ``.sh`` to run the example. The ``tests`` directory also contains some sample data in ``tests/data``.</pre>
 </div>
@@ -9116,6 +9103,21 @@ Following the provided ConfigurationFile, this scripts either:
 </div>
 <div color="#3ba2ea" created="20160922191611219" modified="20160922192427547" tags="Usage" title="Libraries">
 <pre></pre>
+</div>
+<div created="20171106170139058" modified="20171106170431065" tags="MakingOf" title="License">
+<pre>clg-authorship-analytics is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+</pre>
 </div>
 <div bag="default" color="#3ba2ea" created="20160922162205040" modified="20160922192423645" revision="0" tags="[[Table of Contents]]" title="MakingOf">
 <pre></pre>
@@ -9615,8 +9617,7 @@ The top level script which starts the global training process is [[train-top-lev
 </pre>
 </div>
 <div bag="default" color="#3ba2ea" created="20160623140437077" icon="" list="Examples Concepts TrainingProcess Scripts Libraries" modified="20161117165920995" revision="0" tags="[[Table of Contents]]" title="Usage" type="">
-<pre>
-Technically there are two main ways to use the software:
+<pre>Technically there are two main ways to use the software:
 
 * Use the Perl libraries from a Perl program: see [[Verification Strategies]] (this is also useful to check the options specific to a strategy)
 * Use the executable scripts provided in the ``bin``directory:
