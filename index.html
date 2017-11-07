@@ -177,6 +177,8 @@ Error message and password prompt
 
 <li>$:/StoryList</li>
 
+<li>$:/temp/advancedsearch</li>
+
 <li>$:/temp/info-plugin</li>
 
 <li>$:/temp/search</li>
@@ -316,8 +318,6 @@ Error message and password prompt
 <li>StrategyTraining</li>
 
 <li>Table of Contents</li>
-
-<li>TODO</li>
 
 <li>train-cv.sh</li>
 
@@ -8059,7 +8059,7 @@ Error message and password prompt
 <div created="20160922204019437" modified="20160922204019437" title="$:/state/showeditpreview">
 <pre>yes</pre>
 </div>
-<div created="20160922204016926" modified="20161117165540063" title="$:/state/sidebar">
+<div created="20160922204016926" modified="20171107161422136" title="$:/state/sidebar">
 <pre>yes</pre>
 </div>
 <div created="20160922191545032" modified="20161103205816327" title="$:/state/tab/sidebar--1835078512">
@@ -8122,8 +8122,11 @@ Error message and password prompt
 <div created="20160930153955940" modified="20161104162500926" title="$:/state/toc/Usage-TrainingProcess-1680752989">
 <pre>close</pre>
 </div>
-<div list="clg-authorship-analytics" title="$:/StoryList">
+<div list="Requirements clg-authorship-analytics" title="$:/StoryList">
 <pre></pre>
+</div>
+<div created="20171107161425073" modified="20171107161425073" title="$:/temp/advancedsearch">
+<pre>todo</pre>
 </div>
 <div plugin-type="info" title="$:/temp/info-plugin" type="application/json">
 <pre>{
@@ -8139,7 +8142,7 @@ Error message and password prompt
     }
 }</pre>
 </div>
-<div created="20160922191939570" modified="20161117163119022" title="$:/temp/search">
+<div created="20160922191939570" modified="20171107161443954" title="$:/temp/search">
 <pre></pre>
 </div>
 <div author="JeremyRuston" bag="default" core-version="&gt;=5.0.0" dependents="$:/themes/tiddlywiki/vanilla" description="Emphasises individual tiddlers" name="Snow White" plugin-type="theme" revision="0" title="$:/themes/tiddlywiki/snowwhite" type="application/json" version="5.1.13">
@@ -8683,7 +8686,7 @@ Bagging is performed at the end of the meta-training stage in [[train-outerCV-1f
 
 </pre>
 </div>
-<div bag="default" caption="Overview" created="20160520172058387" modified="20161117165441689" revision="0" tags="[[Table of Contents]] TODO" title="clg-authorship-analytics">
+<div bag="default" caption="Overview" created="20160520172058387" modified="20171107161053856" revision="0" tags="[[Table of Contents]]" title="clg-authorship-analytics">
 <pre>! Overview
 
 The package contains a set of scripts and libraries to perform author-identification related tasks. 
@@ -8711,7 +8714,7 @@ The current version of the package provides:
 ** New strategies
 ** New features
 ** New learning methods
-* Distributed computing (through the in-house package ''TODO'')
+* Distributed computing (through the in-house package [[erw-bash-commons|https://github.com/erwanm/erw-bash-commons]])
 
 See [[Verification Strategies]], [[Genetic process]], [[Meta-classifier]]
 
@@ -9205,7 +9208,7 @@ Usage: prepare-input-data.sh [options] &lt;original input dir&gt; &lt;dest dir&g
 
 </pre>
 </div>
-<div bag="default" created="20160520172212606" modified="20161117211021845" revision="0" tags="[[Table of Contents]] TODO" title="Requirements">
+<div bag="default" created="20160520172212606" modified="20171107161417273" revision="0" tags="[[Table of Contents]]" title="Requirements">
 <pre>! Installation
 
 The package itself is coded in Bash and Perl. No compilation is required. 
@@ -9233,7 +9236,7 @@ The different dependencies can be configured using an in-house basic package man
 
 !! In-house packages
 
-''TODO'' git repo location
+The following in-house packages are required; they can be found at https://github.com/erwanm?tab=repositories
 
 * erw-bash-commons
 * erw-tsv-commons
@@ -9384,9 +9387,6 @@ The strategy training includes two parts:
 
 &lt;/div&gt;
 </pre>
-</div>
-<div bag="default" color="#d7202e" created="20160628150908653" modified="20160628150936326" revision="0" title="TODO">
-<pre></pre>
 </div>
 <div bag="default" created="20160922201503000" revision="0" tags="Scripts" title="train-cv.sh" type="text/plain">
 <pre>Usage: train-cv.sh [options] &lt;config file&gt; &lt;input dir&gt; &lt;output eval dir&gt;
