@@ -306,7 +306,7 @@ sub getCatLists {
 	foreach my $feat (@categsLists) {
 	    my $name = $humanNamesPrefix."_".$categsId;
 	    foreach my $l (@$feat) {
-		$name .= "_".categName($l->[0])."Vs".categName($l->[1]);
+		$name .= "_".categName($l->[0]).categName($l->[1]);
 	    }
 	    push(@names, $name);
 	}
@@ -320,11 +320,11 @@ sub getCatLists {
 sub categName {
     my $num = shift;
     if ($num == 0) {
-	return "ProbeA";
+	return "A";
     } elsif ($num == 1) {
-	return "ProbeB";
+	return "B";
     } elsif ($num == 2) {
-	return "MergedAB";
+	return "M";
     }
 }
 
