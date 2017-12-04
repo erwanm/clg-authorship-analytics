@@ -217,13 +217,12 @@ sub featuresHeader {
 
     my @names;
 
-
     if (($self->{finalScoresMethod} eq "aggregSimByRound") || ($self->{finalScoresMethod} eq "both")) {
 	my $catLists = $self->getCatLists($self->{aggregSimByRound}, "simByRound");
 	push(@names, @$catLists);
     }
     if (($self->{finalScoresMethod} eq "countMostSimByRound") || ($self->{finalScoresMethod} eq "both")) {
-	my $catLists = $self->getCatLists($self->{aggregSimByRound}, "countMostSimByRound");
+	my $catLists = $self->getCatLists($self->{countMostSimByRound}, "countMostSimByRound");
 	push(@names, @$catLists);
     }
     return \@names;
