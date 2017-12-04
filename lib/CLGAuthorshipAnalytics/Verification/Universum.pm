@@ -206,6 +206,7 @@ sub featuresFromScores {
 	push(@features, @f);
 
     }
+    confessLog($self->{logger}, "Univ strategy: invalid value for 'finalScoresMethod': '".$self->{finalScoresMethod}."' (must be 'both', 'aggregSimByRound' or 'countMostSimByRound')") if (scalar(@features)==0);
 
     return \@features;
 }
