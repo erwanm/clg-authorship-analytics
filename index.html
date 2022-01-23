@@ -285,6 +285,8 @@ Error message and password prompt
 
 <li>Implementation: train-top-level.sh</li>
 
+<li>Installation</li>
+
 <li>Libraries</li>
 
 <li>License</li>
@@ -8059,7 +8061,7 @@ Error message and password prompt
 <div created="20160922204019437" modified="20160922204019437" title="$:/state/showeditpreview">
 <pre>yes</pre>
 </div>
-<div created="20160922204016926" modified="20171107161422136" title="$:/state/sidebar">
+<div created="20160922204016926" modified="20220123180204025" title="$:/state/sidebar">
 <pre>yes</pre>
 </div>
 <div created="20160922191545032" modified="20161103205816327" title="$:/state/tab/sidebar--1835078512">
@@ -8122,7 +8124,7 @@ Error message and password prompt
 <div created="20160930153955940" modified="20161104162500926" title="$:/state/toc/Usage-TrainingProcess-1680752989">
 <pre>close</pre>
 </div>
-<div list="Requirements clg-authorship-analytics" title="$:/StoryList">
+<div list="Requirements [[Table of Contents]] clg-authorship-analytics" title="$:/StoryList">
 <pre></pre>
 </div>
 <div created="20171107161425073" modified="20171107161425073" title="$:/temp/advancedsearch">
@@ -8142,8 +8144,8 @@ Error message and password prompt
     }
 }</pre>
 </div>
-<div created="20160922191939570" modified="20171107161443954" title="$:/temp/search">
-<pre></pre>
+<div created="20160922191939570" modified="20220123180206573" title="$:/temp/search">
+<pre>table</pre>
 </div>
 <div author="JeremyRuston" bag="default" core-version="&gt;=5.0.0" dependents="$:/themes/tiddlywiki/vanilla" description="Emphasises individual tiddlers" name="Snow White" plugin-type="theme" revision="0" title="$:/themes/tiddlywiki/snowwhite" type="application/json" version="5.1.13">
 <pre>{
@@ -8686,7 +8688,7 @@ Bagging is performed at the end of the meta-training stage in [[train-outerCV-1f
 
 </pre>
 </div>
-<div bag="default" caption="Overview" created="20160520172058387" modified="20171107161053856" revision="0" tags="[[Table of Contents]]" title="clg-authorship-analytics">
+<div bag="default" caption="Overview" created="20160520172058387" modified="20220123180153798" revision="0" tags="[[Table of Contents]]" title="clg-authorship-analytics">
 <pre>! Overview
 
 The package contains a set of scripts and libraries to perform author-identification related tasks. 
@@ -8722,6 +8724,7 @@ See [[Verification Strategies]], [[Genetic process]], [[Meta-classifier]]
 
 The current documentation might not cover all the aspects of the software. The plan is to improve it progressively, don't hesitate to send me [[feedback|About]].
 
+* See [[Requirements]] and [[Installation]] cover the usual prerequisites.
 * [[Examples]] gives a few ways to use the software with explanations.
 * Sections [[Concepts]] and [[TrainingProcess]] give high level information about the system.
 * [[Scripts]] and [[Libraries]] provide detailed inline documentation.
@@ -9104,6 +9107,144 @@ Following the provided ConfigurationFile, this scripts either:
 
 </pre>
 </div>
+<div created="20220122130432758" modified="20220123175932500" tags="[[Table of Contents]]" title="Installation">
+<pre>! Intro
+
+* This installation guide assumes a standard linux environment with ''bash'' and ''perl'' available.
+* Note: ''java'' is also needed for using Weka. Recent versions of Weka include a compatible version of java (see below).
+
+For the sake of simplicity the required dependencies are all installed in a single directory named `22-authorship` below. 
+
+```
+mkdir 22-authorship
+cd 22-authorship
+```
+In the following instructions please replace `&lt;path&gt;/22-authorship` with your own path.
+
+! Downloading the required in-house repositories
+
+```
+git clone git@github.com:erwanm/erw-bash-commons.git
+git clone git@github.com:erwanm/erw-tsv-commons.git
+git clone git@github.com:erwanm/erw-ml-utils.git
+git clone git@github.com:erwanm/TreeTaggerWrapper.git
+git clone git@github.com:erwanm/CLGTextTools.git
+git clone git@github.com:erwanm/clg-authorship-analytics.git
+```
+
+
+
+! Installing
+
+!! Required perl libraries
+
+
+!!! Installing local::lib
+
+There are various ways to install perl libraries, below we propose a way which doesn't require root access.
+
+Install ``local::lib`` following the instructions at [[http://search.cpan.org/~haarg/local-lib-2.000019/lib/local/lib.pm]], i.e.:
+
+# Download and extract the local::lib package
+# Then execute the following from inside the directory
+
+```
+perl Makefile.PL --bootstrap
+make test &amp;&amp; make install
+echo 'eval &quot;$(perl -I$HOME/perl5/lib/perl5 -Mlocal::lib)&quot;' &gt;&gt;~/.bashrc
+source ~/.bashrc
+```
+
+!!! Install the libraries with local::lib
+
+```
+cpan Log::Log4perl
+cpan File::BOM
+cpan Data::Dumper
+cpan Data::Dumper::Simple
+cpan Math::CDF
+cpan HTML::Strip
+```
+
+!! erw-pm 
+
+This is a basic in-house package management system, see [[details|https://erwanm.github.io/erw-bash-commons/#erw-pm]].
+
+```
+source &lt;path&gt;/22-authorship/erw-bash-commons/lib/init-erw-pm.sh
+erw-pm addrepo &lt;path&gt;/22-authorship
+```
+
+The above two lines should be added to `~/.bashrc` in order to save the need to reinitialize manually in future bash sessions.
+
+
+!! ~TreeTaggerWrapper
+
+```
+cd /home/erwan/now/22-authorship/TreeTaggerWrapper; bin/tree-tagger-wrapper-install.sh TreeTagger
+```
+
+!! Weka
+
+Download Weka manually from https://waikato.github.io/weka-wiki/downloading_weka/ and extract the zip file in the `22-authorship` directory:
+
+```
+unzip weka-3-8-5-azul-zulu-linux.zip
+```
+
+Rename the directory `weka` or create a symlink like this:
+
+```
+ln -s weka-3-8-5/ weka
+```
+
+Java is required to run weka. A version of java ships with Weka, so you may configure your system to use it by adding the following to `~/.bashrc`:
+
+```
+export PATH=$PATH:&lt;path&gt;/22-authorship/weka/jre/zulu11.43.55-ca-fx-jre11.0.9.1-linux_x64/bin
+```
+
+* Note: you might have to adapt the name of the java directory depending on your version.
+
+Finally create a setup file as follows for convenient use with `erw-pm`:
+
+```
+echo &quot;addToEnvVar \&quot;$(pwd)/weka.jar\&quot; CLASSPATH :&quot; &gt; weka/setup.erw-pm
+```
+
+! Session setup
+
+The following command makes all the libraries and scripts accessible for the session:
+
+```
+erw-pm activate clg-authorship-analytics
+```
+Normally the command should not output anything. In case there's an error message, something is wrong with the installation.
+
+
+!! Simple test
+
+A simple test can be done (from `&lt;path&gt;/22-authorship/clg-authorship-analytics`):
+
+```
+tests/000-minimal.sh
+```
+
+The output is is supposed to show many lines of warnings but no errors, with the last line containing three numeric values:
+
+```
+0.296877101851181	0.0537945482205651	0.048559261102815
+```
+
+Note: to avoid all the warning messages one can just run:
+
+```
+tests/000-minimal.sh 2&gt;/dev/null
+```
+
+But of course this masks also error messages, so in case the 3 numeric values don't show up please use the previous command above.
+</pre>
+</div>
 <div color="#3ba2ea" created="20160922191611219" modified="20160922192427547" tags="Usage" title="Libraries">
 <pre></pre>
 </div>
@@ -9208,8 +9349,15 @@ Usage: prepare-input-data.sh [options] &lt;original input dir&gt; &lt;dest dir&g
 
 </pre>
 </div>
-<div bag="default" created="20160520172212606" modified="20171107161417273" revision="0" tags="[[Table of Contents]]" title="Requirements">
-<pre>! Installation
+<div bag="default" created="20160520172212606" modified="20220123180614171" revision="0" tags="[[Table of Contents]]" title="Requirements">
+<pre>! Installation (new)
+
+A [[detailed installation guide|Installation]] is now provided. 
+
+Depending on your setup you may want to install only some parts or install things in a different way. In this case see the requirements below.
+
+
+! Requirements (old)
 
 The package itself is coded in Bash and Perl. No compilation is required. 
 The software has been tested only under reasonably recent Linux environments, but it should be usable under any environment which supports these languages (e.g. ~MacOS probably, but MS Windows probably not)
@@ -9380,7 +9528,7 @@ The strategy training includes two parts:
 * at the highest level, the parameters are trained using [[genetic algorithm|Genetic process]].
 </pre>
 </div>
-<div bag="default" color="#3ba2ea" created="20160623134748850" list="clg-authorship-analytics Requirements Usage [[User Guide]] About" modified="20160922162228681" revision="0" tags="$:/tags/SideBar MakingOf" title="Table of Contents">
+<div bag="default" color="#3ba2ea" created="20160623134748850" list="clg-authorship-analytics Requirements Installation Usage [[User Guide]] About" modified="20220123180219815" revision="0" tags="$:/tags/SideBar MakingOf" title="Table of Contents">
 <pre>&lt;div class=&quot;tc-table-of-contents&quot;&gt;
 
 &lt;&lt;toc-selective-expandable 'Table of Contents'&gt;&gt;
