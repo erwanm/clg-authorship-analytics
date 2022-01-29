@@ -35,7 +35,7 @@ function usage {
 #  echo "  if only -a or -l is provided, -m must be supplied as well (location "
 #  echo "  of them model to save or to apply)" 
 #  echo "  remark" 
-w  echo
+  echo
   echo "  Options:"
   echo "    -h this help"
   echo "    -l <cases file> (Learn) train using the cases in the first column of"
@@ -86,10 +86,16 @@ function computeFeaturesTSV {
 	echo "$progName error: something is wrong, different number of instances found in features file '$featuresFile' compared to '$casesFile'" 1>&2
 	exit 1
     fi
+    # UPDATE Jan 2022: now using tab delim to catch column 2 instead of previously using "set -- $line" and obtaining "$2"
+    #                  the previous version would work with both space or tab as delim but is not compatible with space in the first column (as now possible)
+    #                  note: pan15 truth.txt file contains space as separator, but  generateTruthCasesFile in pan-utils.sh is able to produce tab-separated
+    #                  case file with 0/1 instead of N/Y, depending on the options. I would assume that this function must have been used for PAN data,
+    #                  otherwise the target would not be 0/1
     cat "$casesFile" | while read line; do
-	set -- $line
-	gold="$2"
-#	echo "DEBUG case='$caseId' gold='$gold' from $casesFile" 1>&2
+	gold=$(echo "$line" | cut -f 2)
+	#	set -- $line
+	#	gold="$2"
+	#	echo "DEBUG case='$caseId' gold='$gold' from $casesFile" 1>&2
 	if [ -z "$gold" ]; then
 	    gold="?"
 	fi

@@ -26,7 +26,6 @@ function usage {
 }
 
 
-
 OPTIND=1
 while getopts 'h' option ; do 
     case $option in
@@ -82,10 +81,23 @@ else
     fi
     tmpCasesFile=$(mktemp  --tmpdir  "$progName.main.XXXXXXXXX")
     cut -f 1 "$casesFile" | while read caseId; do
-	knownDocsList=$(find "$inputDataDir/$caseId" -name "known*.txt" | tr '\n' ':')
-	knownDocsList=${knownDocsList%:}
-#	echo "DEBUG caseId='$caseId'; knownDocsList='$knownDocsList'" 1>&2
-	echo "$knownDocsList $inputDataDir/$caseId/unknown.txt"
+	if [ -d "$inputDataDir/$caseId" ]; then # PAN dir structure format
+	    knownDocsList=$(find "$inputDataDir/$caseId" -name "known*.txt" | tr '\n' ':')
+	    knownDocsList=${knownDocsList%:}
+	    #	echo "DEBUG caseId='$caseId'; knownDocsList='$knownDocsList'" 1>&2
+	    echo "$knownDocsList $inputDataDir/$caseId/unknown.txt"
+	else
+	    set -- $caseId
+	    if [ $# -eq 2 ]; then # plain filenames: the two groups are separated by a space and the filenames in a group are separated by colons ':'
+		# transforms a string of filenames separated by colons: file1:file2:file3 into prefix/file1:prefix/file2:prefix/file3:
+		files1withColon=$(echo ":$1" | sed "s|:|:$inputDataDir/|g")
+		files2withColon=$(echo ":$2" | sed "s|:|:$inputDataDir/|g")
+		echo "${files1withColon:1} ${files2withColon:1}"
+	    else
+		echo "$progName: error, the format of the input cases file '$casesFile' seems to be neither PAN directory structure not plain filenames." 1>&2
+		exit 1
+	    fi
+	fi
     done >"$tmpCasesFile"
 #    echo "DEBUG cases for verif-author = $tmpCasesFile" 1>&2
     command="cat '$tmpCasesFile' | verif-author.pl  $verifParams '$configFile' "

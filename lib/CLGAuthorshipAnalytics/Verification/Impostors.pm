@@ -428,7 +428,7 @@ sub loadPreSimValues {
 	}
 	return $res ;
     } else { # otherwise the file was not found, sim values have to be computed
-	confessLog($self->{logger}, "Pre-sim values: not provided and not found for file '".$probeDoc->getFilename()."'");
+	confessLog($self->{logger}, "Pre-sim values: not provided or not found for file '".$probeDoc->getFilename()."'");
     }
 }
 
