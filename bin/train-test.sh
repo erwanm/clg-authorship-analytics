@@ -92,13 +92,13 @@ function computeFeaturesTSV {
     #                  case file with 0/1 instead of N/Y, depending on the options. I would assume that this function must have been used for PAN data,
     #                  otherwise the target would not be 0/1
     cat "$casesFile" | while read line; do
-	gold=$(echo "$line" | cut -f 2)
+	gold=$(echo "$line" | cut -s -f 2)
 	#	set -- $line
 	#	gold="$2"
-	#	echo "DEBUG case='$caseId' gold='$gold' from $casesFile" 1>&2
 	if [ -z "$gold" ]; then
 	    gold="?"
 	fi
+#	echo "DEBUG line='$line' gold='$gold' from $casesFile" 1>&2
 	echo "$gold"
     done | paste "$featuresFile" - >"$outputDir/features.tsv"
 
@@ -175,7 +175,7 @@ function applyModelAndCheck {
 
     local nbCols=$(tail -n 1 "$arffInput" | sed 's/,/ /g' | wc -w)
     arffOutput=$(mktemp --tmpdir "tmp.$progName.applyModelAndCheck.XXXXXXXXXX")
-#    echo "DEBUG A1" 1>&2
+#    echo "DEBUG $arffInput $arffOutput" 1>&2
     evalSafe "weka-learn-and-apply.sh -a \"$model\" \"$wekaParams\" UNUSED \"$arffInput\" \"$arffOutput\"" "$progName,$LINENO: "
 #    echo "DEBUG A2" 1>&2
     extractPredictAndCheck "$arffOutput" "$tsvPredict" "$casesFile" $nbCols
