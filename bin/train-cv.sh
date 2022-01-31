@@ -162,9 +162,10 @@ if [ ! -z "$obsTypesListOrStrategiesList" ]; then
 #	scoreAUC=$(evalSafe "cat \"$outputPerfDir/$prefix/eval.out\" | grep AUC | cut -f 2 -d ':' | tr -d ' },'")
 #	scoreC1=$(evalSafe "cat \"$outputPerfDir/$prefix/eval.out\" | grep C1 | cut -f 2 -d ':' | tr -d ' },'")
 #	scoreFinal=$(evalSafe "cat \"$outputPerfDir/$prefix/eval.out\" | grep finalScore | cut -f 2 -d ':' | tr -d ' },'")
-#	echo -e "V1: $scoreAUC\t$scoreC1\t$scoreFinal" 1>&2
-	scoreAUC=$(evalSafe "auc.pl -p 6 -l N:Y \"$truthFile\" \"$outputPerfDir/$prefix.answers\"")
-	scoreC1=$(evalSafe "accuracy.pl -c -p 6 -l N:Y \"$truthFile\" \"$outputPerfDir/$prefix.answers\" | cut -f 1")
+	#	echo -e "V1: $scoreAUC\t$scoreC1\t$scoreFinal" 1>&2
+	values=$(cat "$truthFile" | while read l; do echo "${l: -1}"; done | sort -u | tr '\n' ':')
+	scoreAUC=$(evalSafe "auc.pl -p 6 -l $values \"$truthFile\" \"$outputPerfDir/$prefix.answers\"")
+	scoreC1=$(evalSafe "accuracy.pl -c -p 6 -l $values \"$truthFile\" \"$outputPerfDir/$prefix.answers\" | cut -f 1")
 #	echo "DEBUG: printf(\"%.6f\n\", $scoreAUC * $scoreC1);" 1>&2
 	scoreFinal=$(perl -e "printf(\"%.6f\n\", $scoreAUC * $scoreC1);")
 #	echo -e "V2: $scoreAUC\t$scoreC1\t$scoreFinal" 1>&2

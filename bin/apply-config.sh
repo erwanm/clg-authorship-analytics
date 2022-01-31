@@ -91,9 +91,10 @@ if [ ! -z "$goldFile" ]; then
 #    evalSafe "pan14_author_verification_eval.m -i \"$destDir/predicted.answers\" -t \"$goldFile\" -o \"$evalOutput\" >/dev/null 2>&1"  "$progName,$LINENO: "
 #    scoreAUC=$(evalSafe "cat \"$evalOutput\" | grep AUC | cut -f 2 -d ':' | tr -d ' },'")
 #    scoreC1=$(evalSafe "cat \"$evalOutput\" | grep C1 | cut -f 2 -d ':' | tr -d ' },'")
-#    scoreFinal=$(evalSafe "cat \"$evalOutput\" | grep finalScore | cut -f 2 -d ':' | tr -d ' },'")
-    scoreAUC=$(evalSafe "auc.pl -p 6 -l N:Y \"$goldFile\" \"$destDir/predicted.answers\"")
-    scoreC1=$(evalSafe "accuracy.pl -c -p 6 -l N:Y \"$goldFile\" \"$destDir/predicted.answers\" | cut -f 1")
+    #    scoreFinal=$(evalSafe "cat \"$evalOutput\" | grep finalScore | cut -f 2 -d ':' | tr -d ' },'")
+    values=$(cat "$truthFile" | while read l; do echo "${l: -1}"; done | sort -u | tr '\n' ':')
+    scoreAUC=$(evalSafe "auc.pl -p 6 -l $values \"$goldFile\" \"$destDir/predicted.answers\"")
+    scoreC1=$(evalSafe "accuracy.pl -c -p 6 -l $values \"$goldFile\" \"$destDir/predicted.answers\" | cut -f 1")
     scoreFinal=$(perl -e "printf(\"%.6f\n\", $scoreAUC * $scoreC1);")
     if [ -z "$scoreAUC" ] || [ -z "$scoreC1" ] || [ -z "$scoreFinal" ] ; then
         echo "$progName error: was not able to extract one of the evaluation scores from '$evalOutput'" 1>&2
