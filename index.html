@@ -8061,7 +8061,7 @@ Error message and password prompt
 <div created="20160922204019437" modified="20160922204019437" title="$:/state/showeditpreview">
 <pre>yes</pre>
 </div>
-<div created="20160922204016926" modified="20220129205009821" title="$:/state/sidebar">
+<div created="20160922204016926" modified="20220201161929085" title="$:/state/sidebar">
 <pre>no</pre>
 </div>
 <div created="20160922191545032" modified="20161103205816327" title="$:/state/tab/sidebar--1835078512">
@@ -9107,7 +9107,7 @@ Following the provided ConfigurationFile, this scripts either:
 
 </pre>
 </div>
-<div created="20220122130432758" modified="20220129205046710" tags="[[Table of Contents]]" title="Installation">
+<div created="20220122130432758" modified="20220201164154732" tags="[[Table of Contents]]" title="Installation">
 <pre>! Intro
 
 * This installation guide assumes a standard linux environment with ''bash'' and ''perl'' available.
@@ -9138,10 +9138,12 @@ git clone git@github.com:erwanm/clg-authorship-analytics.git
 
 !! Required perl libraries
 
+There are various ways to install perl libraries, below we propose two ways which don't require root access. Of course it's easier with root access but the names of the modules may depend on your distribution.
 
-!!! Installing local::lib
 
-There are various ways to install perl libraries, below we propose a way which doesn't require root access.
+!!! Method 1: install standard local::lib as a user
+
+//This method requires the `cpan` module (the standard perl package manager) to be installed. Usually it ships with perl but not always, see method 2 if this method doesn't work.//
 
 Install ``local::lib`` following the instructions at [[http://search.cpan.org/~haarg/local-lib-2.000019/lib/local/lib.pm]], i.e.:
 
@@ -9155,7 +9157,25 @@ echo 'eval &quot;$(perl -I$HOME/perl5/lib/perl5 -Mlocal::lib)&quot;' &gt;&gt;~/.
 source ~/.bashrc
 ```
 
-!!! Install the libraries with local::lib
+
+!!! Method 2: install cpan and local::lib as a user
+
+//This method installs both `cpan` and `local::lib` in user space.//
+
+Following [[this method|https://stackoverflow.com/a/2980715/891919]]:
+
+```
+wget -O- http://cpanmin.us | perl - -l ~/perl5 App::cpanminus local::lib
+eval `perl -I ~/perl5/lib/perl5 -Mlocal::lib`
+echo 'eval `perl -I ~/perl5/lib/perl5 -Mlocal::lib`' &gt;&gt; ~/.bashrc
+source ~/.bashrc
+```
+
+!!! Install the required libraries
+
+After installing local::lib with either method 1 or 2, the following packages can be installed.
+
+* ''Important'':  use `cpanm` instead of `cpan` in the following commands if method 2 was used.
 
 ```
 cpan Log::Log4perl
@@ -9165,6 +9185,7 @@ cpan Data::Dumper::Simple
 cpan Math::CDF
 cpan HTML::Strip
 ```
+
 
 !! erw-pm 
 
