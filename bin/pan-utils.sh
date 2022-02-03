@@ -71,16 +71,23 @@ function generateTruthCasesFile {
     fi
     # sed used to remove the (possible) BOM marker
     if [ $officialFormatAndSorted -ne 0 ]; then # sorted for CV evaluation + space sep and Y/N for official eval script
-#	echo "DEBUG generateTruthCasesFile: 'cat \"$truthFile\" | sed 's/^\xEF\xBB\xBF//'  $selectLinesCommandWithPipe  | sort +0 -1 >\"$targetCasesFile\"'" 1>&2
+#	echo "DEBUG generateTruthCasesFile A: 'cat \"$truthFile\" | tr -d '\r' | sed 's/^\xEF\xBB\xBF//'  $selectLinesCommandWithPipe  | sort +0 -1 >\"$targetCasesFile\"'" 1>&2
 	evalSafe "cat \"$truthFile\" | tr -d '\r' | sed 's/^\xEF\xBB\xBF//'  $selectLinesCommandWithPipe  | sort +0 -1 >\"$targetCasesFile\""  "$progName: "
-    else # replace Y/N with 1/0 only in the 2nd col
-	tmp1=$(mktemp --tmpdir "tmp.pan-utils.sh.generateTruthCasesFile1.XXXXXXXXX")
-	tmp2=$(mktemp --tmpdir "tmp.pan-utils.sh.generateTruthCasesFile2.XXXXXXXXX")
-#	echo "DEBUG generateTruthCasesFile: 'cat \"$truthFile\" | sed 's/^\xEF\xBB\xBF//'  $selectLinesCommandWithPipe | cut -d \" \" -f 1 >\"$tmp1\"'" 1>&2
-	evalSafe "cat \"$truthFile\" | tr -d '\r' | sed 's/^\xEF\xBB\xBF//'  $selectLinesCommandWithPipe | cut -d \" \" -f 1 >\"$tmp1\"" "$progName: "
-	evalSafe "cat \"$truthFile\" | tr -d '\r' | sed 's/^\xEF\xBB\xBF//'  $selectLinesCommandWithPipe | cut -d \" \" -f 2 | tr YN 10 >\"$tmp2\"" "$progName: "
-	evalSafe "paste \"$tmp1\" \"$tmp2\" > \"$targetCasesFile\"" "$progName: "
-	rm -f "$tmp1" "$tmp2"
+    else # replace Y/N with 1/0 only in the 2nd col and replace space separator with tab - UPDATED Feb 22: now accepting also the tab 0/1 format
+	values=$(cat "$truthFile" | while read l; do echo "${l: -1}"; done | sort -u | tr '\n' ':')
+#	if head -n 1 "$tmp0" | grep -P '\t' ; do
+	if [ "$values" == "N:Y" ]; then
+	    tmp0=$(mktemp --tmpdir "tmp.pan-utils.sh.generateTruthCasesFile0.XXXXXXXXX")
+	    tmp1=$(mktemp --tmpdir "tmp.pan-utils.sh.generateTruthCasesFile1.XXXXXXXXX")
+	    tmp2=$(mktemp --tmpdir "tmp.pan-utils.sh.generateTruthCasesFile2.XXXXXXXXX")
+	    evalSafe "cat \"$truthFile\" | tr -d '\r' | sed 's/^\xEF\xBB\xBF//'  $selectLinesCommandWithPipe  >\"$tmp0\"" "$progName: "
+	    evalSafe "cat \"$tmp0\" | cut -d \" \" -f 1 >\"$tmp1\"" "$progName: "
+	    evalSafe "cat \"$tmp0\" | cut -d \" \" -f 2 | tr YN 10 >\"$tmp2\"" "$progName: "
+	    evalSafe "paste \"$tmp1\" \"$tmp2\" > \"$targetCasesFile\"" "$progName: "
+	    rm -f "$tmp0" "$tmp1" "$tmp2"
+	else
+	    evalSafe "cat \"$truthFile\" >\"$targetCasesFile\"" "$progName: "
+	fi
     fi
 }
 
