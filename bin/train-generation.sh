@@ -120,7 +120,7 @@ waitFile=$(mktemp  --tmpdir  "$progName.main.wait.XXXXXXXXX")
 cat "$configsFile" | while read configFile; do
     prefix=$(basename ${configFile%.conf})
     if [ $resume -eq 0 ] || [ ! -s "$outputPerfDir/$prefix.perf" ]; then
-	echo "$progName: computing for config $prefix from '$configFile'"
+#	echo "$progName: computing for config $prefix from '$configFile'"
 	if [ -z "$parallelPrefix" ]; then
 	    echo "$progName: calling 'train-cv.sh $trainCVParams \"$configFile\" \"$inputDir\" \"$outputPerfDir\""
 	    evalSafe "train-cv.sh $trainCVParams \"$configFile\" \"$inputDir\" \"$outputPerfDir\"" "$progName,$LINENO: "
