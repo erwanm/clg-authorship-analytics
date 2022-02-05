@@ -87,6 +87,9 @@ function usage {
   echo "       This option is ignored if '-r' is supplied."
   echo "    -i <resources path> same as above but assuming all impostors datasets"
   echo "       are located as subdirs of <resources path>."
+  echo "    -l <language> by default a file 'contents.json' is expected in the"
+  echo "       source dir (PAN input format), and the language is extracted from"
+  echo "       it. This option can be used as an alternative to the json file."
   #  echo "    -s <stop words directory> provide path to stop words directory:"
   echo "       "
   echo
@@ -169,10 +172,11 @@ function getImpostorsDir {
  }
 
 
-while getopts 'hr:i:' option ; do 
+while getopts 'hr:i:l:' option ; do 
     case $option in
 	"r" ) resourcesDir="$OPTARG";;
 	"i" ) impostorsData=$(echo "$OPTARG" | tr ';' ' ');;
+        "l" ) language="$OPTARG";;
 	"h" ) usage
  	      exit 0;;
 	"?" ) 
@@ -197,17 +201,19 @@ fi
 
 # check if valid directories, prepare dest dir
 dieIfNoSuchDir "$sourceDir" "$progName:$LINENO: "
-dieIfNoSuchFile "$sourceDir/contents.json"  "$progName:$LINENO: " # extract language
-
 
 
 if [ ! -z "$resourcesDir" ]; then
     dieIfNoSuchDir "$resourcesDir" "$progName:$LINENO: " 
 fi
 
-# extract language from json description file
-language=$(grep language "$sourceDir/contents.json" | cut -d '"' -f 4)
-language=$(echo "$language" | tr '[:upper:]' '[:lower:]')
+if [ -z "$language" ]; then
+    echo "$progName: no language provided with -l, loooking for contents.json file..."
+    dieIfNoSuchFile "$sourceDir/contents.json"  "$progName:$LINENO: " # extract language
+    # extract language from json description file
+    language=$(grep language "$sourceDir/contents.json" | cut -d '"' -f 4)
+    language=$(echo "$language" | tr '[:upper:]' '[:lower:]')
+fi
 echo "$progName: language is '$language'"
 echo $language >"$destDir/id.language"
 
