@@ -159,12 +159,13 @@ function extractPossibleObsTypes {
 function listDocFiles {
     local dir="$1"
 
+    find "$dir" -type f | grep -v "truth.txt" | grep -v ".observations"
     # probably not the best way to get txt files but not directories
-    find "$dir" -name "*.txt" | grep -v "truth.txt" | while read entry; do
-	if [ -f "$entry" ]; then
-	    echo "$entry"
-	fi
-    done
+#    find "$dir" -name "*.txt" | grep -v "truth.txt" | while read entry; do
+#	if [ -f "$entry" ]; then
+#	    echo "$entry"
+#	fi
+#    done
 }
 
 
