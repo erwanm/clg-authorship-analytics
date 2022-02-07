@@ -54,13 +54,16 @@ function usage {
   echo "    -P <parallel prefix> TODO"
   echo "    -M run master tasks as regular tasks instead of as background daemons."
   echo "       ignored if -P is not enabled."
+  echo "    -l <language> by default a file 'contents.json' is expected in the"
+  echo "       source dir (PAN input format), and the language is extracted from"
+  echo "       it. This option can be used as an alternative to the json file."
   echo
 }
 
 
 
 OPTIND=1
-while getopts 'hfai:o:P:L:c:M' option ; do
+while getopts 'hfai:o:P:L:c:Ml:' option ; do
     case $option in
 	"c" ) confDir="$OPTARG";;
         "f" ) force=1;;
@@ -71,6 +74,7 @@ while getopts 'hfai:o:P:L:c:M' option ; do
         "o" ) trainCVParams="$trainCVParams $OPTARG";;
 	"L" ) preferedDataLocation="$OPTARG";;
 	"M" ) trainingParams="$trainingParams -M";;
+        "l" ) language="$OPTARG";;
         "h" ) usage
               exit 0;;
         "?" )
@@ -92,7 +96,6 @@ sourceDir="$1"
 workDir="$2"
 
 dieIfNoSuchDir "$sourceDir" "$progName,$LINENO: "
-dieIfNoSuchFile "$sourceDir/contents.json" "$progName,$LINENO: "
 
 
 if [ $force -ne 0 ]; then
@@ -109,9 +112,14 @@ if [ $nbEntries -ne 0 ]; then
     fi
 fi
 
-
-language=$(grep language "$sourceDir/contents.json" | cut -d '"' -f 4)
-language=$(echo "$language" | tr '[:upper:]' '[:lower:]')
+if [ -z "$language" ]; then
+    echo "$progName: no language provided with -l, loooking for contents.json file..."
+    dieIfNoSuchFile "$sourceDir/contents.json"  "$progName:$LINENO: " # extract language
+    # extract language from json description file
+    language=$(grep language "$sourceDir/contents.json" | cut -d '"' -f 4)
+    language=$(echo "$language" | tr '[:upper:]' '[:lower:]')
+fi
+prepareParams="$prepareParams -l $language"
 echo "$progName: language is '$language'"
 
 ttValidLang=$(tree-tagger-POS-wrapper.sh -h | grep "Valid language" | grep "$language")
