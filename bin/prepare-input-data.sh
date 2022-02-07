@@ -207,6 +207,7 @@ if [ ! -z "$resourcesDir" ]; then
     dieIfNoSuchDir "$resourcesDir" "$progName:$LINENO: " 
 fi
 
+mkdirSafe "$destDir" "$progName:$LINENO: "
 if [ -z "$language" ]; then
     echo "$progName: no language provided with -l, loooking for contents.json file..."
     dieIfNoSuchFile "$sourceDir/contents.json"  "$progName:$LINENO: " # extract language
@@ -235,18 +236,6 @@ fi
 # and save the list for second pass.
 possibleObsTypes=$(ls "$destDir"/multi-conf-files/*.multi-conf | extractPossibleObsTypes)
 obsTypesColonSep=$(echo "$possibleObsTypes" | sed 's/ /:/g')
-
-
-# checks whether POS tagging is needed
-noPOSParam=""
-tokAndPOS=1
-#echo "DEBUG: possible obs types = $possibleObsTypes" 1>&2
-requiresPOSTags $possibleObsTypes
-if [ $? -eq 0 ]; then
-    noPOSParam="-n"
-    tokAndPOS=0 # TODO two different variables for the same purpose, confusing.
-    echo "   $progName: no TreeTagger tokenization/POS tagging needed"
-fi
 
 
 
