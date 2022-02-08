@@ -17,7 +17,6 @@ metaGenetic_1_returnNbBest=200
 metaGenetic_final_nbFolds=5
 metaGenetic_final_nbRuns=20
 metaGenetic_final_returnNbBest=100
-_final_selectMethod=mean
 #metaGenetic_final_selectMethod=mean mixedMeanMedianMinusSD
 metaGenetic_final_selectMethod=mean
 

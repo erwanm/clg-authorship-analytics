@@ -1,8 +1,8 @@
 
 strategy=meta
 
-confidenceTrainProp=0 1
-confidenceLearnMethod=simpleOptimC1
+confidenceTrainProp=0
+confidenceLearnMethod=NA
 #learnMethod=mean median geomMean M5P-M4 M5P-M8 SMO-C1-N0 SMO-C1-N1 SMO-C1-N0-RBF SMO-C1-N1-RBF
 learnMethod=mean median geomMean
 
@@ -17,11 +17,14 @@ metaGenetic_1_returnNbBest=50
 metaGenetic_final_nbFolds=2
 metaGenetic_final_nbRuns=3
 metaGenetic_final_returnNbBest=20
+metaGenetic_final_selectMethod=mean
 
 metaTestFold_bagging_nbRuns=10
 metaTestFold_bagging_returnNbBest=10
+metaTestFold_bagging_selectMethod=mean
 
 final_bagging_nbRuns=10
 final_bagging_returnNbBest=10
+final_bagging_selectMethod=metaTestSet
 
 
