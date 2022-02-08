@@ -92,6 +92,17 @@ function generateTruthCasesFile {
 }
 
 
+# added Feb 2022 to deal with different possible formats
+#   logic: whatever the answer format (NY or 01) and separator (space or tab), the last separator + last column is exactly 2 chars length.
+#   writes to STDOUT
+function removeAnswersFromTruthCasesFile {
+    local inputCasesFiles="$1"
+    cat "$inputCasesFiles" | while read l; do
+	echo "${l:0:${#l}-2}"
+    done 
+}
+
+
 #
 # inputDir is prepared-data/<prepa-param> (contains the data directly)
 # writes 1 column

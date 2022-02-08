@@ -104,7 +104,10 @@ fi
 
 # computePerf=0 or 1, always cut the 2 column to be safe
 onlyCasesFile=$(mktemp "$destDir/only-cases.tmp.XXXXXXXX")
-evalSafe "cut -d \" \" -f 1 \"$casesFile\" > \"$onlyCasesFile\"" "$progName,$LINENO: " # written to the target dir because /tmp might be different!! (if running on cluster)
+# evalSafe "cut -d \" \" -f 1 \"$casesFile\" > \"$onlyCasesFile\"" "$progName,$LINENO: " # written to the target dir because /tmp might be different!! (if running on cluster)
+# updated Feb 2022 new format possible
+evalSafe "removeAnswersFromTruthCasesFile \"$casesFile\" >\"$onlyCasesFile\"" "$progName,$LINENO: "
+
 
 params=""
 if [ $computePerf -ne 0 ]; then
