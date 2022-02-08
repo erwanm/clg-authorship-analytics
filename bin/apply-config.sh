@@ -84,7 +84,7 @@ evalSafe "train-test.sh -a \"$casesFile\" -m \"$prefix.model\" \"$mainDir\" \"$p
 # extract answers
 # remark: I'm not sure what the dest file should be, see also apply-multi-configs.sh 
 #         it's possible that some script expect it somewhere and some others scripts somewhere else
-evalSafe "paste \"$casesFile\" \"$destDir/test/predict.tsv\" |  sed 's/\t/ /g' >\"$destDir/predicted.answers\"" "$progName,$LINENO: "
+evalSafe "paste \"$casesFile\" \"$destDir/test/predict.tsv\"  >\"$destDir/predicted.answers\"" "$progName,$LINENO: "
 
 # perf, if required
 if [ ! -z "$goldFile" ]; then
@@ -92,12 +92,12 @@ if [ ! -z "$goldFile" ]; then
 #    scoreAUC=$(evalSafe "cat \"$evalOutput\" | grep AUC | cut -f 2 -d ':' | tr -d ' },'")
 #    scoreC1=$(evalSafe "cat \"$evalOutput\" | grep C1 | cut -f 2 -d ':' | tr -d ' },'")
     #    scoreFinal=$(evalSafe "cat \"$evalOutput\" | grep finalScore | cut -f 2 -d ':' | tr -d ' },'")
-    values=$(cat "$truthFile" | while read l; do echo "${l: -1}"; done | sort -u | tr '\n' ':')
+    values=$(cat "$goldFile" | while read l; do echo "${l: -1}"; done | sort -u | tr '\n' ':')
     scoreAUC=$(evalSafe "auc.pl -p 6 -l $values \"$goldFile\" \"$destDir/predicted.answers\"")
     scoreC1=$(evalSafe "accuracy.pl -c -p 6 -l $values \"$goldFile\" \"$destDir/predicted.answers\" | cut -f 1")
     scoreFinal=$(perl -e "printf(\"%.6f\n\", $scoreAUC * $scoreC1);")
     if [ -z "$scoreAUC" ] || [ -z "$scoreC1" ] || [ -z "$scoreFinal" ] ; then
-        echo "$progName error: was not able to extract one of the evaluation scores from '$evalOutput'" 1>&2
+        echo "$progName error: was not able to extract one of the evaluation scores from '$destDir/predicted.answers' (predicted) and '$goldFile' (gold)" 1>&2
         exit 1
     fi
     echo -e "$scoreFinal\t$scoreAUC\t$scoreC1" >"$destDir.perf"
