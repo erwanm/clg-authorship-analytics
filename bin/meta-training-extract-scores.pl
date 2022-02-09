@@ -48,7 +48,19 @@ my %casesMaybeTruth;
 open(FH, "<", $casesFile) or die "$progName error: cannot open '$casesFile'";
 while (<FH>) {
     chomp;
-    my @cols = split;
+    my @cols = split('\t');
+    if (scalar(@cols) == 1) { # no tab; if 2 cols found with tab it's already ok
+	@cols = split(" ");
+	if (scalar(@cols)==2) {
+	    if (length($cols[1])>1) { # DANGER, ASSUMING SINGLE CHAR = TRUE ANSWER
+		@cols = ($cols[0]." ".$cols[1], undef);
+	    } # otherwise <case> <answer>
+	} else {
+	    if (scalar(@cols)>2) { 
+		die "$progName error: cannot recognize format in cases file.";
+	    } # otherwise no space (and no tab) -> ok just case id
+	}
+    }
     $casesMaybeTruth{$cols[0]} = defined($cols[1]) ? $cols[1] : "?" ;
 }
 close(FH);
@@ -60,18 +72,21 @@ foreach my $param (keys %$config) {
 	my ($confId)= ($param =~ m/^indivConf_(.*)/);
 #	print STDERR "$progName DEBUG confId=$confId\n";
 	my $file = "$inputDir/apply-strategy-configs/$confId.answers";
+#	print STDERR "DEBUG $file\n";
 	open(FH, "<", $file) or die "$progName error: cannot open '$file'";
 	my $nb=0; # for sanity check
 	while (<FH>) {
 	    chomp;
-	    my ($case, $score) = split;
+	    my $l = $_;
+	    my ($case, $score) = ($l =~ m/^(.+)\s(\S+)$/);
+#	    print STDERR "DEBUG reading case='$case', score='$score'\n";
 	    if (defined($casesMaybeTruth{$case})) {
 #		print STDERR "$progName DEBUG scores{$case}->{$confId} = $score\n";
 		$scores{$case}->{$confId} = $score;
 		$nb++;
 	    }
 	}
-	die "$progName error: found only $nb cases in '$file' among the $nbCases expected in '$casesFile'" if ($nb != $nbCases); 
+	die "$progName error: found $nb cases in '$file' among the $nbCases expected in '$casesFile'" if ($nb != $nbCases); 
 	close(FH);
     }
 }
