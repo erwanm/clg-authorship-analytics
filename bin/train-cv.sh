@@ -148,7 +148,7 @@ if [ ! -z "$obsTypesListOrStrategiesList" ]; then
     done
     echo
     if [ $status -eq 0 ]; then
-	evalSafe "paste \"$testCasesColFile\" \"$resultsColFile\" | sort +0 -1 |  sed 's/\t/ /g' >\"$outputPerfDir/$prefix/predicted.answers\""  "$progName,$LINENO: "
+	evalSafe "paste \"$testCasesColFile\" \"$resultsColFile\" | sort +0 -1 >\"$outputPerfDir/$prefix/predicted.answers\""  "$progName,$LINENO: "
 	if [ ! -s "$outputPerfDir/$prefix/predicted.answers" ] || [ ! -s "$truthFile" ]; then # should not happen but....
 	    echo "$progName error: one of '$outputPerfDir/$prefix/predicted.answers' and/or '$truthFile' does not exist or is empty; $!" 1>&2
 	    exit 42
