@@ -86,7 +86,7 @@ function generateTruthCasesFile {
 	    evalSafe "paste \"$tmp1\" \"$tmp2\" > \"$targetCasesFile\"" "$progName: "
 	    rm -f "$tmp0" "$tmp1" "$tmp2"
 	else
-	    evalSafe "cat \"$truthFile\" >\"$targetCasesFile\"" "$progName: "
+	    evalSafe "cat \"$truthFile\" | tr -d '\r' | sed 's/^\xEF\xBB\xBF//'  $selectLinesCommandWithPipe  >\"$targetCasesFile\"" "$progName: "
 	fi
     fi
 }
