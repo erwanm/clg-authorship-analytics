@@ -45,6 +45,12 @@ die "$progName error: dir '$inputDir' does not contain subdir 'apply-strategy-co
 my $config = readConfigFile($configFile);
 
 my %casesMaybeTruth;
+# Feb 22: fixed bug related to order of cases: used to have scores only as a map %scores
+#         with the final scores printed by sorted cases, except that if the input cases
+#         were not sorted this would result in completely wrong order since the cases
+#         ids are not printed in the output.
+my @casesOrderedSameAsInput;
+
 open(FH, "<", $casesFile) or die "$progName error: cannot open '$casesFile'";
 while (<FH>) {
     chomp;
@@ -62,6 +68,7 @@ while (<FH>) {
 	}
     }
     $casesMaybeTruth{$cols[0]} = defined($cols[1]) ? $cols[1] : "?" ;
+    push(@casesOrderedSameAsInput,$cols[0]);
 }
 close(FH);
 my $nbCases = scalar(keys %casesMaybeTruth);
@@ -91,7 +98,7 @@ foreach my $param (keys %$config) {
     }
 }
 
-foreach my $case (sort keys %scores) {
+foreach my $case (@casesOrderedSameAsInput) {
     my @features;
     foreach my $confId (sort keys %{$scores{$case}}) {
 	push(@features, $scores{$case}->{$confId});
