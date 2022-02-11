@@ -67,7 +67,7 @@ mkdirSafe "$outputDir"  "$progName,$LINENO: "
 ls "$metaConfPrefix.model/strategy-configs"/*.conf | sed 's/.conf$//' > "$outputDir"/indiv-strategies.prefix-list
 echo "$metaConfPrefix" > "$outputDir"/meta-config.prefix-list
 linkAbsolutePath "$outputDir" "$inputDir/input" "$inputDir/resources-options.conf"
-evalSafe "apply-multi-configsTMP.sh $applyMCOptions -i \"$outputDir/indiv-strategies.prefix-list\" \"$outputDir/meta-config.prefix-list\" \"$testCasesFile\" \"$outputDir\""
+evalSafe "apply-multi-configs.sh $applyMCOptions -i \"$outputDir/indiv-strategies.prefix-list\" \"$outputDir/meta-config.prefix-list\" \"$testCasesFile\" \"$outputDir\""
 
 echo "$progName: done."
 

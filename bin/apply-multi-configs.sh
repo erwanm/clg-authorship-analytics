@@ -2,6 +2,7 @@
 
 # EM  May 15
 
+
 source common-lib.sh
 source file-lib.sh
 source pan-utils.sh
@@ -80,6 +81,7 @@ configsListFile="$1"
 casesFile="$2"
 destDir="$3"
 
+
 mkdirSafe "$destDir" "$progName,$LINENO: "
 if [ -z "$mainDir" ]; then
     mainDir="$destDir"
@@ -96,7 +98,7 @@ if [ ! -z "$preprocessStrategyConfigs" ]; then # calling self to compute strateg
     if [ $computePerf -eq 1 ]; then
 	params="$params -p "
     fi
-    mkdirSafe 
+    mkdirSafe "$destDir/apply-strategy-configs"
     echo "$progName: calling self to apply strategy configs/models '$preprocessStrategyConfigs' first."
     # self call (not really recursive, possible only once)
     evalSafe "$progName $params \"$preprocessStrategyConfigs\" \"$casesFile\" \"$destDir/apply-strategy-configs\"" "$progName,$LINENO: "
@@ -124,7 +126,7 @@ cat "$configsListFile" | while read prefix; do
     id="${outputIdPrefix}${confId}"
     confDir="$destDir/$id"
     if [ $computePerf -eq 0 ]; then
-	fileToCheck="$confDir.answers"
+	fileToCheck="$confDir/predicted.answers"
     else
 	fileToCheck="$confDir.perf"
     fi
