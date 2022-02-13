@@ -67,11 +67,12 @@ while (<FH>) {
 	    } # otherwise no space (and no tab) -> ok just case id
 	}
     }
+    warn "Warning: id '$cols[0]' found twice in '$casesFile'" if (defined($casesMaybeTruth{$cols[0]}));
     $casesMaybeTruth{$cols[0]} = defined($cols[1]) ? $cols[1] : "?" ;
     push(@casesOrderedSameAsInput,$cols[0]);
 }
 close(FH);
-my $nbCases = scalar(keys %casesMaybeTruth);
+my $nbCases = scalar(@casesOrderedSameAsInput);
 
 my %scores;
 foreach my $param (keys %$config) {
