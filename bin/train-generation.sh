@@ -156,8 +156,8 @@ else
 fi
 cat "$configsFile" | while read configFile; do
     prefix=$(basename ${configFile%.conf})
-    echo -ne "$configFile\t" >>"$outputPerfDir/configs.results"
-    cut -f $colPerf "$outputPerfDir/$prefix.perf" >>"$outputPerfDir/configs.results"
+    perf=$(cut -f $colPerf "$outputPerfDir/$prefix.perf")
+    echo -e "$configFile\t$perf" >>"$outputPerfDir/configs.results"
 done
 echo "$progName: done."
 
