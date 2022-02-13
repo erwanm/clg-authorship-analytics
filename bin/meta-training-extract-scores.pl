@@ -90,8 +90,10 @@ foreach my $param (keys %$config) {
 #	    print STDERR "DEBUG reading case='$case', score='$score'\n";
 	    if (defined($casesMaybeTruth{$case})) {
 #		print STDERR "$progName DEBUG scores{$case}->{$confId} = $score\n";
-		$scores{$case}->{$confId} = $score;
-		$nb++;
+		if (!defined($scores{$case}->{$confId})) { # duplicate case
+		    $scores{$case}->{$confId} = $score;
+		    $nb++;
+		}
 	    }
 	}
 	die "$progName error: found $nb cases in '$file' among the $nbCases expected in '$casesFile'" if ($nb != $nbCases); 
