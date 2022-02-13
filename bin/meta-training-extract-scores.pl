@@ -72,7 +72,7 @@ while (<FH>) {
     push(@casesOrderedSameAsInput,$cols[0]);
 }
 close(FH);
-my $nbCases = scalar(@casesOrderedSameAsInput);
+my $nbCases = scalar(keys %casesMaybeTruth);
 
 my %scores;
 foreach my $param (keys %$config) {
