@@ -96,7 +96,12 @@ foreach my $param (keys %$config) {
 		}
 	    }
 	}
-	die "$progName error: found $nb cases in '$file' among the $nbCases expected in '$casesFile'" if ($nb != $nbCases); 
+	foreach my $case (keys %casesMaybeTruth) {
+	    if (!defined($scores{$case}->{$confId})) {
+		die "Error: missing case '$case' in '$file'";
+	    }
+	}
+#	die "$progName error: found $nb cases in '$file' among the $nbCases expected in '$casesFile'" if ($nb != $nbCases); 
 	close(FH);
     }
 }
