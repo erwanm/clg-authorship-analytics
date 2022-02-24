@@ -24,6 +24,7 @@ function usage {
   echo "  Options:"
   echo "    -h this help"
   echo "    -p compute performance (requires gold answer in the cases file)"
+  echo "    -P <parallel prefix> TODO"
   echo
 }
 
@@ -31,11 +32,12 @@ function usage {
 
 
 OPTIND=1
-while getopts 'hp' option ; do 
+while getopts 'hpP:' option ; do 
     case $option in
 	"h" ) usage
  	      exit 0;;
 	"p" ) applyMCOptions="$applyMCOptions -p";;
+        "P" ) applyMCOptions="$applyMCOptions -P \"$OPTARG\"";; 
  	"?" ) 
 	    echo "Error, unknow option." 1>&2
             printHelp=1;;
